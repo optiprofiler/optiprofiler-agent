@@ -61,7 +61,7 @@
 - [x] Implement `validators/syntax_checker.py`: AST syntax validation for LLM-generated code
 - [x] Implement `validators/api_checker.py`: benchmark() parameter validation (solver count, param names, enum values)
 - [x] Implement `common/interface_adapter.py`: AST-based solver signature analysis + wrapper generation
-- [x] Write CLI entry point: `optiprofiler-agent chat` / `index` / `check` (click-based)
+- [x] Write CLI entry point: `opagent` / `optiprofiler-agent` — `chat` / `index` / `check` (click-based)
 - [ ] Publish to PyPI: `pip install optiprofiler-agent`
 
 **Deliverable**: local CLI is usable after `pip install`
@@ -147,8 +147,8 @@
 - [x] Write `agent_c/prompts/system_prompt.md`: optimization benchmark expert (DFO + Dolan-Moré methodology)
 - [x] Write `agent_c/prompts/report_template.md`: report template
 - [x] Implement `agent_c/interpreter.py`: JSON summary → LLM polish → Markdown report (with no-LLM fallback)
-- [x] CLI: `optiprofiler-agent interpret <results_dir>` (with --no-llm, --no-profiles, --latest, --output)
-- [x] CLI: `optiprofiler-agent debug <script> --traceback <file>`
+- [x] CLI: `opagent interpret <results_dir>` (with --no-llm, --no-profiles, --latest, --output)
+- [x] CLI: `opagent debug <script> --traceback <file>`
 - [ ] Write test cases
 
 **Deliverable**: CLI outputs a natural-language analysis report — **DONE (core)**

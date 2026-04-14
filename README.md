@@ -26,6 +26,19 @@ pip install 'optiprofiler-agent[interpret]'
 pip install 'optiprofiler-agent[all]'
 ```
 
+### CLI command name (`opagent` vs `optiprofiler-agent`)
+
+After `pip install`, two **equivalent** executables are on your `PATH`:
+
+| Command | When to use |
+|---------|-------------|
+| **`opagent`** | **Recommended** — short and easy to type. |
+| `optiprofiler-agent` | Same program; name matches the [PyPI](https://pypi.org/project/optiprofiler-agent/) package. |
+
+Running **`opagent` with no subcommand** starts the **unified agent** (ReAct tool-use loop). That is the same as `opagent agent` / `optiprofiler-agent agent`.
+
+Examples below use **`opagent`**. Substitute `optiprofiler-agent` anywhere if you prefer the long name.
+
 ### Configure the LLM (required)
 
 **Without a valid API key, any command that calls an LLM will fail.** You must configure credentials for the provider you use (you only need **one** provider).
@@ -46,14 +59,14 @@ Example (current shell session only):
 
 ```bash
 export MINIMAX_API_KEY="your-key-here"
-optiprofiler-agent chat --provider minimax
+opagent chat --provider minimax
 ```
 
 #### 2. `.env` file (local development)
 
 The package uses `python-dotenv` and loads a file named **`.env`** from the **current working directory** when you run a command (the folder you `cd` into), not from inside the installed package.
 
-1. Create a file named `.env` in your project directory (same place you run `optiprofiler-agent`).
+1. Create a file named `.env` in your project directory (same place you run `opagent`).
 2. Put **only the key(s) you need**, for example:
 
 ```bash
@@ -91,24 +104,29 @@ If `api_key` is omitted, `LLMConfig` falls back to the same environment variable
 ### CLI (Primary Interface)
 
 ```bash
-# Interactive advisor chat
-optiprofiler-agent chat
+# Unified agent (default if you run plain `opagent`; combines Advisor / Debug / Interpret via tools)
+opagent
 
-# Unified agent (combines all capabilities via tool-use)
-optiprofiler-agent agent
+# Same as above, explicit subcommand
+opagent agent
+
+# Interactive advisor chat (Agent A only)
+opagent chat
 
 # Validate a benchmark script
-optiprofiler-agent check my_script.py
+opagent check my_script.py
 
 # Interpret benchmark results
-optiprofiler-agent interpret path/to/out --latest
+opagent interpret path/to/out --latest
 
 # Debug a failing script (auto-run + fix)
-optiprofiler-agent debug my_script.py --run
+opagent debug my_script.py --run
 
 # Wiki knowledge base management
-optiprofiler-agent wiki stats
+opagent wiki stats
 ```
+
+Inside the unified agent, slash shortcuts include `/chat`, `/agent`, `/debug <file.py>`, `/interpret <dir> [--latest]`, `/help`, `/quit`. Run `opagent --help` for all subcommands.
 
 ### Python Library
 
@@ -139,12 +157,14 @@ result = agent.invoke({"messages": [("user", "What is ptype?")]})
 
 ## CLI Command Reference
 
-### `optiprofiler-agent chat`
+The following use **`opagent`**; **`optiprofiler-agent ...`** is identical.
+
+### `opagent chat`
 
 Interactive conversation with Agent A (Product Advisor).
 
 ```bash
-optiprofiler-agent chat [OPTIONS]
+opagent chat [OPTIONS]
 
 Options:
   --provider [kimi|minimax|openai|deepseek|anthropic]  LLM provider (default: minimax)
@@ -157,39 +177,40 @@ Options:
 
 In-chat commands: `/reset` (clear history), `/prompt` (show system prompt), `/quit`.
 
-### `optiprofiler-agent agent`
+### `opagent` / `opagent agent`
 
-Unified tool-use agent with ReAct reasoning. Automatically selects among knowledge search, script validation, error debugging, and result interpretation.
+Unified tool-use agent with ReAct reasoning. Automatically selects among knowledge search, script validation, error debugging, and result interpretation. **Plain `opagent` (no subcommand) runs this mode.**
 
-> **Note:** The `agent` command uses the `knowledge_search` tool internally, which requires `[rag]` extras (`pip install 'optiprofiler-agent[rag]'`). Without it, knowledge search calls will silently return no results.
+> **Note:** The unified agent uses the `knowledge_search` tool internally, which requires `[rag]` extras (`pip install 'optiprofiler-agent[rag]'`). Without it, knowledge search calls will silently return no results.
 
 ```bash
-optiprofiler-agent agent [OPTIONS]
+opagent [OPTIONS]
+opagent agent [OPTIONS]
 
 Options:
   --provider [kimi|minimax|openai|deepseek|anthropic]
   --model TEXT
 ```
 
-### `optiprofiler-agent check`
+### `opagent check`
 
 Validate a Python benchmark script for syntax errors and API usage issues.
 
 ```bash
-optiprofiler-agent check FILEPATH [OPTIONS]
+opagent check FILEPATH [OPTIONS]
 
 Options:
   --language [python|matlab]  (default: python)
 ```
 
-### `optiprofiler-agent interpret`
+### `opagent interpret`
 
 Analyze benchmark results and generate a natural-language report.
 
 > **Note:** To read PDF profile curves (the default), install `[interpret]` extras: `pip install 'optiprofiler-agent[interpret]'`. Use `--no-profiles` to skip PDF reading without the extra.
 
 ```bash
-optiprofiler-agent interpret RESULTS_DIR [OPTIONS]
+opagent interpret RESULTS_DIR [OPTIONS]
 
 Options:
   --latest              Auto-detect the latest experiment in the directory
@@ -201,21 +222,21 @@ Options:
   -o, --output PATH    Write report to file instead of stdout
 ```
 
-### `optiprofiler-agent debug`
+### `opagent debug`
 
 Diagnose and fix benchmark script errors. Supports two modes:
 
 **Manual mode** — provide code + error traceback:
 
 ```bash
-optiprofiler-agent debug script.py --traceback error.log
-optiprofiler-agent debug script.py --error "ValueError: at least 2 solvers"
+opagent debug script.py --traceback error.log
+opagent debug script.py --error "ValueError: at least 2 solvers"
 ```
 
 **Auto mode** — run the script, catch errors, fix, and re-run:
 
 ```bash
-optiprofiler-agent debug script.py --run [OPTIONS]
+opagent debug script.py --run [OPTIONS]
 
 Options:
   --run                 Run the script first, then auto-debug if it fails
@@ -227,27 +248,27 @@ Options:
   --model TEXT          Model name
 ```
 
-### `optiprofiler-agent index`
+### `opagent index`
 
 Build or rebuild the RAG vector index.
 
 ```bash
-optiprofiler-agent index [OPTIONS]
+opagent index [OPTIONS]
 
 Options:
   --force       Force rebuild even if index is up-to-date
   --no-persist  Use in-memory index only (do not save to disk)
 ```
 
-### `optiprofiler-agent wiki`
+### `opagent wiki`
 
 Wiki knowledge base management commands.
 
 ```bash
-optiprofiler-agent wiki stats           # Page count, size, category breakdown
-optiprofiler-agent wiki lint            # Check for broken links, missing index entries
-optiprofiler-agent wiki rebuild-index   # Rebuild RAG index from wiki content
-optiprofiler-agent wiki rebuild-index --force  # Force full rebuild
+opagent wiki stats           # Page count, size, category breakdown
+opagent wiki lint            # Check for broken links, missing index entries
+opagent wiki rebuild-index   # Rebuild RAG index from wiki content
+opagent wiki rebuild-index --force  # Force full rebuild
 ```
 
 ---
@@ -304,6 +325,7 @@ optiprofiler_agent/
 │   ├── llm_client.py    # Unified LLM wrapper (langchain)
 │   ├── knowledge_base.py # Structured knowledge loader
 │   ├── rag.py           # RAG retrieval (ChromaDB + two-stage search)
+│   ├── quiet_ml.py      # Suppress HF/transformers noise during RAG model load
 │   └── interface_adapter.py
 ├── agent_a/             # Product Advisor
 │   ├── advisor.py

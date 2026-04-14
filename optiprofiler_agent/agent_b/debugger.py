@@ -442,7 +442,7 @@ def run_and_debug(
                 "during execution. This typically means the benchmark takes "
                 "longer than the configured timeout, not that the code is wrong.\n\n"
                 "**Suggestion:** Re-run with a longer timeout:\n"
-                "```bash\noptiprofiler-agent debug script.py --run --timeout 600\n```\n"
+                "```bash\nopagent debug script.py --run --timeout 600\n```\n"
             )
             if save_fixed:
                 Path(save_fixed).write_text(current_code, encoding="utf-8")

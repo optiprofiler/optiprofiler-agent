@@ -166,6 +166,8 @@ The wiki should be updated whenever:
    `_sources/refs/bibliography.md`, update methodology pages.
 5. **Agent answers a novel question** — if the answer required synthesizing
    multiple sources, consider filing it as a new wiki page.
+6. **CLI checks** — from the repo root, use `opagent wiki stats`, `opagent wiki lint`,
+   and `opagent wiki rebuild-index` (same as the `optiprofiler-agent` command name).
 
 The key principle: **the wiki is never "done"** — it compounds with every
 interaction and every new source.

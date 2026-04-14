@@ -1,10 +1,10 @@
-"""CLI entry point for optiprofiler-agent.
+"""CLI entry point for optiprofiler-agent (alias: opagent).
 
 Installed via ``pip install optiprofiler-agent``, provides the
-``optiprofiler-agent`` command with subcommands:
+``opagent`` / ``optiprofiler-agent`` command with subcommands:
 
+- ``agent`` (default): unified tool-use agent (ReAct)
 - ``chat``: interactive conversation with Agent A (Product Advisor)
-- ``agent``: unified tool-use agent (ReAct) combining all capabilities
 - ``index``: build/rebuild the RAG vector index
 - ``check``: validate a Python script's benchmark() calls
 - ``interpret``: analyze benchmark results and generate a report
@@ -12,14 +12,11 @@ Installed via ``pip install optiprofiler-agent``, provides the
 
 Usage::
 
-    optiprofiler-agent chat
-    optiprofiler-agent chat --provider kimi --rag
-    optiprofiler-agent agent
-    optiprofiler-agent index
-    optiprofiler-agent check my_script.py
-    optiprofiler-agent interpret /path/to/experiment --latest
-    optiprofiler-agent debug script.py --run
-    optiprofiler-agent debug script.py --traceback error.log
+    opagent                 # default → agent mode
+    opagent chat --provider kimi --rag
+    opagent check my_script.py
+    opagent interpret /path/to/experiment --latest
+    opagent debug script.py --run
 """
 
 from __future__ import annotations
@@ -30,16 +27,133 @@ from pathlib import Path
 import click
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.spinner import SPINNERS
 
+from optiprofiler_agent import __version__
 from optiprofiler_agent.config import AgentConfig, LLMConfig, PROVIDER_REGISTRY
 
 console = Console()
 
+_BRAILLE_BASE = 0x2800
 
-@click.group()
+
+def _opa_outline_grid() -> list[list[int]]:
+    """18×6 pixel grid: hollow O, P, A side by side (6 columns each), 1 = contour dot.
+
+    Rendered as **two** rows of Unicode braille (3 dot-rows each), so letters read larger.
+    """
+    o = [
+        [1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1],
+    ]
+    p = [
+        [1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 0],
+        [1, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0],
+    ]
+    a = [
+        [0, 1, 1, 1, 1, 0],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1],
+    ]
+    return [orow + prow + arow for orow, prow, arow in zip(o, p, a)]
+
+
+def _scale2x_nearest(grid: list[list[int]]) -> list[list[int]]:
+    """Double width and height (each pixel becomes a 2×2 block) for sharper braille shapes."""
+    h, w = len(grid), len(grid[0])
+    out = [[0] * (w * 2) for _ in range(h * 2)]
+    for r in range(h):
+        for c in range(w):
+            if not grid[r][c]:
+                continue
+            for dr in (0, 1):
+                for dc in (0, 1):
+                    out[r * 2 + dr][c * 2 + dc] = 1
+    return out
+
+
+def _opa_bitmap_for_spinner() -> list[list[int]]:
+    """2× upsampled O/P/A outline (no blur dilation) so Thinking spinner reads clearer."""
+    return _scale2x_nearest(_opa_outline_grid())
+
+
+def _bitmap_to_braille(grid: list[list[int]]) -> str:
+    """Pack a bitmap into 6-dot braille cells (2 dot-columns × 3 dot-rows per character).
+
+    Height must be a multiple of 3; width must be even. Multiple horizontal bands are
+    stacked with newlines (taller letters).
+    """
+    h = len(grid)
+    w = len(grid[0])
+    if h % 3 != 0 or w % 2 != 0:
+        msg = f"grid must be 3k rows and even columns, got {h}×{w}"
+        raise ValueError(msg)
+
+    lines: list[str] = []
+    for band in range(0, h, 3):
+        chars: list[str] = []
+        for tcx in range(0, w, 2):
+            bits = 0
+            for r in range(3):
+                for dc in range(2):
+                    col = tcx + dc
+                    if grid[band + r][col]:
+                        bits |= 1 << (r + 3 * dc)
+            # Use ASCII space for empty cells: U+2800 ``⠀`` still draws a tinted “blank” in many
+            # terminals once ``spinner_style`` applies, which looks like stray grid dots.
+            chars.append(" " if bits == 0 else chr(_BRAILLE_BASE + bits))
+        lines.append("".join(chars))
+    return "\n".join(lines)
+
+
+def _build_opa_contour_spin_frames() -> list[str]:
+    """Contour O P A in braille; a vertical 'dark column' sweeps left → right (wave), then full bright."""
+    base = _opa_bitmap_for_spinner()
+    h, w = len(base), len(base[0])
+    frames: list[str] = []
+    for sweep_col in range(w):
+        g = [row[:] for row in base]
+        for r in range(h):
+            if base[r][sweep_col]:
+                g[r][sweep_col] = 0
+        frames.append(_bitmap_to_braille(g))
+    frames.append(_bitmap_to_braille(base))
+    return frames
+
+
+SPINNERS["opa"] = {
+    "interval": 110,
+    "frames": _build_opa_contour_spin_frames(),
+}
+
+# Claude Code–style terminal orange (common CC / Anthropic CLI accent approximation)
+_LOGO_OPA_COLOR = "bold #F97316"
+
+_LOGO = (
+    f"[{_LOGO_OPA_COLOR}] █▀█ █▀█ █▀█[/]\n"
+    f"[{_LOGO_OPA_COLOR}] █ █ █▀▀ █▀█[/]  [bold]Agent for OptiProfiler[/]\n"
+    f"[{_LOGO_OPA_COLOR}] ▀▀▀ ▀   ▀ ▀[/]  [dim]v{__version__}[/]"
+)
+
+
+@click.group(invoke_without_command=True)
 @click.version_option(package_name="optiprofiler-agent")
-def main():
+@click.pass_context
+def main(ctx):
     """OptiProfiler Agent — AI assistant for optimization benchmarking."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(agent)
 
 
 @main.command()
@@ -143,7 +257,7 @@ def index(force: bool, no_persist: bool):
         console.print(f"Persist dir:   {persist_dir}")
 
     rag = KnowledgeRAG(config.knowledge_dir, persist_dir=persist_dir)
-    with console.status("Building index..."):
+    with console.status("Building index...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
         n = rag.build_index(force=force)
 
     console.print(f"[green]Done![/] Indexed {n} chunks.")
@@ -220,7 +334,7 @@ def interpret(results_dir: str, provider: str, model: str | None,
         llm=LLMConfig(provider=provider, model=model),
     )
 
-    with console.status("Analyzing benchmark results..."):
+    with console.status("Analyzing benchmark results...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
         report = do_interpret(
             results_dir=results_dir,
             config=config,
@@ -298,7 +412,7 @@ def debug(filepath: str, traceback_file: str | None, error_text: str | None,
             console.print("[bold red]Error:[/] Provide --traceback, --error, or use --run")
             sys.exit(1)
 
-        with console.status("Diagnosing error..."):
+        with console.status("Diagnosing error...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
             result = debug_script(
                 code=code,
                 error=error,
@@ -319,6 +433,90 @@ def debug(filepath: str, traceback_file: str | None, error_text: str | None,
     console.print(f"\n[dim]Attempts: {result.attempts}[/]")
 
 
+def _print_help(mode: str):
+    """Print available slash commands for the current mode."""
+    console.print("[bold]Commands:[/]")
+    console.print("  [bold]/agent[/]              Switch to unified agent mode")
+    console.print("  [bold]/chat[/]               Switch to advisor chat mode")
+    if mode == "chat":
+        console.print("  [bold]/reset[/]              Clear chat history")
+    console.print("  [bold]/debug[/] <file>       Run & debug a script")
+    console.print("  [bold]/interpret[/] <dir>    Analyze benchmark results")
+    console.print("  [bold]/help[/]               Show this help")
+    console.print("  [bold]/quit[/]               Exit\n")
+
+
+def _slash_debug(args: str, config: AgentConfig):
+    """Handle /debug <filepath> within the interactive loop."""
+    if not args:
+        console.print("[yellow]Usage: /debug <script.py>[/]\n")
+        return
+
+    filepath = Path(args)
+    if not filepath.exists():
+        console.print(f"[red]File not found: {filepath}[/]\n")
+        return
+
+    from optiprofiler_agent.agent_b.debugger import run_and_debug
+
+    code = filepath.read_text(encoding="utf-8")
+    console.print(f"[bold]Running & debugging {filepath}...[/]\n")
+
+    result = run_and_debug(
+        code=code,
+        config=config,
+        timeout=120,
+        cwd=str(filepath.parent),
+        progress_callback=lambda msg: console.print(f"  [dim]{msg}[/]"),
+    )
+
+    console.print(Markdown(result.diagnostic_report))
+    if result.fixed_code:
+        save = filepath.parent / f"{filepath.stem}_fixed{filepath.suffix}"
+        save.write_text(result.fixed_code, encoding="utf-8")
+        console.print(f"\n[green]Fixed code saved to {save}[/]")
+    console.print()
+
+
+def _slash_interpret(args: str, config: AgentConfig):
+    """Handle /interpret <dir> [--latest] within the interactive loop."""
+    if not args:
+        console.print("[yellow]Usage: /interpret <results_dir> [--latest][/]\n")
+        return
+
+    latest = "--latest" in args
+    path_str = args.replace("--latest", "").strip()
+    results_dir = Path(path_str)
+
+    if not results_dir.exists():
+        console.print(f"[red]Directory not found: {results_dir}[/]\n")
+        return
+
+    from optiprofiler_agent.agent_c.interpreter import interpret as do_interpret
+    from optiprofiler_agent.agent_c.result_loader import find_latest_experiment
+
+    if latest:
+        try:
+            results_dir = Path(str(find_latest_experiment(str(results_dir))))
+            console.print(f"[dim]Latest experiment: {results_dir}[/]")
+        except FileNotFoundError as e:
+            console.print(f"[red]{e}[/]\n")
+            return
+
+    with console.status("Analyzing...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
+        report = do_interpret(
+            results_dir=str(results_dir),
+            config=config,
+            language="English",
+            read_profiles=True,
+            llm_enabled=True,
+        )
+
+    console.print()
+    console.print(Markdown(report))
+    console.print()
+
+
 @main.command()
 @click.option("--provider", default="minimax",
               type=click.Choice(list(PROVIDER_REGISTRY.keys())),
@@ -329,6 +527,7 @@ def agent(provider: str, model: str | None):
 
     Combines knowledge retrieval, script validation, debugging, and
     result interpretation in a single conversational interface.
+    Supports /agent, /chat, /debug, /interpret mode switching.
     """
     from optiprofiler_agent.unified_agent import create_unified_agent
 
@@ -337,18 +536,21 @@ def agent(provider: str, model: str | None):
         rag_enabled=True,
     )
 
-    console.print("[bold green]OptiProfiler Unified Agent[/]")
-    console.print(f"  Provider: {config.llm.provider} | Model: {config.llm.model}")
-    console.print("  Tools: knowledge_search, validate_script, debug_error, interpret_results")
-    console.print("  Commands: /quit\n")
+    console.print(_LOGO)
+    console.print(f"  [dim]Provider:[/] {config.llm.provider} | [dim]Model:[/] {config.llm.model}")
+    console.print("  [dim]Type /help for commands[/]\n")
 
     unified = create_unified_agent(config)
-
+    advisor = None
+    mode = "agent"
     messages: list = []
 
     while True:
         try:
-            user_input = console.input("[bold cyan]You:[/] ").strip()
+            if mode == "agent":
+                user_input = console.input("[bold cyan]You:[/] ").strip()
+            else:
+                user_input = console.input("[bold green]You:[/] ").strip()
         except (EOFError, KeyboardInterrupt):
             console.print("\nBye!")
             break
@@ -356,25 +558,71 @@ def agent(provider: str, model: str | None):
         if not user_input:
             continue
 
-        if user_input.lower() in ("/quit", "/exit", "/q"):
+        cmd = user_input.lower()
+
+        if cmd in ("/quit", "/exit", "/q"):
             console.print("Bye!")
             break
 
-        messages.append(("user", user_input))
+        if cmd in ("/help", "/h"):
+            _print_help(mode)
+            continue
 
-        try:
-            with console.status("Thinking..."):
-                result = unified.invoke({"messages": messages})
+        if cmd == "/agent":
+            mode = "agent"
+            messages.clear()
+            console.print("[dim]▸ Agent mode (unified)[/]\n")
+            continue
 
-            reply = result["messages"][-1].content
-            messages = result["messages"]
+        if cmd == "/chat":
+            if advisor is None:
+                from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+                advisor = AdvisorAgent(config)
+            mode = "chat"
+            console.print("[dim]▸ Chat mode (advisor)[/]\n")
+            continue
 
-            console.print()
-            console.print(Markdown(reply))
-            console.print()
+        if cmd == "/reset" and mode == "chat":
+            if advisor:
+                advisor.reset()
+            console.print("[dim]History cleared.[/]\n")
+            continue
 
-        except Exception as e:
-            console.print(f"[bold red]Error:[/] {e}\n")
+        if cmd.startswith("/debug"):
+            _slash_debug(user_input[6:].strip(), config)
+            continue
+
+        if cmd.startswith("/interpret"):
+            _slash_interpret(user_input[10:].strip(), config)
+            continue
+
+        if mode == "agent":
+            messages.append(("user", user_input))
+            try:
+                with console.status("Thinking...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
+                    result = unified.invoke({"messages": messages})
+
+                reply = result["messages"][-1].content
+                messages = result["messages"]
+
+                console.print()
+                console.print(Markdown(reply))
+                console.print()
+
+            except Exception as e:
+                console.print(f"[bold red]Error:[/] {e}\n")
+
+        else:
+            try:
+                with console.status("Thinking...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
+                    reply = advisor.chat(user_input)
+
+                console.print()
+                console.print(Markdown(reply))
+                console.print()
+
+            except Exception as e:
+                console.print(f"[bold red]Error:[/] {e}\n")
 
 
 @main.group()
@@ -438,7 +686,7 @@ def wiki_rebuild_index(force: bool):
     console.print(f"Wiki dir:      {config.wiki_dir}")
 
     rag = KnowledgeRAG(config.knowledge_dir, persist_dir=config.rag_persist_dir)
-    with console.status("Rebuilding wiki index..."):
+    with console.status("Rebuilding wiki index...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
         n = rag.build_index(force=force)
 
     console.print(f"[green]Done![/] Indexed {n} chunks from wiki + sources.")

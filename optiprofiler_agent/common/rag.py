@@ -26,6 +26,8 @@ import logging
 import re
 from pathlib import Path
 
+from optiprofiler_agent.common.quiet_ml import suppress_hf_transformers_noise
+
 logger = logging.getLogger(__name__)
 
 _CHUNK_SEPARATOR = re.compile(r"\n#{1,2}\s")
@@ -233,6 +235,7 @@ class KnowledgeRAG:
 
         Returns the number of chunks indexed.
         """
+        suppress_hf_transformers_noise()
         chromadb, SentenceTransformerEF = self._ensure_deps()
 
         chunks = self._gather_chunks()

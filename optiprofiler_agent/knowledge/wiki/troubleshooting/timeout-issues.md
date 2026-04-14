@@ -68,7 +68,7 @@ executed with a timeout (default 120 seconds). If your benchmark runs
 longer:
 
 ```bash
-optiprofiler-agent debug script.py --run --timeout 600
+opagent debug script.py --run --timeout 600
 ```
 
 ## See Also
