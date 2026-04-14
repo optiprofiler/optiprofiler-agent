@@ -1,0 +1,56 @@
+# Secrets (never commit real keys)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.egg
+dist/
+build/
+wheels/
+*.whl
+pip-log.txt
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Tool caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+*.sublime-*
+
+# Local benchmark / scratch (entire folder — not part of the published package)
+op_test/
+
+# Chroma / local RAG persistence
+*.chroma/
+.chroma_db/

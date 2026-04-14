@@ -161,6 +161,8 @@ In-chat commands: `/reset` (clear history), `/prompt` (show system prompt), `/qu
 
 Unified tool-use agent with ReAct reasoning. Automatically selects among knowledge search, script validation, error debugging, and result interpretation.
 
+> **Note:** The `agent` command uses the `knowledge_search` tool internally, which requires `[rag]` extras (`pip install 'optiprofiler-agent[rag]'`). Without it, knowledge search calls will silently return no results.
+
 ```bash
 optiprofiler-agent agent [OPTIONS]
 
@@ -183,6 +185,8 @@ Options:
 ### `optiprofiler-agent interpret`
 
 Analyze benchmark results and generate a natural-language report.
+
+> **Note:** To read PDF profile curves (the default), install `[interpret]` extras: `pip install 'optiprofiler-agent[interpret]'`. Use `--no-profiles` to skip PDF reading without the extra.
 
 ```bash
 optiprofiler-agent interpret RESULTS_DIR [OPTIONS]

@@ -61,6 +61,17 @@ Repository = "https://github.com/optiprofiler/optiprofiler-agent"
 [tool.setuptools.packages.find]
 include = ["optiprofiler_agent*"]
 
+[tool.setuptools.package-data]
+optiprofiler_agent = [
+    "knowledge/**/*.md",
+    "knowledge/**/*.json",
+    "knowledge/SCHEMA.md",
+    "knowledge/enums.json",
+    "agent_a/prompts/*.md",
+    "agent_b/prompts/*.md",
+    "agent_c/prompts/*.md",
+]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
