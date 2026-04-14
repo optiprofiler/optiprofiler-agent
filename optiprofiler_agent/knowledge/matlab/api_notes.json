@@ -1,0 +1,18 @@
+{
+  "language": "MATLAB",
+  "solver_format": "cell array of function handles: {@solver1, @solver2}",
+  "options_format": "struct with fields: options.ptype = 'u'",
+  "vector_convention": "column vectors (n×1 matrices)",
+  "problem_libs": [
+    "s2mpj",
+    "matcutest"
+  ],
+  "matcutest_note": "matcutest is only available on Linux",
+  "differences_from_python": {
+    "maxdim_default": "mindim + 10 (Python: mindim + 1)",
+    "draw_hist_plots_default": "'sequential' (Python: 'parallel')",
+    "solvers_to_load": "1-indexed (Python: 0-indexed)",
+    "line_colors_default": "MATLAB 'gem' colororder (Python: matplotlib tab10)",
+    "no_custom_problem_libs_path": "MATLAB uses folder structure instead"
+  }
+}

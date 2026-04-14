@@ -1,0 +1,348 @@
+{
+  "name": "benchmark",
+  "description": "Benchmark optimization solvers on a set of problems with specified features.",
+  "calling_convention": {
+    "syntax": "[solver_scores, profile_scores, curves] = benchmark(solvers, options)",
+    "solvers": "cell array of function handles: {@solver1, @solver2}",
+    "options": "struct with fields (NOT name-value pairs). Example: options.ptype = 'u'; options.mindim = 2; benchmark(solvers, options);"
+  },
+  "solver_signatures": {
+    "unconstrained": "x = solver(fun, x0)",
+    "bound_constrained": "x = solver(fun, x0, xl, xu)",
+    "linearly_constrained": "x = solver(fun, x0, xl, xu, aub, bub, aeq, beq)",
+    "nonlinearly_constrained": "x = solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)"
+  },
+  "solver_notes": [
+    "fun is a function handle: fun(x) -> scalar. Provides ONLY function values (DFO).",
+    "x0 is a column vector.",
+    "All constraint vectors are column vectors.",
+    "Must return column vector x.",
+    "At least 2 solvers required (cell array of function handles)."
+  ],
+  "profile_options": {
+    "bar_colors": {
+      "description": "two different colors for the bars of two solvers in the log-ratio profiles. It can be a cell array of short names of colors('r','g','b','c','m','y','k')or a 2-by-3 matrix with each row being a RGB triplet. Default is set to the first two colors in theline_colorsoption.",
+      "default": "set to the first two colors in theline_colorsoption",
+      "choices": [
+        "r",
+        "g",
+        "b",
+        "c",
+        "m",
+        "y",
+        "k"
+      ]
+    },
+    "benchmark_id": {
+      "description": "the identifier of the test. It is used to create the specific directory to store the results. Default is'out'if the optionloadis not provided, otherwise default is'.'."
+    },
+    "draw_hist_plots": {
+      "description": "whether or how to draw the history plots of all the problems. It can be either'none','sequential', or'parallel'. If it is'none', we will not draw the history plots. If it is'parallel', we will draw the history plots in the same time when solvers are solving the problems. If it is'sequential', we will draw the history plots after all the problems are solved. Default is'sequential'.",
+      "choices": [
+        "none",
+        "sequential",
+        "parallel"
+      ]
+    },
+    "errorbar_type": {
+      "description": "the type of the uncertainty interval that can be either'minmax'or'meanstd'. Whenn_runsis greater than 1, we run several times of the experiments and get average curves and get average curves and uncertainty intervals. Default is'minmax', meaning that we takes the pointwise minimum and maximum of the curves.",
+      "choices": [
+        "minmax",
+        "meanstd"
+      ]
+    },
+    "feature_stamp": {
+      "description": "the stamp of the feature with the given options. It is used to create the specific directory to store the results. Default depends on features."
+    },
+    "hist_aggregation": {
+      "description": "the aggregation method we use to reduce the number of points in the history plots. It can be'min','mean', or'max'. Default is'min'."
+    },
+    "line_colors": {
+      "description": "the colors of the lines in the plots. It can be a cell array of short names of colors('r','g','b','c','m','y','k')or a matrix with each row being a RGB triplet. Default line colors are those in the palettename named “gem” (see MATLAB documentation for ‘colororder’). Note that if the number of solvers is greater than the number of colors, we will cycle through the colors.",
+      "choices": [
+        "r",
+        "g",
+        "b",
+        "c",
+        "m",
+        "y",
+        "k"
+      ]
+    },
+    "line_styles": {
+      "description": "the styles of the lines in the plots. It can be a cell array of chars that are the combinations of line styles('-','-.','--',':')and markers('o','+','*','.','x','s','d','^','v','>','<','p','h'). Default line style order is{'-','-.','--',':'}. Note that if the number of solvers is greater than the number of line styles, we will cycle through the styles.",
+      "choices": [
+        "-",
+        "-.",
+        "--",
+        ":",
+        "o",
+        "+",
+        "*",
+        ".",
+        "x",
+        "s",
+        "d",
+        "^",
+        "v",
+        ">",
+        "<",
+        "p",
+        "h"
+      ]
+    },
+    "line_widths": {
+      "description": "the widths of the lines in the plots. It should be a positive scalar or a vector. Default is1.5. Note that if the number of solvers is greater than the number of line widths, we will cycle through the widths."
+    },
+    "load": {
+      "description": "loading the stored data from a completed experiment and draw profiles. It can be either'latest'or a time stamp of an experiment in the format of ‘yyyyMMdd_HHmmss’. No default."
+    },
+    "max_eval_factor": {
+      "description": "the factor multiplied to each problem’s dimension to get the maximum number of evaluations for each problem. Default is500."
+    },
+    "max_tol_order": {
+      "description": "the maximum order of the tolerance. In any profile (performance profiles, data profiles, and log-ratio profiles), we need to set a group of ‘tolerances’ to define the convergence test of the solvers. (Details can be found in the references.) We will set the tolerances as10^(-1:-1:-max_tol_order). Default is10."
+    },
+    "merit_fun": {
+      "description": "the merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a function handle(fun_value,maxcv_value,maxcv_init)->merit_value,wherefun_valueis the objective function value,maxcv_valueis the maximum constraint violation, andmaxcv_initis the maximum constraint violation at the initial guess. The size offun_valuesandmaxcv_valuesis the same, and the size ofmaxcv_initis the same as the second to last dimensions offun_values"
+    },
+    "n_jobs": {
+      "description": "the number of parallel jobs to run the test. Default is the default number of workers in the default local cluster.",
+      "default": "the default number of workers in the default local cluster"
+    },
+    "normalized_scores": {
+      "description": "whether to normalize the scores of the solvers by the maximum score of the solvers. Default istrue."
+    },
+    "project_x0": {
+      "description": "whether to project the initial point to the feasible set. Default isfalse."
+    },
+    "run_plain": {
+      "description": "whether to run an extra experiment with the'plain'feature. Default isfalse."
+    },
+    "savepath": {
+      "description": "the path to store the results. Default is'pwd', the current working directory."
+    },
+    "score_fun": {
+      "description": "the scoring function to calculate the scores of the solvers. It should be a function handleprofile_scores->solver_scores,whereprofile_scoresis a 4D tensor containing scores for all profiles. The first dimension ofprofile_scorescorresponds to the index of the solver, the second corresponds to the index of tolerance starting from 1, the third represents history-based or output-based profiles, and the fourth represents performance profiles, data profiles, or log-ratio profiles. The default scoring "
+    },
+    "score_only": {
+      "description": "whether to only calculate the scores of the solvers without drawing the profiles and saving the data. Default isfalse."
+    },
+    "score_weight_fun": {
+      "description": "the weight function to calculate the scores of the solvers in the performance and data profiles. It should be a function handle representing a nonnegative function in R^+. Default is1."
+    },
+    "seed": {
+      "description": "the seed of the random number generator. Default is0."
+    },
+    "semilogx": {
+      "description": "whether to use the semilogx scale during plotting profiles (performance profiles and data profiles). Default istrue."
+    },
+    "silent": {
+      "description": "whether to show the information of the progress. Default isfalse."
+    },
+    "solver_isrand": {
+      "description": "whether the solvers are randomized or not. It is a logical array of the same length as the number of solvers, where the value is true if the solver is randomized, and false otherwise. Default is all false. Note that ifn_runsis not specified, we will set it 5 for the randomized solvers.",
+      "default": "all false"
+    },
+    "solver_names": {
+      "description": "the names of the solvers. Default is the names of the function handles insolvers.",
+      "default": "the names of the function handles insolvers"
+    },
+    "solver_verbose": {
+      "description": "the level of the verbosity of the solvers.0means no verbosity,1means some verbosity, and2means full verbosity. Default is1."
+    },
+    "solvers_to_load": {
+      "description": "the indices of the solvers to load when theloadoption is provided. It can be a vector of different integers selected from 1 to the total number of solvers of the loading experiment. At least two indices should be provided. Default is all the solvers.",
+      "default": "all the solvers"
+    },
+    "summarize_data_profiles": {
+      "description": "whether to add all the data profiles to the summary PDF. Default istrue."
+    },
+    "summarize_log_ratio_profiles": {
+      "description": "whether to add all the log-ratio profiles to the summary PDF. Default isfalse."
+    },
+    "summarize_output_based_profiles": {
+      "description": "whether to add all the output-based profiles of the selected profiles to the summary PDF. Default istrue."
+    },
+    "summarize_performance_profiles": {
+      "description": "whether to add all the performance profiles to the summary PDF. Default istrue."
+    },
+    "xlabel_data_profile": {
+      "description": "the label of the x-axis of the data profiles. Default is'Numberofsimplexgradients'. Note: the'Interpreter'property is set to'latex', so LaTeX formatting is supported. The same applies to the optionsxlabel_log_ratio_profile,xlabel_performance_profile,ylabel_data_profile,ylabel_log_ratio_profile, andylabel_performance_profile."
+    },
+    "xlabel_log_ratio_profile": {
+      "description": "the label of the x-axis of the log-ratio profiles. Default is'Problem'."
+    },
+    "xlabel_performance_profile": {
+      "description": "the label of the x-axis of the performance profiles. Default is'Performanceratio'."
+    },
+    "ylabel_data_profile": {
+      "description": "the label of the y-axis of the data profiles. Default is'Dataprofiles($\\\\mathrm{tol}=%s$)', where%swill be replaced by the current tolerance in LaTeX format. You can also use%sin your custom label, and it will be replaced accordingly. The same applies to the optionsylabel_log_ratio_profileandylabel_performance_profile."
+    },
+    "ylabel_log_ratio_profile": {
+      "description": "the label of the y-axis of the log-ratio profiles. Default is'Log-ratioprofiles($\\\\mathrm{tol}=%s$)', where%swill be replaced by the current tolerance in LaTeX format."
+    },
+    "ylabel_performance_profile": {
+      "description": "ylabel_performance_profile: the label of the y-axis of the performance profiles. Default is'Performanceprofiles($\\\\mathrm{tol}=%s$)', where%swill be replaced by the current tolerance in LaTeX format."
+    }
+  },
+  "feature_options": {
+    "feature_name": {
+      "description": "the name of the feature. The available features are'plain','perturbed_x0','noisy','truncated','permuted','linearly_transformed','random_nan','unrelaxable_constraints','nonquantifiable_constraints','quantized', and'custom'. Default is'plain'."
+    },
+    "n_runs": {
+      "description": "the number of runs of the experiments with the given feature. Default is5for stochastic features and1for deterministic features."
+    },
+    "distribution": {
+      "description": "the distribution of perturbation in'perturbed_x0'feature or noise in'noisy'feature. It should be either a string (or char), or a function handle(random_stream,dimension)->randomvectorthat accepts arandom_streamand thedimensionof a problem and returning arandomvectorwith the givendimension. In'perturbed_x0'case, the char should be either'spherical'or'gaussian'(default is'spherical'). In'noisy'case, the char should be either'gaussian'or'uniform'(default is'gaussian')."
+    },
+    "perturbation_level": {
+      "description": "the magnitude of the perturbation to the initial guess in the'perturbed_x0'feature. Default is1e-3."
+    },
+    "noise_level": {
+      "description": "the magnitude of the noise in the'noisy'feature. Default is1e-3."
+    },
+    "noise_type": {
+      "description": "the type of the noise in the'noisy'features. It should be either'absolute','relative', or'mixed'. Default is'mixed'.",
+      "choices": [
+        "absolute",
+        "relative",
+        "mixed"
+      ]
+    },
+    "significant_digits": {
+      "description": "the number of significant digits in the'truncated'feature. Default is6."
+    },
+    "perturbed_trailing_digits": {
+      "description": "whether we will randomize the trailing digits of the objective function value in the'truncated'feature. Default isfalse."
+    },
+    "rotated": {
+      "description": "whether to use a random or given rotation matrix to rotate the coordinates of a problem in the'linearly_transformed'feature. Default istrue."
+    },
+    "condition_factor": {
+      "description": "the scaling factor of the condition number of the linear transformation in the'linearly_transformed'feature. More specifically, the condition number of the linear transformation will be2^(condition_factor*n/2), wherenis the dimension of the problem. Default is0."
+    },
+    "nan_rate": {
+      "description": "the probability that the evaluation of the objective function will return NaN in the'random_nan'feature. Default is0.05."
+    },
+    "unrelaxable_bounds": {
+      "description": "whether the bound constraints are unrelaxable or not in the'unrelaxable_constraints'feature. Default istrue."
+    },
+    "unrelaxable_linear_constraints": {
+      "description": "whether the linear constraints are unrelaxable or not in the'unrelaxable_constraints'feature. Default isfalse."
+    },
+    "unrelaxable_nonlinear_constraints": {
+      "description": "whether the nonlinear constraints are unrelaxable or not in the'unrelaxable_constraints'feature. Default isfalse."
+    },
+    "mesh_size": {
+      "description": "the size of the mesh in the'quantized'feature. Default is1e-3."
+    },
+    "mesh_type": {
+      "description": "the type of the mesh in the'quantized'feature. It should be either'absolute'or'relative'. Default is'absolute'.",
+      "choices": [
+        "absolute",
+        "relative"
+      ]
+    },
+    "ground_truth": {
+      "description": "whether the featured problem is the ground truth or not in the'quantized'feature. Default istrue."
+    },
+    "mod_x0": {
+      "description": "the modifier function to modify the inital guess in the'custom'feature. It should be a function handle(random_stream,problem)->modified_x0,whereproblemis an instance of the class Problem, andmodified_x0is the modified initial guess. No default."
+    },
+    "mod_affine": {
+      "description": "the modifier function to generate the affine transformation applied to the variables in the'custom'feature. It should be a function handle(random_stream,problem)->(A,b,inv),whereproblemis an instance of the class Problem,Ais the matrix of the affine transformation,bis the vector of the affine transformation, andinvis the inverse of matrixA. No default."
+    },
+    "mod_bounds": {
+      "description": "the modifier function to modify the bound constraints in the'custom'feature. It should be a function handle(random_stream,problem)->(modified_xl,modified_xu),whereproblemis an instance of the class Problem,modified_xlis the modified lower bound, andmodified_xuis the modified upper bound. No default."
+    },
+    "mod_linear_ub": {
+      "description": "the modifier function to modify the linear inequality constraints in the'custom'feature. It should be a function handle(random_stream,problem)->(modified_aub,modified_bub),whereproblemis an instance of the class Problem,modified_aubis the modified matrix of the linear inequality constraints, andmodified_bubis the modified vector of the linear inequality constraints. No default."
+    },
+    "mod_linear_eq": {
+      "description": "the modifier function to modify the linear equality constraints in the'custom'feature. It should be a function handle(random_stream,problem)->(modified_aeq,modified_beq),whereproblemis an instance of the class Problem,modified_aeqis the modified matrix of the linear equality constraints, andmodified_beqis the modified vector of the linear equality constraints. No default."
+    },
+    "mod_fun": {
+      "description": "the modifier function to modify the objective function in the'custom'feature. It should be a function handle(x,random_stream,problem)->modified_fun,wherexis the evaluation point,problemis an instance of the class Problem, andmodified_funis the modified objective function value. No default."
+    },
+    "mod_cub": {
+      "description": "the modifier function to modify the nonlinear inequality constraints in the'custom'feature. It should be a function handle(x,random_stream,problem)->modified_cub,wherexis the evaluation point,problemis an instance of the class Problem, andmodified_cubis the modified vector of the nonlinear inequality constraints. No default."
+    },
+    "mod_ceq": {
+      "description": "the modifier function to modify the nonlinear equality constraints in the'custom'feature. It should be a function handle(x,random_stream,problem)->modified_ceq,wherexis the evaluation point,problemis an instance of the class Problem, andmodified_ceqis the modified vector of the nonlinear equality constraints. No default."
+    }
+  },
+  "problem_options": {
+    "plibs": {
+      "description": "the problem libraries to be used. It should be a cell array of strings or chars. The built-in choices ares2mpj,matcutest, andcustom. Default setting is's2mpj'."
+    },
+    "ptype": {
+      "description": "the type of the problems to be selected. It should be a string or char consisting of any combination of'u'(unconstrained),'b'(bound constrained),'l'(linearly constrained), and'n'(nonlinearly constrained), such as'b','ul','ubn'. Default is'u'.",
+      "choices": [
+        "u",
+        "b",
+        "l",
+        "n",
+        "b",
+        "ul",
+        "ubn"
+      ]
+    },
+    "mindim": {
+      "description": "the minimum dimension of the problems to be selected. Default is1."
+    },
+    "maxdim": {
+      "description": "the maximum dimension of the problems to be selected. Default ismindim+10."
+    },
+    "minb": {
+      "description": "the minimum number of bound constraints of the problems to be selected. Default is0."
+    },
+    "maxb": {
+      "description": "the maximum number of bound constraints of the problems to be selected. Default isminb+10."
+    },
+    "minlcon": {
+      "description": "the minimum number of linear constraints of the problems to be selected. Default is0."
+    },
+    "maxlcon": {
+      "description": "the maximum number of linear constraints of the problems to be selected. Default isminlcon+10."
+    },
+    "minnlcon": {
+      "description": "the minimum number of nonlinear constraints of the problems to be selected. Default is0."
+    },
+    "maxnlcon": {
+      "description": "the maximum number of nonlinear constraints of the problems to be selected. Default isminnlcon+10."
+    },
+    "mincon": {
+      "description": "the minimum number of linear and nonlinear constraints of the problems to be selected. Default ismin(minlcon,minnlcon)."
+    },
+    "maxcon": {
+      "description": "the maximum number of linear and nonlinear constraints of the problems to be selected. Default ismax(maxlcon,maxnlcon)."
+    },
+    "excludelist": {
+      "description": "the list of problems to be excluded. Default is not to exclude any problem.",
+      "default": "not to exclude any problem"
+    },
+    "problem_names": {
+      "description": "the names of the problems to be selected. It should be a cell array of strings or chars. Default is not to select any problem by name but by the options above.",
+      "default": "not to select any problem by name but by the options above"
+    },
+    "problem": {
+      "description": "a problem to be benchmarked. It should be an instance of the class Problem. If it is provided, we will only run the test on this problem with the given feature and draw the history plots. Default is not to set any problem.",
+      "default": "not to set any problem"
+    }
+  },
+  "returns": {
+    "solver_scores": {
+      "type": "vector",
+      "description": "Scores of the solvers based on the profiles."
+    },
+    "profile_scores": {
+      "type": "4D tensor",
+      "description": "Scores for all profiles (solver × tolerance × hist/output × profile_type)."
+    },
+    "curves": {
+      "type": "cell array",
+      "description": "Curves of all the profiles."
+    }
+  }
+}

@@ -1,0 +1,614 @@
+[INFO    ] The script or function that calls `benchmark` function is copied to:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/cobyla_wrapper_cobyqa_wrapper_slsqp_wrapper_un_1_2_0_10_plain_20260413_165514/test_log
+[INFO    ] 
+[INFO    ] Start testing with the following options:
+[INFO    ] - Solvers: cobyla_wrapper, cobyqa_wrapper, slsqp_wrapper
+[INFO    ] - Problem libraries: s2mpj
+[INFO    ] - Problem types: un
+[INFO    ] - Problem dimension range: [1, 2]
+[INFO    ] - Problem mb range: [0, 10]
+[INFO    ] - Problem mlcon range: [0, 10]
+[INFO    ] - Problem mnlcon range: [0, 10]
+[INFO    ] - Problem mcon range: [0, 10]
+[INFO    ] - Feature stamp: plain
+[INFO    ] 
+[INFO    ] Start testing problems from the problem library "s2mpj" with the "plain" feature.
+[INFO    ] 
+[INFO    ] More information about the S2MPJ problem library can be found at:
+[INFO    ] https://github.com/GrattonToint/S2MPJ
+[INFO    ] 
+[INFO    ] There are 76 problems selected from "s2mpj" to test.
+[INFO    ] Entering the parallel section.
+[INFO    ] Loading problem   BEALE      from "s2mpj".
+[INFO    ] Start  solving    BEALE      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   BRKMCC     from "s2mpj".
+[WARNING ] An error occurred while solving BEALE with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BRKMCC     with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   CLUSTERLS  from "s2mpj".
+[INFO    ] Start  solving    BEALE      with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving BEALE with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving BRKMCC with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BEALE      with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving BEALE with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BRKMCC     with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving BRKMCC with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   BOXBODLS   from "s2mpj".
+[INFO    ] Start  solving    BRKMCC     with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving BRKMCC with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   BROWNBS    from "s2mpj".
+[INFO    ] Start  solving    CLUSTERLS  with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving CLUSTERLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CLUSTERLS  with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    BOXBODLS   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving CLUSTERLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CLUSTERLS  with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    BROWNBS    with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving BROWNBS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving CLUSTERLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving BOXBODLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   CUBE       from "s2mpj".
+[INFO    ] Start  solving    BOXBODLS   with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving BOXBODLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CUBE       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving CUBE with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CUBE       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving CUBE with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CUBE       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving CUBE with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BOXBODLS   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving BOXBODLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BROWNBS    with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   EGGCRATE   from "s2mpj".
+[WARNING ] An error occurred while solving BROWNBS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BROWNBS    with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving BROWNBS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   DANIWOODLS from "s2mpj".
+[INFO    ] Loading problem   HS12       from "s2mpj".
+[INFO    ] Loading problem   HS14       from "s2mpj".
+[INFO    ] Start  solving    EGGCRATE   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   BT10       from "s2mpj".
+[INFO    ] Start  solving    DANIWOODLS with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving EGGCRATE with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    EGGCRATE   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS16       from "s2mpj".
+[INFO    ] Start  solving    HS12       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving DANIWOODLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    DANIWOODLS with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving DANIWOODLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    DANIWOODLS with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving DANIWOODLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   DENSCHNA   from "s2mpj".
+[WARNING ] An error occurred while solving EGGCRATE with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    EGGCRATE   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HS14       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS14 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   DENSCHNB   from "s2mpj".
+[INFO    ] Start  solving    HS14       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS14 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS14       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS14 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   HS15       from "s2mpj".
+[INFO    ] Loading problem   HAIRY      from "s2mpj".
+[WARNING ] An error occurred while solving HS12 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving EGGCRATE with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    DENSCHNA   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving DENSCHNA with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS16       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   ELATVIDU   from "s2mpj".
+[WARNING ] An error occurred while solving HS16 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS16       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS16 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS16       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS16 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS12       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS12 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS12       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS12 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   HS17       from "s2mpj".
+[INFO    ] Start  solving    DENSCHNA   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS13       from "s2mpj".
+[INFO    ] Start  solving    HS15       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS15 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HAIRY      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNB   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving DENSCHNA with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    DENSCHNA   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   BURKEHAN   from "s2mpj".
+[WARNING ] An error occurred while solving DENSCHNA with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BT10       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HS15       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS15 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS15       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS15 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    ELATVIDU   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving ELATVIDU with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    ELATVIDU   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HS17       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving ELATVIDU with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   HS18       from "s2mpj".
+[INFO    ] Start  solving    ELATVIDU   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HS13       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS13 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ELATVIDU with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS13       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELBCLS from "s2mpj".
+[WARNING ] An error occurred while solving HS13 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS13       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS13 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   HS20       from "s2mpj".
+[WARNING ] An error occurred while solving BT10 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS17 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS17       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS17 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS17       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS17 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HAIRY with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HAIRY      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    BT10       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    BURKEHAN   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving BURKEHAN with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    BURKEHAN   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HS18       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS18 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS18       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS23       from "s2mpj".
+[WARNING ] An error occurred while solving DENSCHNB with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving BURKEHAN with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    BURKEHAN   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving BURKEHAN with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS18 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS18       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   CLIFF      from "s2mpj".
+[WARNING ] An error occurred while solving HS18 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HAIRY with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HAIRY      with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HS20       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS59       from "s2mpj".
+[INFO    ] Loading problem   HS19       from "s2mpj".
+[INFO    ] Start  solving    HIMMELBCLS with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELBCLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELBCLS with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   EXPFIT     from "s2mpj".
+[WARNING ] An error occurred while solving HS20 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS20       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving BT10 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HIMMELBCLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    BT10       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBCLS with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELBCLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CLIFF      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HS19       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELBG   from "s2mpj".
+[WARNING ] An error occurred while solving HS20 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS20       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving CLIFF with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CLIFF      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS7        from "s2mpj".
+[INFO    ] Start  solving    DENSCHNB   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBG   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving CLIFF with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    CLIFF      with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS20 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS19 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving BT10 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS23       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving DENSCHNB with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS19       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HAIRY with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    EXPFIT     with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS22       from "s2mpj".
+[WARNING ] An error occurred while solving EXPFIT with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    DENSCHNB   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   BT1        from "s2mpj".
+[WARNING ] An error occurred while solving DENSCHNB with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS7        with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS7 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS23 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS23       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS23 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS19 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS23       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HS19       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   DENSCHNC   from "s2mpj".
+[INFO    ] Start  solving    HS59       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving CLIFF with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS7        with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELBB   from "s2mpj".
+[WARNING ] An error occurred while solving HS23 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS19 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS22       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS59 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    DENSCHNC   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    BT1        with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS7 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HIMMELBB   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELP5   from "s2mpj".
+[INFO    ] Start  solving    EXPFIT     with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS57       from "s2mpj".
+[INFO    ] Loading problem   HIMMELP3   from "s2mpj".
+[INFO    ] Loading problem   JENSMP     from "s2mpj".
+[INFO    ] Loading problem   DENSCHNF   from "s2mpj".
+[WARNING ] An error occurred while solving HIMMELBG with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   MISRA1DLS  from "s2mpj".
+[WARNING ] An error occurred while solving HS22 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS59       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELBH   from "s2mpj".
+[WARNING ] An error occurred while solving DENSCHNC with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving BT1 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS7        with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELBB with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELP5   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving EXPFIT with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS57       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP3   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    JENSMP     with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNF   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBG   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MISRA1DLS  with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HS22       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS59 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HIMMELBH   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNC   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    BT1        with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS7 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HIMMELBB   with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELP5 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    EXPFIT     with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS57 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HIMMELP3 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving JENSMP with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving DENSCHNF with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HIMMELBG with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MISRA1DLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HS22 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS59       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELBH with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving DENSCHNC with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving BT1 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   HUMPS      from "s2mpj".
+[WARNING ] An error occurred while solving HIMMELBB with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELP5   with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving EXPFIT with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS57       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP3   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    JENSMP     with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNF   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBG   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    MISRA1DLS  with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS59 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS22       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBH   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNC   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    BT1        with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HUMPS      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBB   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELP5 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   FLT        from "s2mpj".
+[WARNING ] An error occurred while solving HS57 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HIMMELP3 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving JENSMP with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving DENSCHNF with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HIMMELBG with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MISRA1DLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   HS6        from "s2mpj".
+[WARNING ] An error occurred while solving HS22 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HIMMELBH with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving DENSCHNC with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving BT1 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HUMPS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HIMMELBB with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELP5   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    FLT        with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HS57       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP3   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    JENSMP     with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNF   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   S316m322   from "s2mpj".
+[INFO    ] Start  solving    MISRA1DLS  with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HS6        with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   MARATOS    from "s2mpj".
+[INFO    ] Start  solving    HIMMELBH   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   MISRA1ALS  from "s2mpj".
+[INFO    ] Loading problem   ROSENBR    from "s2mpj".
+[INFO    ] Start  solving    HUMPS      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   LOGHAIRY   from "s2mpj".
+[WARNING ] An error occurred while solving HIMMELP5 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving FLT with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HS57 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HIMMELP3 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving JENSMP with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving DENSCHNF with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    S316m322   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving MISRA1DLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HS6 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    MARATOS    with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELBH with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    MISRA1ALS  with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ROSENBR    with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HUMPS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    LOGHAIRY   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELP6   from "s2mpj".
+[INFO    ] Start  solving    FLT        with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   SISSER2    from "s2mpj".
+[INFO    ] Loading problem   HIMMELP4   from "s2mpj".
+[INFO    ] Loading problem   JUDGE      from "s2mpj".
+[INFO    ] Loading problem   DJTL       from "s2mpj".
+[WARNING ] An error occurred while solving S316m322 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   MUONSINELS from "s2mpj".
+[WARNING ] An error occurred while solving MARATOS with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS6        with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HIMMELP2   from "s2mpj".
+[WARNING ] An error occurred while solving ROSENBR with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MISRA1ALS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HUMPS      with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving LOGHAIRY with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELP6   with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving FLT with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    SISSER2    with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP4   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    JUDGE      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    DJTL       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    S316m322   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MUONSINELS with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MARATOS    with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS6 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HIMMELP2   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ROSENBR    with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MISRA1ALS  with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HUMPS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    LOGHAIRY   with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELP6 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    FLT        with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving SISSER2 with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HIMMELP4 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving JUDGE with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving S316m322 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving DJTL with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MUONSINELS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MARATOS with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS6        with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELP2 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ROSENBR with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MISRA1ALS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   POWELLBSLS from "s2mpj".
+[WARNING ] An error occurred while solving LOGHAIRY with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELP6   with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving FLT with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    SISSER2    with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP4   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    JUDGE      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    S316m322   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    DJTL       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MUONSINELS with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MARATOS    with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS6 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HIMMELP2   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ROSENBR    with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    MISRA1ALS  with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    POWELLBSLS with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    LOGHAIRY   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HIMMELP6 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   TRYmB      from "s2mpj".
+[WARNING ] An error occurred while solving SISSER2 with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving JUDGE with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HIMMELP4 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving S316m322 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving DJTL with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MUONSINELS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MARATOS with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   ROSEPETAL  from "s2mpj".
+[WARNING ] An error occurred while solving HIMMELP2 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ROSENBR with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MISRA1ALS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving POWELLBSLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HIMMELP6   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving LOGHAIRY with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    TRYmB      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    SISSER2    with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    JUDGE      with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP4   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   SINEVAL    from "s2mpj".
+[INFO    ] Start  solving    DJTL       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    MUONSINELS with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   MEXHAT     from "s2mpj".
+[INFO    ] Start  solving    ROSEPETAL  with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    HIMMELP2   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   ROSENBRTU  from "s2mpj".
+[INFO    ] Loading problem   MISRA1BLS  from "s2mpj".
+[WARNING ] An error occurred while solving HIMMELP6 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    POWELLBSLS with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   MARATOSB   from "s2mpj".
+[WARNING ] An error occurred while solving TRYmB with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving SISSER2 with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving JUDGE with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving HIMMELP4 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    SINEVAL    with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving DJTL with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MUONSINELS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    MEXHAT     with cobyla_wrapper (run  1/ 1).
+[INFO    ] Loading problem   HS10       from "s2mpj".
+[WARNING ] An error occurred while solving ROSEPETAL with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving HIMMELP2 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    MISRA1BLS  with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ROSENBRTU  with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving POWELLBSLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    MARATOSB   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    TRYmB      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   SISSER     from "s2mpj".
+[WARNING ] An error occurred while solving SINEVAL with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MEXHAT with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    ROSEPETAL  with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving MISRA1BLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving ROSENBRTU with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    POWELLBSLS with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving MARATOSB with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving TRYmB with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    SISSER     with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    SINEVAL    with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    MEXHAT     with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving ROSEPETAL with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    MISRA1BLS  with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ROSENBRTU  with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving POWELLBSLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    MARATOSB   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    TRYmB      with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving SISSER with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving SINEVAL with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MEXHAT with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    ROSEPETAL  with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving MISRA1BLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving ROSENBRTU with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   POWELLSQLS from "s2mpj".
+[WARNING ] An error occurred while solving MARATOSB with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving TRYmB with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    SISSER     with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    SINEVAL    with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    MEXHAT     with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving ROSEPETAL with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    MISRA1BLS  with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    POWELLSQLS with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ROSENBRTU  with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    MARATOSB   with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   TWOBARS    from "s2mpj".
+[WARNING ] An error occurred while solving SISSER with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving SINEVAL with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MEXHAT with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Loading problem   S308       from "s2mpj".
+[WARNING ] An error occurred while solving MISRA1BLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving POWELLSQLS with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving ROSENBRTU with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving MARATOSB with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    TWOBARS    with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    SISSER     with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    S308       with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    POWELLSQLS with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   ZECEVIC3   from "s2mpj".
+[INFO    ] Loading problem   SNAIL      from "s2mpj".
+[WARNING ] An error occurred while solving TWOBARS with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving SISSER with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving S308 with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving POWELLSQLS with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    SNAIL      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ZECEVIC3   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    TWOBARS    with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    S308       with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    POWELLSQLS with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving SNAIL with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving ZECEVIC3 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving TWOBARS with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving S308 with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving POWELLSQLS with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    SNAIL      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ZECEVIC3   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    TWOBARS    with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    S308       with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Loading problem   WAYSEA1    from "s2mpj".
+[WARNING ] An error occurred while solving SNAIL with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving ZECEVIC3 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving TWOBARS with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving S308 with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    WAYSEA1    with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    SNAIL      with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    ZECEVIC3   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving SNAIL with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving WAYSEA1 with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[WARNING ] An error occurred while solving ZECEVIC3 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   SNAKE      from "s2mpj".
+[INFO    ] Start  solving    WAYSEA1    with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   ZECEVIC4   from "s2mpj".
+[WARNING ] An error occurred while solving WAYSEA1 with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    SNAKE      with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ZECEVIC4   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    WAYSEA1    with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving SNAKE with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ZECEVIC4 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving WAYSEA1 with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    SNAKE      with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Start  solving    ZECEVIC4   with cobyqa_wrapper (run  1/ 1).
+[INFO    ] Loading problem   ZANGWIL2   from "s2mpj".
+[WARNING ] An error occurred while solving SNAKE with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ZECEVIC4 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    ZANGWIL2   with cobyla_wrapper (run  1/ 1).
+[INFO    ] Start  solving    SNAKE      with slsqp_wrapper  (run  1/ 1).
+[INFO    ] Start  solving    ZECEVIC4   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving SNAKE with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ZECEVIC4 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[WARNING ] An error occurred while solving ZANGWIL2 with cobyla_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    ZANGWIL2   with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving ZANGWIL2 with cobyqa_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    ZANGWIL2   with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving ZANGWIL2 with slsqp_wrapper: minimize() got an unexpected keyword argument 'maxiter'
+[INFO    ] Start  solving    HS10       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS10 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS10       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS10 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS10       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS10 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Loading problem   HS11       from "s2mpj".
+[INFO    ] Start  solving    HS11       with cobyla_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS11 with cobyla_wrapper: cobyla_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS11       with cobyqa_wrapper (run  1/ 1).
+[WARNING ] An error occurred while solving HS11 with cobyqa_wrapper: cobyqa_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Start  solving    HS11       with slsqp_wrapper  (run  1/ 1).
+[WARNING ] An error occurred while solving HS11 with slsqp_wrapper: slsqp_wrapper() takes 2 positional arguments but 10 were given
+[INFO    ] Leaving the parallel section.
+[INFO    ] 
+[INFO    ] Start creating profiles.
+[INFO    ] Creating profiles for tolerance 1e-1
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-1 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-1 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-2
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-2 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-2 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-3
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-3 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-3 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-4
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-4 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-4 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-5
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-5 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-5 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-6
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-6 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-6 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-7
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-7 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-7 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-8
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-8 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-8 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-9
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-9 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-9 in output-based profiles.
+[INFO    ] Creating profiles for tolerance 1e-10
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-10 in history-based profiles.
+[INFO    ] All solvers failed to meet the convergence test for tolerance 1e-10 in output-based profiles.
+[INFO    ] 
+[INFO    ] All single profiles are created.
+[INFO    ] 
+[INFO    ] Start creating the summary PDF of all the profiles.
+[INFO    ] The summary PDF of all the profiles is created.
+[INFO    ] 
+[INFO    ] Scores of the solvers:
+[INFO    ] cobyla_wrapper:    0.0000
+[INFO    ] cobyqa_wrapper:    0.0000
+[INFO    ] slsqp_wrapper :    0.0000
+[INFO    ] 
+[INFO    ] Finished creating profiles with the "plain" feature.
+[INFO    ] 
+[INFO    ] ======================================================================
+[INFO    ] 
+[INFO    ] Summary PDF of the profiles is saved as:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/cobyla_wrapper_cobyqa_wrapper_slsqp_wrapper_un_1_2_0_10_plain_20260413_165514/summary_cobyla_wrapper_cobyqa_wrapper_slsqp_wrapper_un_1_2_0_10_plain_20260413_165514.pdf
+[INFO    ] 
+[INFO    ] Single profiles are stored in:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/cobyla_wrapper_cobyqa_wrapper_slsqp_wrapper_un_1_2_0_10_plain_20260413_165514/detailed_profiles
+[INFO    ] 
+[INFO    ] Report of the experiment is saved as:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/cobyla_wrapper_cobyqa_wrapper_slsqp_wrapper_un_1_2_0_10_plain_20260413_165514/test_log/report.txt
+[INFO    ] 
+[INFO    ] Check the README file for more information about the experiment and the results:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/cobyla_wrapper_cobyqa_wrapper_slsqp_wrapper_un_1_2_0_10_plain_20260413_165514/README.txt
+[INFO    ] 
+[INFO    ] ======================================================================

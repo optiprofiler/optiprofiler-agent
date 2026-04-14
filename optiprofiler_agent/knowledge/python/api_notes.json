@@ -1,0 +1,16 @@
+{
+  "language": "Python",
+  "solver_format": "list of callables: [solver1, solver2]",
+  "options_format": "keyword arguments to benchmark()",
+  "vector_convention": "1-D numpy arrays, shape (n,)",
+  "problem_libs": [
+    "s2mpj",
+    "pycutest",
+    "custom"
+  ],
+  "python_only_options": [
+    "custom_problem_libs_path"
+  ],
+  "pycutest_note": "Requires separate installation; Linux and macOS only",
+  "lambda_warning": "Lambda functions are not picklable — use named functions (def) for parallel execution (n_jobs > 1)"
+}

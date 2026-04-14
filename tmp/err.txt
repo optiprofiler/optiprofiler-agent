@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/_scratch.py", line 100, in <module>
+    scores = benchmark([scipy_cobyla, scipy_coby], plibs=['s2mpj'], **options)
+                                      ^^^^^^^^^^
+NameError: name 'scipy_coby' is not defined. Did you mean: 'scipy_cobyla'?

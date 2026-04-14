@@ -1,0 +1,22 @@
+{
+  "s2mpj_load": {
+    "name": "s2mpj_load",
+    "signature": "s2mpj_load(problem_name)",
+    "description": "s2mpj_loadcoverts the S2MPJ problem name to a Problem class instance."
+  },
+  "s2mpj_select": {
+    "name": "s2mpj_select",
+    "signature": "s2mpj_select(options)",
+    "description": "s2mpj_selectselects the problems in S2MPJ that satisfy given criteria."
+  },
+  "matcutest_load": {
+    "name": "matcutest_load",
+    "signature": "matcutest_load(problem_name)",
+    "description": "matcutest_loadcoverts the MatCUTEst problem name to a Problem class instance."
+  },
+  "matcutest_select": {
+    "name": "matcutest_select",
+    "signature": "matcutest_select(options)",
+    "description": "matcutest_selectselects the problems in MatCUTEst that satisfy given criteria."
+  }
+}

@@ -1,0 +1,436 @@
+[INFO    ] The script or function that calls `benchmark` function is copied to:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/scipy_cobyla_scipy_cobyqa_u_1_2_noisy_0.001_mixed_gaussian_20260413_172817/test_log
+[INFO    ] 
+[INFO    ] Start testing with the following options:
+[INFO    ] - Solvers: scipy_cobyla, scipy_cobyqa
+[INFO    ] - Problem libraries: s2mpj
+[INFO    ] - Problem types: u
+[INFO    ] - Problem dimension range: [1, 2]
+[INFO    ] - Feature stamp: noisy_0.001_mixed_gaussian
+[INFO    ] 
+[INFO    ] Start testing problems from the problem library "s2mpj" with the "noisy" feature.
+[INFO    ] 
+[INFO    ] More information about the S2MPJ problem library can be found at:
+[INFO    ] https://github.com/GrattonToint/S2MPJ
+[INFO    ] 
+[INFO    ] There are 42 problems selected from "s2mpj" to test.
+[INFO    ] Entering the parallel section.
+[INFO    ] Loading problem   BEALE      from "s2mpj".
+[INFO    ] Start  solving    BEALE      with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   BOXBODLS   from "s2mpj".
+[INFO    ] Start  solving    BOXBODLS   with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   BRKMCC     from "s2mpj".
+[INFO    ] Start  solving    BRKMCC     with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   BROWNBS    from "s2mpj".
+[INFO    ] Start  solving    BROWNBS    with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    BEALE      with scipy_cobyla (run  1/ 1) (in 0.08 seconds).
+[INFO    ] Output result for BEALE      with scipy_cobyla (run  1/ 1): f = 6.1092e-03.
+[INFO    ] Best   result for BEALE      with scipy_cobyla (run  1/ 1): f = 5.9302e-03.
+[INFO    ] Start  solving    BEALE      with scipy_cobyqa (run  1/ 1).
+[INFO    ] Loading problem   CLIFF      from "s2mpj".
+[INFO    ] Start  solving    CLIFF      with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    BROWNBS    with scipy_cobyla (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Output result for BROWNBS    with scipy_cobyla (run  1/ 1): f = 1.0000e+12.
+[INFO    ] Best   result for BROWNBS    with scipy_cobyla (run  1/ 1): f = 1.0000e+12.
+[INFO    ] Start  solving    BROWNBS    with scipy_cobyqa (run  1/ 1).
+[INFO    ] Loading problem   CLUSTERLS  from "s2mpj".
+[INFO    ] Loading problem   CUBE       from "s2mpj".
+[INFO    ] Start  solving    CLUSTERLS  with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    CUBE       with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   DANIWOODLS from "s2mpj".
+[INFO    ] Loading problem   DENSCHNA   from "s2mpj".
+[INFO    ] Start  solving    DANIWOODLS with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNA   with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   DENSCHNB   from "s2mpj".
+[INFO    ] Loading problem   DENSCHNC   from "s2mpj".
+[INFO    ] Start  solving    DENSCHNC   with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    DENSCHNB   with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   DENSCHNF   from "s2mpj".
+[INFO    ] Start  solving    DENSCHNF   with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    BRKMCC     with scipy_cobyla (run  1/ 1) (in 0.17 seconds).
+[INFO    ] Output result for BRKMCC     with scipy_cobyla (run  1/ 1): f = 1.7996e-01.
+[INFO    ] Best   result for BRKMCC     with scipy_cobyla (run  1/ 1): f = 1.7907e-01.
+[INFO    ] Start  solving    BRKMCC     with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    DENSCHNF   with scipy_cobyla (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Output result for DENSCHNF   with scipy_cobyla (run  1/ 1): f = 1.1729e-03.
+[INFO    ] Best   result for DENSCHNF   with scipy_cobyla (run  1/ 1): f = 5.2315e-04.
+[INFO    ] Start  solving    DENSCHNF   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Loading problem   ELATVIDU   from "s2mpj".
+[INFO    ] Finish solving    DENSCHNB   with scipy_cobyla (run  1/ 1) (in 0.10 seconds).
+[INFO    ] Output result for DENSCHNB   with scipy_cobyla (run  1/ 1): f = 3.5771e-03.
+[INFO    ] Best   result for DENSCHNB   with scipy_cobyla (run  1/ 1): f = 2.5690e-03.
+[INFO    ] Start  solving    DENSCHNB   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    DENSCHNC   with scipy_cobyla (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Output result for DENSCHNC   with scipy_cobyla (run  1/ 1): f = 1.6338e-03.
+[INFO    ] Best   result for DENSCHNC   with scipy_cobyla (run  1/ 1): f = 8.8494e-04.
+[INFO    ] Start  solving    DENSCHNC   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    ELATVIDU   with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   EXPFIT     from "s2mpj".
+[INFO    ] Start  solving    EXPFIT     with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   EGGCRATE   from "s2mpj".
+[INFO    ] Start  solving    EGGCRATE   with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    CLIFF      with scipy_cobyla (run  1/ 1) (in 0.09 seconds).
+[INFO    ] Output result for CLIFF      with scipy_cobyla (run  1/ 1): f = 2.0155e-01.
+[INFO    ] Best   result for CLIFF      with scipy_cobyla (run  1/ 1): f = 2.0135e-01.
+[INFO    ] Start  solving    CLIFF      with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    CLIFF      with scipy_cobyqa (run  1/ 1) (in 0.09 seconds).
+[INFO    ] Output result for CLIFF      with scipy_cobyqa (run  1/ 1): f = 2.0099e-01.
+[INFO    ] Best   result for CLIFF      with scipy_cobyqa (run  1/ 1): f = 2.0084e-01.
+[INFO    ] Finish solving    DENSCHNA   with scipy_cobyla (run  1/ 1) (in 0.07 seconds).
+[INFO    ] Output result for DENSCHNA   with scipy_cobyla (run  1/ 1): f = 2.5896e-02.
+[INFO    ] Best   result for DENSCHNA   with scipy_cobyla (run  1/ 1): f = 2.3629e-02.
+[INFO    ] Start  solving    DENSCHNA   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    BOXBODLS   with scipy_cobyla (run  1/ 1) (in 0.21 seconds).
+[INFO    ] Finish solving    CUBE       with scipy_cobyla (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Output result for BOXBODLS   with scipy_cobyla (run  1/ 1): f = 9.7801e+03.
+[INFO    ] Output result for CUBE       with scipy_cobyla (run  1/ 1): f = 2.9541e-02.
+[INFO    ] Best   result for BOXBODLS   with scipy_cobyla (run  1/ 1): f = 9.7716e+03.
+[INFO    ] Best   result for CUBE       with scipy_cobyla (run  1/ 1): f = 2.9454e-02.
+[INFO    ] Start  solving    BOXBODLS   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    CUBE       with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    DANIWOODLS with scipy_cobyla (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Output result for DANIWOODLS with scipy_cobyla (run  1/ 1): f = 2.1054e-02.
+[INFO    ] Best   result for DANIWOODLS with scipy_cobyla (run  1/ 1): f = 2.1029e-02.
+[INFO    ] Start  solving    DANIWOODLS with scipy_cobyqa (run  1/ 1).
+[INFO    ] Loading problem   DJTL       from "s2mpj".
+[INFO    ] Start  solving    DJTL       with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    EGGCRATE   with scipy_cobyla (run  1/ 1) (in 0.08 seconds).
+[INFO    ] Output result for EGGCRATE   with scipy_cobyla (run  1/ 1): f = 9.4944e+00.
+[INFO    ] Best   result for EGGCRATE   with scipy_cobyla (run  1/ 1): f = 9.4888e+00.
+[INFO    ] Start  solving    EGGCRATE   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    BRKMCC     with scipy_cobyqa (run  1/ 1) (in 0.10 seconds).
+[INFO    ] Output result for BRKMCC     with scipy_cobyqa (run  1/ 1): f = 1.6971e-01.
+[INFO    ] Best   result for BRKMCC     with scipy_cobyqa (run  1/ 1): f = 1.6905e-01.
+[INFO    ] Finish solving    DANIWOODLS with scipy_cobyqa (run  1/ 1) (in 0.10 seconds).
+[INFO    ] Output result for DANIWOODLS with scipy_cobyqa (run  1/ 1): f = 1.7587e-02.
+[INFO    ] Best   result for DANIWOODLS with scipy_cobyqa (run  1/ 1): f = 1.6844e-02.
+[INFO    ] Finish solving    CLUSTERLS  with scipy_cobyla (run  1/ 1) (in 0.19 seconds).
+[INFO    ] Output result for CLUSTERLS  with scipy_cobyla (run  1/ 1): f = 1.2285e-04.
+[INFO    ] Best   result for CLUSTERLS  with scipy_cobyla (run  1/ 1): f = 3.7962e-07.
+[INFO    ] Start  solving    CLUSTERLS  with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    DENSCHNA   with scipy_cobyqa (run  1/ 1) (in 0.11 seconds).
+[INFO    ] Output result for DENSCHNA   with scipy_cobyqa (run  1/ 1): f = 3.3425e-03.
+[INFO    ] Best   result for DENSCHNA   with scipy_cobyqa (run  1/ 1): f = 2.8226e-03.
+[INFO    ] Finish solving    DENSCHNF   with scipy_cobyqa (run  1/ 1) (in 0.10 seconds).
+[INFO    ] Output result for DENSCHNF   with scipy_cobyqa (run  1/ 1): f = 3.1844e-05.
+[INFO    ] Best   result for DENSCHNF   with scipy_cobyqa (run  1/ 1): f = 1.9764e-05.
+[INFO    ] Finish solving    ELATVIDU   with scipy_cobyla (run  1/ 1) (in 0.09 seconds).
+[INFO    ] Output result for ELATVIDU   with scipy_cobyla (run  1/ 1): f = 5.5286e+01.
+[INFO    ] Best   result for ELATVIDU   with scipy_cobyla (run  1/ 1): f = 5.5231e+01.
+[INFO    ] Start  solving    ELATVIDU   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    DENSCHNC   with scipy_cobyqa (run  1/ 1) (in 0.16 seconds).
+[INFO    ] Output result for DENSCHNC   with scipy_cobyqa (run  1/ 1): f = 4.0506e-04.
+[INFO    ] Best   result for DENSCHNC   with scipy_cobyqa (run  1/ 1): f = 7.7226e-05.
+[INFO    ] Finish solving    DJTL       with scipy_cobyla (run  1/ 1) (in 0.19 seconds).
+[INFO    ] Output result for DJTL       with scipy_cobyla (run  1/ 1): f = -3.8066e+03.
+[INFO    ] Best   result for DJTL       with scipy_cobyla (run  1/ 1): f = -3.8084e+03.
+[INFO    ] Start  solving    DJTL       with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    CUBE       with scipy_cobyqa (run  1/ 1) (in 0.21 seconds).
+[INFO    ] Output result for CUBE       with scipy_cobyqa (run  1/ 1): f = 5.8092e-02.
+[INFO    ] Best   result for CUBE       with scipy_cobyqa (run  1/ 1): f = 5.7074e-02.
+[INFO    ] Finish solving    CLUSTERLS  with scipy_cobyqa (run  1/ 1) (in 0.09 seconds).
+[INFO    ] Output result for CLUSTERLS  with scipy_cobyqa (run  1/ 1): f = 8.9767e-07.
+[INFO    ] Best   result for CLUSTERLS  with scipy_cobyqa (run  1/ 1): f = 8.2498e-08.
+[INFO    ] Finish solving    DENSCHNB   with scipy_cobyqa (run  1/ 1) (in 0.15 seconds).
+[INFO    ] Output result for DENSCHNB   with scipy_cobyqa (run  1/ 1): f = 3.6686e-05.
+[INFO    ] Best   result for DENSCHNB   with scipy_cobyqa (run  1/ 1): f = 1.0351e-05.
+[INFO    ] Finish solving    EXPFIT     with scipy_cobyla (run  1/ 1) (in 0.17 seconds).
+[INFO    ] Output result for EXPFIT     with scipy_cobyla (run  1/ 1): f = 2.5604e-01.
+[INFO    ] Best   result for EXPFIT     with scipy_cobyla (run  1/ 1): f = 2.5529e-01.
+[INFO    ] Start  solving    EXPFIT     with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    EGGCRATE   with scipy_cobyqa (run  1/ 1) (in 0.15 seconds).
+[INFO    ] Output result for EGGCRATE   with scipy_cobyqa (run  1/ 1): f = 9.4884e+00.
+[INFO    ] Best   result for EGGCRATE   with scipy_cobyqa (run  1/ 1): f = 9.4883e+00.
+[INFO    ] Finish solving    BOXBODLS   with scipy_cobyqa (run  1/ 1) (in 0.28 seconds).
+[INFO    ] Output result for BOXBODLS   with scipy_cobyqa (run  1/ 1): f = 9.7754e+03.
+[INFO    ] Best   result for BOXBODLS   with scipy_cobyqa (run  1/ 1): f = 9.7715e+03.
+[INFO    ] Finish solving    ELATVIDU   with scipy_cobyqa (run  1/ 1) (in 0.16 seconds).
+[INFO    ] Output result for ELATVIDU   with scipy_cobyqa (run  1/ 1): f = 9.9191e+01.
+[INFO    ] Best   result for ELATVIDU   with scipy_cobyqa (run  1/ 1): f = 9.9152e+01.
+[INFO    ] Finish solving    EXPFIT     with scipy_cobyqa (run  1/ 1) (in 0.10 seconds).
+[INFO    ] Output result for EXPFIT     with scipy_cobyqa (run  1/ 1): f = 2.4438e-01.
+[INFO    ] Best   result for EXPFIT     with scipy_cobyqa (run  1/ 1): f = 2.4198e-01.
+[INFO    ] Finish solving    DJTL       with scipy_cobyqa (run  1/ 1) (in 0.20 seconds).
+[INFO    ] Output result for DJTL       with scipy_cobyqa (run  1/ 1): f = -4.2523e+03.
+[INFO    ] Best   result for DJTL       with scipy_cobyqa (run  1/ 1): f = -4.2593e+03.
+[INFO    ] Finish solving    BROWNBS    with scipy_cobyqa (run  1/ 1) (in 0.12 seconds).
+[INFO    ] Output result for BROWNBS    with scipy_cobyqa (run  1/ 1): f = 1.0000e+12.
+[INFO    ] Best   result for BROWNBS    with scipy_cobyqa (run  1/ 1): f = 1.0000e+12.
+[INFO    ] Finish solving    BEALE      with scipy_cobyqa (run  1/ 1) (in 0.13 seconds).
+[INFO    ] Output result for BEALE      with scipy_cobyqa (run  1/ 1): f = 3.6730e-04.
+[INFO    ] Best   result for BEALE      with scipy_cobyqa (run  1/ 1): f = 9.8853e-06.
+[INFO    ] Loading problem   HIMMELBB   from "s2mpj".
+[INFO    ] Loading problem   HIMMELBCLS from "s2mpj".
+[INFO    ] Start  solving    HIMMELBB   with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    HIMMELBB   with scipy_cobyla (run  1/ 1) (in 0.02 seconds).
+[INFO    ] Output result for HIMMELBB   with scipy_cobyla (run  1/ 1): f = 6.3457e-04.
+[INFO    ] Best   result for HIMMELBB   with scipy_cobyla (run  1/ 1): f = 1.6572e-09.
+[INFO    ] Start  solving    HIMMELBB   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    HIMMELBB   with scipy_cobyqa (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Output result for HIMMELBB   with scipy_cobyqa (run  1/ 1): f = 1.4635e-04.
+[INFO    ] Best   result for HIMMELBB   with scipy_cobyqa (run  1/ 1): f = 0.0000e+00.
+[INFO    ] Loading problem   HIMMELBG   from "s2mpj".
+[INFO    ] Start  solving    HIMMELBG   with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    HIMMELBCLS with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    HIMMELBCLS with scipy_cobyla (run  1/ 1) (in 0.04 seconds).
+[INFO    ] Finish solving    HIMMELBG   with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Loading problem   HIMMELBH   from "s2mpj".
+[INFO    ] Loading problem   HAIRY      from "s2mpj".
+[INFO    ] Output result for HIMMELBCLS with scipy_cobyla (run  1/ 1): f = 1.8204e-03.
+[INFO    ] Loading problem   LOGHAIRY   from "s2mpj".
+[INFO    ] Output result for HIMMELBG   with scipy_cobyla (run  1/ 1): f = 1.6437e-03.
+[INFO    ] Start  solving    HIMMELBH   with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   JUDGE      from "s2mpj".
+[INFO    ] Start  solving    HAIRY      with scipy_cobyla (run  1/ 1).
+[INFO    ] Best   result for HIMMELBCLS with scipy_cobyla (run  1/ 1): f = 1.4247e-03.
+[INFO    ] Loading problem   JENSMP     from "s2mpj".
+[INFO    ] Loading problem   MARATOSB   from "s2mpj".
+[INFO    ] Loading problem   MEXHAT     from "s2mpj".
+[INFO    ] Loading problem   MISRA1ALS  from "s2mpj".
+[INFO    ] Loading problem   HUMPS      from "s2mpj".
+[INFO    ] Loading problem   MUONSINELS from "s2mpj".
+[INFO    ] Loading problem   MISRA1DLS  from "s2mpj".
+[INFO    ] Start  solving    LOGHAIRY   with scipy_cobyla (run  1/ 1).
+[INFO    ] Best   result for HIMMELBG   with scipy_cobyla (run  1/ 1): f = 1.0350e-03.
+[INFO    ] Finish solving    HIMMELBH   with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Loading problem   MISRA1BLS  from "s2mpj".
+[INFO    ] Start  solving    JUDGE      with scipy_cobyla (run  1/ 1).
+[INFO    ] Loading problem   POWELLBSLS from "s2mpj".
+[INFO    ] Finish solving    HAIRY      with scipy_cobyla (run  1/ 1) (in 0.04 seconds).
+[INFO    ] Start  solving    HIMMELBCLS with scipy_cobyqa (run  1/ 1).
+[INFO    ] Loading problem   ROSENBRTU  from "s2mpj".
+[INFO    ] Start  solving    JENSMP     with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    MARATOSB   with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    MEXHAT     with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    MISRA1ALS  with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    HUMPS      with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    MUONSINELS with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    MISRA1DLS  with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    LOGHAIRY   with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Start  solving    HIMMELBG   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Output result for HIMMELBH   with scipy_cobyla (run  1/ 1): f = -9.9983e-01.
+[INFO    ] Start  solving    MISRA1BLS  with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    JUDGE      with scipy_cobyla (run  1/ 1) (in 0.21 seconds).
+[INFO    ] Start  solving    POWELLBSLS with scipy_cobyla (run  1/ 1).
+[INFO    ] Output result for HAIRY      with scipy_cobyla (run  1/ 1): f = 2.0266e+01.
+[INFO    ] Finish solving    HIMMELBCLS with scipy_cobyqa (run  1/ 1) (in 0.08 seconds).
+[INFO    ] Start  solving    ROSENBRTU  with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    JENSMP     with scipy_cobyla (run  1/ 1) (in 0.07 seconds).
+[INFO    ] Finish solving    MARATOSB   with scipy_cobyla (run  1/ 1) (in 0.04 seconds).
+[INFO    ] Finish solving    MEXHAT     with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Finish solving    MISRA1ALS  with scipy_cobyla (run  1/ 1) (in 0.10 seconds).
+[INFO    ] Finish solving    HUMPS      with scipy_cobyla (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Finish solving    MUONSINELS with scipy_cobyla (run  1/ 1) (in 0.86 seconds).
+[INFO    ] Finish solving    MISRA1DLS  with scipy_cobyla (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Output result for LOGHAIRY   with scipy_cobyla (run  1/ 1): f = 6.5527e+00.
+[INFO    ] Finish solving    HIMMELBG   with scipy_cobyqa (run  1/ 1) (in 0.07 seconds).
+[INFO    ] Best   result for HIMMELBH   with scipy_cobyla (run  1/ 1): f = -9.9994e-01.
+[INFO    ] Finish solving    MISRA1BLS  with scipy_cobyla (run  1/ 1) (in 0.12 seconds).
+[INFO    ] Output result for JUDGE      with scipy_cobyla (run  1/ 1): f = 1.6763e+01.
+[INFO    ] Finish solving    POWELLBSLS with scipy_cobyla (run  1/ 1) (in 0.02 seconds).
+[INFO    ] Best   result for HAIRY      with scipy_cobyla (run  1/ 1): f = 2.0233e+01.
+[INFO    ] Output result for HIMMELBCLS with scipy_cobyqa (run  1/ 1): f = 1.8310e-04.
+[INFO    ] Finish solving    ROSENBRTU  with scipy_cobyla (run  1/ 1) (in 0.04 seconds).
+[INFO    ] Output result for MARATOSB   with scipy_cobyla (run  1/ 1): f = 9.9716e-01.
+[INFO    ] Output result for JENSMP     with scipy_cobyla (run  1/ 1): f = 2.5183e+02.
+[INFO    ] Output result for MEXHAT     with scipy_cobyla (run  1/ 1): f = 6.5453e-01.
+[INFO    ] Output result for MISRA1ALS  with scipy_cobyla (run  1/ 1): f = 5.3873e+01.
+[INFO    ] Output result for HUMPS      with scipy_cobyla (run  1/ 1): f = 3.9038e-02.
+[INFO    ] Output result for MUONSINELS with scipy_cobyla (run  1/ 1): f = 6.5050e-06.
+[INFO    ] Output result for MISRA1DLS  with scipy_cobyla (run  1/ 1): f = 6.3118e+02.
+[INFO    ] Best   result for LOGHAIRY   with scipy_cobyla (run  1/ 1): f = 6.5511e+00.
+[INFO    ] Output result for HIMMELBG   with scipy_cobyqa (run  1/ 1): f = 1.1190e-05.
+[INFO    ] Start  solving    HIMMELBH   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Output result for MISRA1BLS  with scipy_cobyla (run  1/ 1): f = 7.5859e+00.
+[INFO    ] Best   result for JUDGE      with scipy_cobyla (run  1/ 1): f = 1.6752e+01.
+[INFO    ] Output result for POWELLBSLS with scipy_cobyla (run  1/ 1): f = 1.0139e+00.
+[INFO    ] Start  solving    HAIRY      with scipy_cobyqa (run  1/ 1).
+[INFO    ] Best   result for HIMMELBCLS with scipy_cobyqa (run  1/ 1): f = 5.3511e-05.
+[INFO    ] Output result for ROSENBRTU  with scipy_cobyla (run  1/ 1): f = 1.0099e+02.
+[INFO    ] Best   result for MARATOSB   with scipy_cobyla (run  1/ 1): f = 9.9716e-01.
+[INFO    ] Best   result for JENSMP     with scipy_cobyla (run  1/ 1): f = 2.5177e+02.
+[INFO    ] Best   result for MEXHAT     with scipy_cobyla (run  1/ 1): f = 6.5453e-01.
+[INFO    ] Best   result for MISRA1ALS  with scipy_cobyla (run  1/ 1): f = 5.3873e+01.
+[INFO    ] Best   result for HUMPS      with scipy_cobyla (run  1/ 1): f = 3.8493e-02.
+[INFO    ] Best   result for MUONSINELS with scipy_cobyla (run  1/ 1): f = 6.5050e-06.
+[INFO    ] Best   result for MISRA1DLS  with scipy_cobyla (run  1/ 1): f = 6.3118e+02.
+[INFO    ] Start  solving    LOGHAIRY   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Best   result for HIMMELBG   with scipy_cobyqa (run  1/ 1): f = 1.1178e-06.
+[INFO    ] Finish solving    HIMMELBH   with scipy_cobyqa (run  1/ 1) (in 0.07 seconds).
+[INFO    ] Best   result for MISRA1BLS  with scipy_cobyla (run  1/ 1): f = 7.5859e+00.
+[INFO    ] Start  solving    JUDGE      with scipy_cobyqa (run  1/ 1).
+[INFO    ] Best   result for POWELLBSLS with scipy_cobyla (run  1/ 1): f = 1.0138e+00.
+[INFO    ] Finish solving    HAIRY      with scipy_cobyqa (run  1/ 1) (in 0.09 seconds).
+[INFO    ] Loading problem   SISSER2    from "s2mpj".
+[INFO    ] Best   result for ROSENBRTU  with scipy_cobyla (run  1/ 1): f = 1.0098e+02.
+[INFO    ] Start  solving    MARATOSB   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    JENSMP     with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    MEXHAT     with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    MISRA1ALS  with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    HUMPS      with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    MUONSINELS with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    MISRA1DLS  with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    LOGHAIRY   with scipy_cobyqa (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Loading problem   WAYSEA1    from "s2mpj".
+[INFO    ] Output result for HIMMELBH   with scipy_cobyqa (run  1/ 1): f = -9.9996e-01.
+[INFO    ] Start  solving    MISRA1BLS  with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    POWELLBSLS with scipy_cobyqa (run  1/ 1).
+[INFO    ] Output result for HAIRY      with scipy_cobyqa (run  1/ 1): f = 3.6752e+02.
+[INFO    ] Finish solving    JUDGE      with scipy_cobyqa (run  1/ 1) (in 0.38 seconds).
+[INFO    ] Start  solving    SISSER2    with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    ROSENBRTU  with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    MARATOSB   with scipy_cobyqa (run  1/ 1) (in 0.07 seconds).
+[INFO    ] Finish solving    JENSMP     with scipy_cobyqa (run  1/ 1) (in 0.11 seconds).
+[INFO    ] Finish solving    MEXHAT     with scipy_cobyqa (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Finish solving    MISRA1ALS  with scipy_cobyqa (run  1/ 1) (in 0.22 seconds).
+[INFO    ] Finish solving    HUMPS      with scipy_cobyqa (run  1/ 1) (in 0.16 seconds).
+[INFO    ] Finish solving    MUONSINELS with scipy_cobyqa (run  1/ 1) (in 0.85 seconds).
+[INFO    ] Finish solving    MISRA1DLS  with scipy_cobyqa (run  1/ 1) (in 0.12 seconds).
+[INFO    ] Output result for LOGHAIRY   with scipy_cobyqa (run  1/ 1): f = 6.5508e+00.
+[INFO    ] Start  solving    WAYSEA1    with scipy_cobyla (run  1/ 1).
+[INFO    ] Best   result for HIMMELBH   with scipy_cobyqa (run  1/ 1): f = -1.0000e+00.
+[INFO    ] Finish solving    MISRA1BLS  with scipy_cobyqa (run  1/ 1) (in 0.20 seconds).
+[INFO    ] Finish solving    POWELLBSLS with scipy_cobyqa (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Best   result for HAIRY      with scipy_cobyqa (run  1/ 1): f = 3.6739e+02.
+[INFO    ] Output result for JUDGE      with scipy_cobyqa (run  1/ 1): f = 1.6087e+01.
+[INFO    ] Finish solving    SISSER2    with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Finish solving    ROSENBRTU  with scipy_cobyqa (run  1/ 1) (in 0.07 seconds).
+[INFO    ] Output result for MARATOSB   with scipy_cobyqa (run  1/ 1): f = 9.8618e-01.
+[INFO    ] Output result for JENSMP     with scipy_cobyqa (run  1/ 1): f = 2.3677e+02.
+[INFO    ] Output result for MEXHAT     with scipy_cobyqa (run  1/ 1): f = 1.0837e+01.
+[INFO    ] Output result for MISRA1ALS  with scipy_cobyqa (run  1/ 1): f = 1.9584e+01.
+[INFO    ] Output result for HUMPS      with scipy_cobyqa (run  1/ 1): f = 4.5564e-02.
+[INFO    ] Output result for MUONSINELS with scipy_cobyqa (run  1/ 1): f = 2.1207e-05.
+[INFO    ] Output result for MISRA1DLS  with scipy_cobyqa (run  1/ 1): f = 1.1379e+00.
+[INFO    ] Best   result for LOGHAIRY   with scipy_cobyqa (run  1/ 1): f = 6.5497e+00.
+[INFO    ] Finish solving    WAYSEA1    with scipy_cobyla (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Loading problem   S308       from "s2mpj".
+[INFO    ] Output result for MISRA1BLS  with scipy_cobyqa (run  1/ 1): f = 7.4673e+00.
+[INFO    ] Output result for POWELLBSLS with scipy_cobyqa (run  1/ 1): f = 1.8275e-02.
+[INFO    ] Loading problem   POWELLSQLS from "s2mpj".
+[INFO    ] Best   result for JUDGE      with scipy_cobyqa (run  1/ 1): f = 1.6085e+01.
+[INFO    ] Output result for SISSER2    with scipy_cobyla (run  1/ 1): f = 2.8817e-05.
+[INFO    ] Output result for ROSENBRTU  with scipy_cobyqa (run  1/ 1): f = 1.0099e+02.
+[INFO    ] Best   result for MARATOSB   with scipy_cobyqa (run  1/ 1): f = 9.8543e-01.
+[INFO    ] Best   result for JENSMP     with scipy_cobyqa (run  1/ 1): f = 2.3649e+02.
+[INFO    ] Best   result for MEXHAT     with scipy_cobyqa (run  1/ 1): f = 1.0827e+01.
+[INFO    ] Best   result for MISRA1ALS  with scipy_cobyqa (run  1/ 1): f = 1.9584e+01.
+[INFO    ] Best   result for HUMPS      with scipy_cobyqa (run  1/ 1): f = 4.4784e-02.
+[INFO    ] Best   result for MUONSINELS with scipy_cobyqa (run  1/ 1): f = 6.5210e-06.
+[INFO    ] Best   result for MISRA1DLS  with scipy_cobyqa (run  1/ 1): f = 1.1379e+00.
+[INFO    ] Loading problem   SISSER     from "s2mpj".
+[INFO    ] Output result for WAYSEA1    with scipy_cobyla (run  1/ 1): f = 4.8594e-01.
+[INFO    ] Start  solving    S308       with scipy_cobyla (run  1/ 1).
+[INFO    ] Best   result for MISRA1BLS  with scipy_cobyqa (run  1/ 1): f = 7.4673e+00.
+[INFO    ] Best   result for POWELLBSLS with scipy_cobyqa (run  1/ 1): f = 1.8272e-02.
+[INFO    ] Start  solving    POWELLSQLS with scipy_cobyla (run  1/ 1).
+[INFO    ] Best   result for SISSER2    with scipy_cobyla (run  1/ 1): f = 2.9351e-09.
+[INFO    ] Best   result for ROSENBRTU  with scipy_cobyqa (run  1/ 1): f = 1.0098e+02.
+[INFO    ] Loading problem   ROSENBR    from "s2mpj".
+[INFO    ] Loading problem   SNAIL      from "s2mpj".
+[INFO    ] Loading problem   SINEVAL    from "s2mpj".
+[INFO    ] Loading problem   ZANGWIL2   from "s2mpj".
+[INFO    ] Start  solving    SISSER     with scipy_cobyla (run  1/ 1).
+[INFO    ] Best   result for WAYSEA1    with scipy_cobyla (run  1/ 1): f = 4.8515e-01.
+[INFO    ] Finish solving    S308       with scipy_cobyla (run  1/ 1) (in 0.04 seconds).
+[INFO    ] Finish solving    POWELLSQLS with scipy_cobyla (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Start  solving    SISSER2    with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    ROSENBR    with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    SNAIL      with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    SINEVAL    with scipy_cobyla (run  1/ 1).
+[INFO    ] Start  solving    ZANGWIL2   with scipy_cobyla (run  1/ 1).
+[INFO    ] Finish solving    SISSER     with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Start  solving    WAYSEA1    with scipy_cobyqa (run  1/ 1).
+[INFO    ] Output result for S308       with scipy_cobyla (run  1/ 1): f = 7.7371e-01.
+[INFO    ] Output result for POWELLSQLS with scipy_cobyla (run  1/ 1): f = 5.5514e-05.
+[INFO    ] Finish solving    SISSER2    with scipy_cobyqa (run  1/ 1) (in 0.06 seconds).
+[INFO    ] Finish solving    ROSENBR    with scipy_cobyla (run  1/ 1) (in 0.04 seconds).
+[INFO    ] Finish solving    SNAIL      with scipy_cobyla (run  1/ 1) (in 0.02 seconds).
+[INFO    ] Finish solving    SINEVAL    with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Finish solving    ZANGWIL2   with scipy_cobyla (run  1/ 1) (in 0.03 seconds).
+[INFO    ] Output result for SISSER     with scipy_cobyla (run  1/ 1): f = 9.2139e-06.
+[INFO    ] Finish solving    WAYSEA1    with scipy_cobyqa (run  1/ 1) (in 0.21 seconds).
+[INFO    ] Best   result for S308       with scipy_cobyla (run  1/ 1): f = 7.7351e-01.
+[INFO    ] Best   result for POWELLSQLS with scipy_cobyla (run  1/ 1): f = 6.4830e-06.
+[INFO    ] Output result for SISSER2    with scipy_cobyqa (run  1/ 1): f = 1.0157e-04.
+[INFO    ] Output result for ROSENBR    with scipy_cobyla (run  1/ 1): f = 4.0930e+00.
+[INFO    ] Output result for SINEVAL    with scipy_cobyla (run  1/ 1): f = 5.5517e+00.
+[INFO    ] Output result for SNAIL      with scipy_cobyla (run  1/ 1): f = 1.4198e+01.
+[INFO    ] Output result for ZANGWIL2   with scipy_cobyla (run  1/ 1): f = -1.8185e+01.
+[INFO    ] Best   result for SISSER     with scipy_cobyla (run  1/ 1): f = 1.4972e-06.
+[INFO    ] Output result for WAYSEA1    with scipy_cobyqa (run  1/ 1): f = 4.5619e-03.
+[INFO    ] Start  solving    S308       with scipy_cobyqa (run  1/ 1).
+[INFO    ] Best   result for SISSER2    with scipy_cobyqa (run  1/ 1): f = 2.2102e-05.
+[INFO    ] Start  solving    POWELLSQLS with scipy_cobyqa (run  1/ 1).
+[INFO    ] Best   result for ROSENBR    with scipy_cobyla (run  1/ 1): f = 4.0914e+00.
+[INFO    ] Best   result for SINEVAL    with scipy_cobyla (run  1/ 1): f = 5.5485e+00.
+[INFO    ] Best   result for SNAIL      with scipy_cobyla (run  1/ 1): f = 1.4197e+01.
+[INFO    ] Best   result for ZANGWIL2   with scipy_cobyla (run  1/ 1): f = -1.8200e+01.
+[INFO    ] Start  solving    SISSER     with scipy_cobyqa (run  1/ 1).
+[INFO    ] Best   result for WAYSEA1    with scipy_cobyqa (run  1/ 1): f = 3.2994e-03.
+[INFO    ] Finish solving    S308       with scipy_cobyqa (run  1/ 1) (in 0.08 seconds).
+[INFO    ] Finish solving    POWELLSQLS with scipy_cobyqa (run  1/ 1) (in 0.09 seconds).
+[INFO    ] Start  solving    ROSENBR    with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    SINEVAL    with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    SNAIL      with scipy_cobyqa (run  1/ 1).
+[INFO    ] Start  solving    ZANGWIL2   with scipy_cobyqa (run  1/ 1).
+[INFO    ] Finish solving    SISSER     with scipy_cobyqa (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Output result for POWELLSQLS with scipy_cobyqa (run  1/ 1): f = 1.5991e-04.
+[INFO    ] Output result for S308       with scipy_cobyqa (run  1/ 1): f = 7.7518e-01.
+[INFO    ] Finish solving    ROSENBR    with scipy_cobyqa (run  1/ 1) (in 0.19 seconds).
+[INFO    ] Finish solving    SNAIL      with scipy_cobyqa (run  1/ 1) (in 0.05 seconds).
+[INFO    ] Finish solving    SINEVAL    with scipy_cobyqa (run  1/ 1) (in 0.31 seconds).
+[INFO    ] Finish solving    ZANGWIL2   with scipy_cobyqa (run  1/ 1) (in 0.08 seconds).
+[INFO    ] Output result for SISSER     with scipy_cobyqa (run  1/ 1): f = 5.1297e-04.
+[INFO    ] Best   result for POWELLSQLS with scipy_cobyqa (run  1/ 1): f = 2.6789e-06.
+[INFO    ] Output result for ROSENBR    with scipy_cobyqa (run  1/ 1): f = 4.6745e-02.
+[INFO    ] Best   result for S308       with scipy_cobyqa (run  1/ 1): f = 7.7397e-01.
+[INFO    ] Output result for SNAIL      with scipy_cobyqa (run  1/ 1): f = 1.4154e+01.
+[INFO    ] Output result for SINEVAL    with scipy_cobyqa (run  1/ 1): f = 2.2243e-01.
+[INFO    ] Output result for ZANGWIL2   with scipy_cobyqa (run  1/ 1): f = -1.8199e+01.
+[INFO    ] Best   result for SISSER     with scipy_cobyqa (run  1/ 1): f = 3.0000e-04.
+[INFO    ] Best   result for ROSENBR    with scipy_cobyqa (run  1/ 1): f = 4.5640e-02.
+[INFO    ] Best   result for SNAIL      with scipy_cobyqa (run  1/ 1): f = 1.4146e+01.
+[INFO    ] Best   result for SINEVAL    with scipy_cobyqa (run  1/ 1): f = 2.2193e-01.
+[INFO    ] Best   result for ZANGWIL2   with scipy_cobyqa (run  1/ 1): f = -1.8200e+01.
+[INFO    ] Leaving the parallel section.
+[INFO    ] Merging all the history plots of problems from the "s2mpj" library to a single PDF file.
+[INFO    ] 
+[INFO    ] Start creating profiles.
+[INFO    ] Creating profiles for tolerance 1e-1
+[INFO    ] Creating profiles for tolerance 1e-2
+[INFO    ] Creating profiles for tolerance 1e-3
+[INFO    ] Creating profiles for tolerance 1e-4
+[INFO    ] Creating profiles for tolerance 1e-5
+[INFO    ] Creating profiles for tolerance 1e-6
+[INFO    ] Creating profiles for tolerance 1e-7
+[INFO    ] Creating profiles for tolerance 1e-8
+[INFO    ] Creating profiles for tolerance 1e-9
+[INFO    ] Creating profiles for tolerance 1e-10
+[INFO    ] 
+[INFO    ] All single profiles are created.
+[INFO    ] 
+[INFO    ] Start creating the summary PDF of all the profiles.
+[INFO    ] The summary PDF of all the profiles is created.
+[INFO    ] 
+[INFO    ] Scores of the solvers:
+[INFO    ] scipy_cobyla:    0.8137
+[INFO    ] scipy_cobyqa:    0.9699
+[INFO    ] 
+[INFO    ] Finished creating profiles with the "noisy" feature.
+[INFO    ] 
+[INFO    ] ======================================================================
+[INFO    ] 
+[INFO    ] Summary PDF of the profiles is saved as:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/scipy_cobyla_scipy_cobyqa_u_1_2_noisy_0.001_mixed_gaussian_20260413_172817/summary_scipy_cobyla_scipy_cobyqa_u_1_2_noisy_0.001_mixed_gaussian_20260413_172817.pdf
+[INFO    ] 
+[INFO    ] Single profiles are stored in:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/scipy_cobyla_scipy_cobyqa_u_1_2_noisy_0.001_mixed_gaussian_20260413_172817/detailed_profiles
+[INFO    ] 
+[INFO    ] Report of the experiment is saved as:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/scipy_cobyla_scipy_cobyqa_u_1_2_noisy_0.001_mixed_gaussian_20260413_172817/test_log/report.txt
+[INFO    ] 
+[INFO    ] Check the README file for more information about the experiment and the results:
+[INFO    ] /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/op_test/out/scipy_cobyla_scipy_cobyqa_u_1_2_noisy_0.001_mixed_gaussian_20260413_172817/README.txt
+[INFO    ] 
+[INFO    ] ======================================================================

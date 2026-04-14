@@ -1,0 +1,86 @@
+[
+  {
+    "id": "f01",
+    "question": "What is the default value of n_runs in benchmark()?",
+    "expected_keywords": ["1"],
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f02",
+    "question": "What is the default value of ptype?",
+    "expected_keywords": ["u"],
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f03",
+    "question": "What problem types does ptype support?",
+    "expected_keywords": ["u", "b", "l", "n"],
+    "language": null,
+    "category": "factual_query"
+  },
+  {
+    "id": "f04",
+    "question": "What are the valid values for feature_name?",
+    "expected_keywords": ["plain", "noisy", "custom", "perturbed_x0", "truncated"],
+    "language": null,
+    "category": "factual_query"
+  },
+  {
+    "id": "f05",
+    "question": "How many solvers does benchmark() require at minimum?",
+    "expected_keywords": ["2", "two", "at least"],
+    "language": null,
+    "category": "factual_query"
+  },
+  {
+    "id": "f06",
+    "question": "What does the fun argument provide to solvers?",
+    "expected_keywords": ["function value", "no gradient", "DFO", "derivative-free"],
+    "language": null,
+    "category": "factual_query"
+  },
+  {
+    "id": "f07",
+    "question": "What is the default value of max_eval_factor in Python?",
+    "expected_keywords": ["500"],
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f08",
+    "question": "What does the savepath parameter do?",
+    "expected_keywords": ["save", "path", "results", "directory"],
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f09",
+    "question": "What is the return type of benchmark() in Python?",
+    "expected_keywords": ["dict", "scores"],
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f10",
+    "question": "How do I install OptiProfiler in MATLAB?",
+    "expected_keywords": ["git clone", "setup"],
+    "language": "matlab",
+    "category": "factual_query"
+  },
+  {
+    "id": "f11",
+    "question": "What is the MATLAB equivalent of plibs?",
+    "expected_keywords": ["plibs", "problem_libs", "matcutest", "s2mpj"],
+    "language": "matlab",
+    "category": "factual_query"
+  },
+  {
+    "id": "f12",
+    "question": "How do I pass options to benchmark() in MATLAB?",
+    "expected_keywords": ["struct", "options"],
+    "language": "matlab",
+    "category": "factual_query"
+  }
+]
