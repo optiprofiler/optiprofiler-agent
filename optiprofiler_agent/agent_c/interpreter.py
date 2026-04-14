@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from optiprofiler_agent.agent_c.summary import BenchmarkSummary, build_summary
-from optiprofiler_agent.config import AgentConfig, LLMConfig
+from optiprofiler_agent.config import AgentConfig
 
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"

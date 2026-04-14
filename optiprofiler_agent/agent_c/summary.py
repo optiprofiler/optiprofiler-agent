@@ -12,9 +12,9 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from optiprofiler_agent.agent_c.result_loader import BenchmarkResults, load_results
+from optiprofiler_agent.agent_c.result_loader import load_results
 from optiprofiler_agent.agent_c.profile_reader import read_all_profiles
-from optiprofiler_agent.agent_c.score_analyzer import ScoreAnalysis, analyze
+from optiprofiler_agent.agent_c.score_analyzer import analyze
 from optiprofiler_agent.agent_c.anomaly_detector import AnomalyReport, detect_anomalies
 
 

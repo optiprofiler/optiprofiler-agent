@@ -4,16 +4,11 @@ Tests the no-LLM path (rule engine) to avoid needing API keys.
 """
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from optiprofiler_agent.agent_c.result_loader import (
-    BenchmarkResults,
-    ExperimentConfig,
-    ProfilePaths,
-)
+from optiprofiler_agent.agent_c.result_loader import ProfilePaths
 from optiprofiler_agent.agent_c.summary import BenchmarkSummary, build_summary
 from optiprofiler_agent.config import AgentConfig
 

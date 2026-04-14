@@ -1,6 +1,5 @@
 """Tests for the knowledge base structure and loading."""
 
-import pytest
 from pathlib import Path
 
 KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "optiprofiler_agent" / "knowledge"

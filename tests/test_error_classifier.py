@@ -1,7 +1,5 @@
 """Tests for Agent B's error classifier — all 5 error types."""
 
-import pytest
-
 from optiprofiler_agent.agent_b.error_classifier import classify_error
 
 

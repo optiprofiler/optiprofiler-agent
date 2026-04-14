@@ -466,7 +466,7 @@ def wiki_stats():
         total_size += f.stat().st_size
         total_pages += 1
 
-    console.print(f"[bold]Wiki Statistics[/]\n")
+    console.print("[bold]Wiki Statistics[/]\n")
     console.print(f"  Total pages: {total_pages}")
     console.print(f"  Total size:  {total_size / 1024:.1f} KB\n")
     console.print("  [bold]By category:[/]")

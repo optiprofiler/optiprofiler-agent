@@ -1,7 +1,5 @@
 """Tests for Agent B's local runner."""
 
-import pytest
-
 
 class TestLocalRunner:
 

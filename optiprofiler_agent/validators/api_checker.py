@@ -17,9 +17,7 @@ Usage::
 from __future__ import annotations
 
 import ast
-import re
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from optiprofiler_agent.common.knowledge_base import KnowledgeBase, OPTION_CATEGORIES
 

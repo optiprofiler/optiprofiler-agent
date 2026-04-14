@@ -1,7 +1,5 @@
 """Tests for syntax_checker and api_checker validators."""
 
-import pytest
-
 
 class TestSyntaxChecker:
 

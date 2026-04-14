@@ -5,8 +5,6 @@ All tests use mocked LLM calls; no real API key needed.
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from optiprofiler_agent.agent_b.debugger import (
     DebugResult,
     _extract_code_from_reply,

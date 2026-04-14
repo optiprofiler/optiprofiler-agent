@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import math
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +120,7 @@ def _extract_page_metadata(page) -> tuple[str, str, list[str]]:
     Returns (title, tolerance_str, solver_names).
     """
     text = page.get_text()
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
 
     title = ""
     tolerance = ""
@@ -181,7 +180,6 @@ def _extract_axis_ticks(page) -> tuple[
     Returns two lists of (pixel_position, data_value) pairs.
     """
     blocks = page.get_text("dict")["blocks"]
-    page_h = page.rect.height
 
     x_ticks: list[tuple[float, float]] = []
     y_ticks: list[tuple[float, float]] = []
@@ -263,8 +261,8 @@ def _find_plot_area(page) -> tuple[float, float, float, float]:
     if not h_lines or not v_lines:
         return (50, 400, 10, 280)
 
-    h_lines.sort(key=lambda l: l[0])
-    v_lines.sort(key=lambda l: l[0])
+    h_lines.sort(key=lambda seg: seg[0])
+    v_lines.sort(key=lambda seg: seg[0])
 
     top = h_lines[0][0] if len(h_lines) > 1 else h_lines[0][0]
     bottom = h_lines[-1][0]
@@ -373,9 +371,7 @@ def _deduplicate_step_points(
         curr = points[i]
         nxt = points[i + 1]
 
-        dx1 = curr[0] - prev[0]
         dy1 = curr[1] - prev[1]
-        dx2 = nxt[0] - curr[0]
         dy2 = nxt[1] - curr[1]
 
         # Keep point if direction changes (horizontal -> vertical or vice versa)

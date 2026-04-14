@@ -15,13 +15,12 @@ Flow:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from optiprofiler_agent.agent_b.error_classifier import (
     ErrorClassification,
-    classify_error,
     classify_error_with_llm,
 )
 from optiprofiler_agent.config import AgentConfig
@@ -485,7 +484,7 @@ def run_and_debug(
                 _log(f"Partially fixed code saved to {save_fixed}")
             return result
 
-    _log(f"[Final] Running verification...")
+    _log("[Final] Running verification...")
     final_run = run_script(current_code, timeout=timeout, cwd=cwd)
     if final_run.success:
         _log("[Final] Verification passed!")

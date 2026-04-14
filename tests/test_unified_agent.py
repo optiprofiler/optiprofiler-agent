@@ -5,8 +5,6 @@ Verifies tool registration and agent creation without requiring an LLM.
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from optiprofiler_agent.config import AgentConfig, LLMConfig
 from optiprofiler_agent.unified_agent import _build_tools, create_unified_agent
 

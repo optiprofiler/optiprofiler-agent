@@ -22,7 +22,7 @@ from typing import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
-from optiprofiler_agent.config import AgentConfig, LLMConfig
+from optiprofiler_agent.config import AgentConfig
 from optiprofiler_agent.common.llm_client import create_llm
 
 logger = logging.getLogger(__name__)

@@ -128,7 +128,7 @@ def _parse_log_txt(log_path: Path) -> tuple[
     """Parse ``log.txt`` to extract config, scores, and per-run results."""
     text = log_path.read_text(encoding="utf-8")
     lines = text.splitlines()
-    stripped = [_strip_log_prefix(l) for l in lines]
+    stripped = [_strip_log_prefix(line) for line in lines]
 
     config = ExperimentConfig()
     scores: dict[str, float] = {}
