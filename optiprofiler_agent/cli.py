@@ -34,107 +34,10 @@ from optiprofiler_agent.config import AgentConfig, LLMConfig, PROVIDER_REGISTRY
 
 console = Console()
 
-_BRAILLE_BASE = 0x2800
-
-
-def _opa_outline_grid() -> list[list[int]]:
-    """18×6 pixel grid: hollow O, P, A side by side (6 columns each), 1 = contour dot.
-
-    Rendered as **two** rows of Unicode braille (3 dot-rows each), so letters read larger.
-    """
-    o = [
-        [1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1],
-    ]
-    p = [
-        [1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 0],
-        [1, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0],
-    ]
-    a = [
-        [0, 1, 1, 1, 1, 0],
-        [1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1],
-    ]
-    return [orow + prow + arow for orow, prow, arow in zip(o, p, a)]
-
-
-def _scale2x_nearest(grid: list[list[int]]) -> list[list[int]]:
-    """Double width and height (each pixel becomes a 2×2 block) for sharper braille shapes."""
-    h, w = len(grid), len(grid[0])
-    out = [[0] * (w * 2) for _ in range(h * 2)]
-    for r in range(h):
-        for c in range(w):
-            if not grid[r][c]:
-                continue
-            for dr in (0, 1):
-                for dc in (0, 1):
-                    out[r * 2 + dr][c * 2 + dc] = 1
-    return out
-
-
-def _opa_bitmap_for_spinner() -> list[list[int]]:
-    """2× upsampled O/P/A outline (no blur dilation) so Thinking spinner reads clearer."""
-    return _scale2x_nearest(_opa_outline_grid())
-
-
-def _bitmap_to_braille(grid: list[list[int]]) -> str:
-    """Pack a bitmap into 6-dot braille cells (2 dot-columns × 3 dot-rows per character).
-
-    Height must be a multiple of 3; width must be even. Multiple horizontal bands are
-    stacked with newlines (taller letters).
-    """
-    h = len(grid)
-    w = len(grid[0])
-    if h % 3 != 0 or w % 2 != 0:
-        msg = f"grid must be 3k rows and even columns, got {h}×{w}"
-        raise ValueError(msg)
-
-    lines: list[str] = []
-    for band in range(0, h, 3):
-        chars: list[str] = []
-        for tcx in range(0, w, 2):
-            bits = 0
-            for r in range(3):
-                for dc in range(2):
-                    col = tcx + dc
-                    if grid[band + r][col]:
-                        bits |= 1 << (r + 3 * dc)
-            # Use ASCII space for empty cells: U+2800 ``⠀`` still draws a tinted “blank” in many
-            # terminals once ``spinner_style`` applies, which looks like stray grid dots.
-            chars.append(" " if bits == 0 else chr(_BRAILLE_BASE + bits))
-        lines.append("".join(chars))
-    return "\n".join(lines)
-
-
-def _build_opa_contour_spin_frames() -> list[str]:
-    """Contour O P A in braille; a vertical 'dark column' sweeps left → right (wave), then full bright."""
-    base = _opa_bitmap_for_spinner()
-    h, w = len(base), len(base[0])
-    frames: list[str] = []
-    for sweep_col in range(w):
-        g = [row[:] for row in base]
-        for r in range(h):
-            if base[r][sweep_col]:
-                g[r][sweep_col] = 0
-        frames.append(_bitmap_to_braille(g))
-    frames.append(_bitmap_to_braille(base))
-    return frames
-
-
+# Thinking spinner: one braille cell per frame — Grade-1 o → p → a (⠕ ⠏ ⠁).
 SPINNERS["opa"] = {
-    "interval": 110,
-    "frames": _build_opa_contour_spin_frames(),
+    "interval": 350,
+    "frames": ["⠕", "⠏", "⠁"],
 }
 
 # Claude Code–style terminal orange (common CC / Anthropic CLI accent approximation)
@@ -145,6 +48,18 @@ _LOGO = (
     f"[{_LOGO_OPA_COLOR}] █ █ █▀▀ █▀█[/]  [bold]Agent for OptiProfiler[/]\n"
     f"[{_LOGO_OPA_COLOR}] ▀▀▀ ▀   ▀ ▀[/]  [dim]v{__version__}[/]"
 )
+
+_LLM_DISCLAIMER = (
+    "[dim]All responses and actions are LLM-generated and may not match official behavior; "
+    "see the documentation at www.optprof.com if in doubt.[/]"
+)
+
+
+def _print_agent_banner(config: AgentConfig) -> None:
+    """Startup lines under the ASCII logo: provider + LLM disclaimer."""
+    console.print(f"  [dim]LLM Provider:[/] {config.llm.provider} | [dim]Model:[/] {config.llm.model}")
+    console.print(f"  {_LLM_DISCLAIMER}")
+    console.print("  [dim]Type /help for commands[/]\n")
 
 
 @click.group(invoke_without_command=True)
@@ -179,7 +94,8 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
     )
 
     console.print("[bold green]OptiProfiler Advisor[/]")
-    console.print(f"  Provider: {config.llm.provider} | Model: {config.llm.model}")
+    console.print(f"  LLM Provider: {config.llm.provider} | Model: {config.llm.model}")
+    console.print(f"  {_LLM_DISCLAIMER}")
     if rag:
         console.print("  RAG: [green]enabled[/]")
     console.print("  Commands: /reset /prompt /quit\n")
@@ -537,8 +453,7 @@ def agent(provider: str, model: str | None):
     )
 
     console.print(_LOGO)
-    console.print(f"  [dim]Provider:[/] {config.llm.provider} | [dim]Model:[/] {config.llm.model}")
-    console.print("  [dim]Type /help for commands[/]\n")
+    _print_agent_banner(config)
 
     unified = create_unified_agent(config)
     advisor = None
