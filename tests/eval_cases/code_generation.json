@@ -1,0 +1,107 @@
+[
+  {
+    "id": "cg01",
+    "question": "Write a minimal Python benchmark script comparing COBYLA and Nelder-Mead on unconstrained problems.",
+    "expected_keywords": ["benchmark", "cobyla", "nelder", "ptype"],
+    "must_contain": ["from optiprofiler"],
+    "must_not_contain": ["jac=", "hess=", "gradient"],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true,
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "cg02",
+    "question": "Write a MATLAB script to benchmark two solvers with options mindim=2 and maxdim=10.",
+    "expected_keywords": ["benchmark", "options", "struct", "mindim", "maxdim"],
+    "must_contain": ["options.mindim", "options.maxdim"],
+    "must_not_contain": ["benchmark(solvers, f)", "benchmark({@s1, @s2}, f)"],
+    "language": "matlab",
+    "category": "code_generation",
+    "expect_code": true,
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "cg03",
+    "question": "Generate a Python benchmark script that uses the noisy feature with noise_level=1e-3.",
+    "expected_keywords": ["benchmark", "noisy", "noise_level", "1e-3"],
+    "must_contain": ["feature_name"],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true,
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "cg04",
+    "question": "Write a Python wrapper so I can use scipy.optimize.minimize with method='COBYLA' in OptiProfiler benchmark.",
+    "expected_keywords": ["def", "wrapper", "x0", "fun"],
+    "must_contain": ["minimize"],
+    "must_not_contain": ["jac=", "hess="],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true
+  },
+  {
+    "id": "cg05",
+    "question": "Write a MATLAB script that loads previous benchmark results using the load option.",
+    "expected_keywords": ["options.load", "latest"],
+    "must_contain": ["benchmark"],
+    "must_not_contain": [],
+    "language": "matlab",
+    "category": "code_generation",
+    "expect_code": true,
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "cg06",
+    "question": "Write a Python benchmark script for bound-constrained problems comparing 3 solvers.",
+    "expected_keywords": ["benchmark", "ptype", "bound"],
+    "must_contain": [],
+    "must_not_contain": ["ptype='u'"],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true
+  },
+  {
+    "id": "cg07",
+    "question": "Write a Python solver wrapper for a custom solver that takes (fun, x0, lower, upper).",
+    "expected_keywords": ["def", "fun", "x0"],
+    "must_contain": ["xl", "xu"],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true
+  },
+  {
+    "id": "cg08",
+    "question": "Write a MATLAB benchmark script that runs on linearly constrained problems with 5 to 20 dimensions.",
+    "expected_keywords": ["options.ptype", "linear", "options.mindim", "options.maxdim"],
+    "must_contain": ["benchmark"],
+    "must_not_contain": [],
+    "language": "matlab",
+    "category": "code_generation",
+    "expect_code": true,
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "cg09",
+    "question": "Show me how to run benchmark() with score_only=True and silent=True in Python.",
+    "expected_keywords": ["score_only", "silent", "True"],
+    "must_contain": ["benchmark"],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true
+  },
+  {
+    "id": "cg10",
+    "question": "Write a Python benchmark that uses max_eval_factor=200 and n_runs=3.",
+    "expected_keywords": ["max_eval_factor", "200", "n_runs"],
+    "must_contain": ["benchmark"],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true
+  }
+]

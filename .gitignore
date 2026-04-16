@@ -54,3 +54,7 @@ op_test/
 # Chroma / local RAG persistence
 *.chroma/
 .chroma_db/
+
+# Local eval harness outputs (may include upstream API error payloads)
+results.json
+report.md

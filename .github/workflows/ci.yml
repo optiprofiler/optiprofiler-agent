@@ -68,6 +68,41 @@ jobs:
       - name: Run RAG tests
         run: pytest tests/test_rag.py -v -x
 
+  eval-dry:
+    name: Eval (dry-run, no LLM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: eval-pip-${{ hashFiles('pyproject.toml') }}
+
+      - name: Install package
+        run: pip install -e '.[dev,rag]'
+
+      - name: Validate eval cases load
+        run: |
+          python -c "
+          import json, sys
+          from pathlib import Path
+          cases_dir = Path('tests/eval_cases')
+          total = 0
+          for f in sorted(cases_dir.glob('*.json')):
+              data = json.loads(f.read_text())
+              assert isinstance(data, list), f'{f} is not a list'
+              total += len(data)
+              print(f'  {f.name}: {len(data)} cases')
+          print(f'Total: {total} cases')
+          assert total > 0, 'No cases found'
+          "
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -82,4 +117,23 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff check
-        run: ruff check optiprofiler_agent/ tests/
+        run: ruff check optiprofiler_agent/ tests/ scripts/
+
+  prose-lint:
+    name: Prose & terminology lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install codespell
+        run: pip install codespell
+
+      - name: Terminology check
+        run: python scripts/check_prose.py --ci
+
+      - name: Spell check (codespell)
+        run: codespell --skip "*.json,*.pyc,__pycache__,.venv,node_modules" optiprofiler_agent/knowledge/ optiprofiler_agent/agent_a/prompts/ optiprofiler_agent/agent_b/prompts/ optiprofiler_agent/agent_c/prompts/ docs/

@@ -16,7 +16,7 @@ approach to handle bound constraints.
 | Property | Value |
 |---|---|
 | Type | Model-based (quadratic interpolation) |
-| Constraints | Bound constrained |
+| Constraints | Bound-constrained |
 | Author | M.J.D. Powell |
 | Available via | PRIMA, PDFO, Py-BOBYQA |
 

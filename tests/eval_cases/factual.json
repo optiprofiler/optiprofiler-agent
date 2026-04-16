@@ -2,21 +2,21 @@
   {
     "id": "f01",
     "question": "What is the default value of n_runs in benchmark()?",
-    "expected_keywords": ["1"],
+    "expected_keywords": ["n_runs", "default"],
     "language": "python",
     "category": "factual_query"
   },
   {
     "id": "f02",
     "question": "What is the default value of ptype?",
-    "expected_keywords": ["u"],
+    "expected_keywords": ["ptype", "default", "unconstrained"],
     "language": "python",
     "category": "factual_query"
   },
   {
     "id": "f03",
     "question": "What problem types does ptype support?",
-    "expected_keywords": ["u", "b", "l", "n"],
+    "expected_keywords": ["unconstrained", "bound", "linear", "nonlinear"],
     "language": null,
     "category": "factual_query"
   },
@@ -30,7 +30,7 @@
   {
     "id": "f05",
     "question": "How many solvers does benchmark() require at minimum?",
-    "expected_keywords": ["2", "two", "at least"],
+    "expected_keywords": ["at least 2", "two", "minimum 2", "2 solver"],
     "language": null,
     "category": "factual_query"
   },

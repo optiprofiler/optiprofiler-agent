@@ -15,7 +15,7 @@ by the `ptype` parameter in `benchmark()`.
 | Code | Type                      | Solver Arguments                                    |
 |------|---------------------------|-----------------------------------------------------|
 | `'u'`| Unconstrained             | `fun, x0`                                          |
-| `'b'`| Bound constrained         | `fun, x0, xl, xu`                                  |
+| `'b'`| Bound-constrained         | `fun, x0, xl, xu`                                  |
 | `'l'`| Linearly constrained      | `fun, x0, xl, xu, aub, bub, aeq, beq`              |
 | `'n'`| Nonlinearly constrained   | `fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq`   |
 

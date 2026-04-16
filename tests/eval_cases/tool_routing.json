@@ -1,0 +1,102 @@
+[
+  {
+    "id": "tr01",
+    "question": "What is the default value of max_tol_order?",
+    "expected_keywords": ["max_tol_order", "default"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": null,
+    "category": "tool_routing",
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "tr02",
+    "question": "Check if this code is correct:\n```python\nfrom optiprofiler import benchmark\nbenchmark([solver1])\n```",
+    "expected_keywords": ["at least 2", "two", "error"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "tool_routing",
+    "expect_tool": "validate_script"
+  },
+  {
+    "id": "tr03",
+    "question": "I got this error running my benchmark:\n```\nTypeError: solver() takes 2 positional arguments but 4 were given\n```\nMy code:\n```python\ndef solver(fun, x0):\n    pass\nbenchmark([solver, solver], ptype='b')\n```",
+    "expected_keywords": ["bound", "xl", "xu", "signature"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "tool_routing",
+    "expect_tool": "debug_error"
+  },
+  {
+    "id": "tr04",
+    "question": "What problem libraries are available in MATLAB?",
+    "expected_keywords": ["s2mpj", "matcutest"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": "matlab",
+    "category": "tool_routing",
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "tr05",
+    "question": "Please validate this MATLAB code:\n```matlab\noptions.ptype = 'u';\nscores = benchmark({@solver1}, options);\n```",
+    "expected_keywords": ["at least 2", "two", "solver"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": "matlab",
+    "category": "tool_routing",
+    "expect_tool": "validate_script"
+  },
+  {
+    "id": "tr06",
+    "question": "Explain what performance profiles and data profiles measure.",
+    "expected_keywords": ["performance profile", "data profile"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": null,
+    "category": "tool_routing",
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "tr07",
+    "question": "My script fails with: ModuleNotFoundError: No module named 'optiprofiler'\nCode:\n```python\nfrom optiprofiler import benchmark\n```",
+    "expected_keywords": ["install", "pip"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "tool_routing",
+    "expect_tool": "debug_error"
+  },
+  {
+    "id": "tr08",
+    "question": "What solver signatures does OptiProfiler support for nonlinearly constrained problems?",
+    "expected_keywords": ["fun", "x0", "cub", "ceq"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": null,
+    "category": "tool_routing",
+    "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "tr09",
+    "question": "Is this benchmark call correct?\n```python\nfrom optiprofiler import benchmark\ndef s1(fun, x0): return x0\ndef s2(fun, x0): return x0\nbenchmark([s1, s2], ptype='u', mindim=2, maxdim=5)\n```",
+    "expected_keywords": ["benchmark", "solver"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": "python",
+    "category": "tool_routing",
+    "expect_tool": "validate_script"
+  },
+  {
+    "id": "tr10",
+    "question": "What are the differences between Python and MATLAB benchmark() calling conventions?",
+    "expected_keywords": ["keyword", "struct", "options"],
+    "must_contain": [],
+    "must_not_contain": [],
+    "language": null,
+    "category": "tool_routing",
+    "expect_tool": "knowledge_search"
+  }
+]

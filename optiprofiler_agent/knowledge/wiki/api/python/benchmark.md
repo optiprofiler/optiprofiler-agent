@@ -20,7 +20,7 @@ scores, profile_scores, curves = benchmark(
 | Problem Type | Signature |
 |---|---|
 | Unconstrained | `solver(fun, x0) -> np.ndarray` |
-| Bound constrained | `solver(fun, x0, xl, xu) -> np.ndarray` |
+| Bound-constrained | `solver(fun, x0, xl, xu) -> np.ndarray` |
 | Linearly constrained | `solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> np.ndarray` |
 | Nonlinearly constrained | `solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> np.ndarray` |
 

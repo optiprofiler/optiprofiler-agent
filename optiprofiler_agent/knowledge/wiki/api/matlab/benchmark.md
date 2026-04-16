@@ -16,7 +16,7 @@ scores = benchmark({@solver1, @solver2}, options)
 | Problem Type | Signature |
 |---|---|
 | Unconstrained | `solver(fun, x0)` |
-| Bound constrained | `solver(fun, x0, xl, xu)` |
+| Bound-constrained | `solver(fun, x0, xl, xu)` |
 | Linearly constrained | `solver(fun, x0, xl, xu, aub, bub, aeq, beq)` |
 | Nonlinearly constrained | `solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)` |
 

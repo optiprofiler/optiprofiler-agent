@@ -96,7 +96,7 @@ scores = benchmark({@solver1, @solver2}, options)
 
 If you want to benchmark solvers based on your own problem library, you should do the following three steps:
 
-- Create a new subfolder (e.g., 'myproblems') within the 'problems' folder located in the optiprofiler project root directory.
+- Create a new subfolder (e.g., 'myproblems') within the 'problems' folder located in the OptiProfiler project root directory.
 
 - Implement two MATLAB functions:
 

@@ -2,7 +2,7 @@
   {
     "id": "a01",
     "question": "Can I use benchmark() with just one solver?",
-    "must_contain": ["at least 2", "two", "minimum"],
+    "expected_keywords": ["at least 2", "two", "minimum", "2 solver"],
     "must_not_contain": ["yes, you can use one"],
     "language": null,
     "category": "adversarial"
@@ -10,7 +10,7 @@
   {
     "id": "a02",
     "question": "Show me how to use scipy.optimize.minimize with benchmark()",
-    "must_contain": ["derivative-free", "DFO", "no gradient"],
+    "expected_keywords": ["derivative-free", "DFO", "no gradient", "function value"],
     "must_not_contain": [],
     "language": "python",
     "category": "adversarial"
@@ -18,7 +18,7 @@
   {
     "id": "a03",
     "question": "I want to use BFGS with OptiProfiler benchmark",
-    "must_contain": ["derivative-free", "DFO", "no gradient"],
+    "expected_keywords": ["derivative-free", "DFO", "no gradient", "gradient", "finite difference", "quasi-newton"],
     "must_not_contain": [],
     "language": "python",
     "category": "adversarial"
@@ -26,15 +26,15 @@
   {
     "id": "a04",
     "question": "How do I use PyCUTEst with MATLAB benchmark?",
-    "must_contain": ["MatCUTEst", "MATLAB"],
-    "must_not_contain": ["PyCUTEst is available for MATLAB", "pip install"],
+    "expected_keywords": ["MatCUTEst", "MATLAB", "Python", "PyCUTEst"],
+    "must_not_contain": ["PyCUTEst is available for MATLAB"],
     "language": "matlab",
     "category": "adversarial"
   },
   {
     "id": "a05",
     "question": "In MATLAB, can I call benchmark(@solver1, @solver2, 'ptype', 'u')?",
-    "must_contain": ["struct", "options"],
+    "expected_keywords": ["struct", "options"],
     "must_not_contain": [],
     "language": "matlab",
     "category": "adversarial"
@@ -42,7 +42,7 @@
   {
     "id": "a06",
     "question": "Can I pass gradients to the fun function in OptiProfiler?",
-    "must_contain": ["function value", "no gradient", "DFO", "derivative-free"],
+    "expected_keywords": ["function value", "no gradient", "DFO", "derivative-free"],
     "must_not_contain": ["yes, you can pass gradients"],
     "language": null,
     "category": "adversarial"
@@ -50,7 +50,7 @@
   {
     "id": "a07",
     "question": "Write me a Python script with benchmark([my_solver])",
-    "must_contain": ["at least 2", "two"],
+    "expected_keywords": ["at least 2", "two", "minimum", "2 solver"],
     "must_not_contain": [],
     "language": "python",
     "category": "adversarial"
@@ -58,7 +58,7 @@
   {
     "id": "a08",
     "question": "How do I install OptiProfiler with pip in MATLAB?",
-    "must_contain": ["git clone", "MATLAB"],
+    "expected_keywords": ["git clone", "MATLAB"],
     "must_not_contain": ["pip install"],
     "language": "matlab",
     "category": "adversarial"

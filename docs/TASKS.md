@@ -30,11 +30,11 @@
 
 ## Phase A-0.5: Knowledge Automation & Quality Assurance (Week 1-2)
 
-- [x] Write `scripts/extract_knowledge.py`: auto-extract from optiprofiler source
+- [x] Write `scripts/extract_knowledge.py`: auto-extract from OptiProfiler source
   - Parse `benchmark()` docstring via `numpydoc` → `api_params.json`
   - Parse enum classes from `utils.py` → `enums.json`
   - Extract return value structure, raises, notes
-  - Pin to a specific optiprofiler version/commit for reproducibility
+  - Pin to a specific OptiProfiler version/commit for reproducibility
 - [x] Add missing knowledge categories:
   - [x] Return values (`solver_scores`, `profile_scores`, `curves`) structure
   - [x] Error conditions (TypeError, ValueError triggers)

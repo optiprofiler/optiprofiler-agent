@@ -16,7 +16,7 @@ classical DFO solvers.
 | Solver | Problem Type | Model |
 |---|---|---|
 | NEWUOA | Unconstrained | Quadratic |
-| BOBYQA | Bound constrained | Quadratic |
+| BOBYQA | Bound-constrained | Quadratic |
 | LINCOA | Linearly constrained | Quadratic |
 | COBYLA | All constraints | Linear |
 | UOBYQA | Unconstrained | Quadratic (full) |
