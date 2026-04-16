@@ -469,7 +469,7 @@ def print_summary(results: list[dict], mode: str):
 def generate_report(results: list[dict], mode: str, config: AgentConfig) -> str:
     lines: list[str] = []
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines.append(f"# OptiProfiler Agent Evaluation Report")
+    lines.append("# OptiProfiler Agent Evaluation Report")
     lines.append(f"\n- **Date**: {ts}")
     lines.append(f"- **Mode**: {mode}")
     lines.append(f"- **Provider**: {config.llm.provider}")
@@ -479,9 +479,9 @@ def generate_report(results: list[dict], mode: str, config: AgentConfig) -> str:
     all_scores = [r["combined_score"] for r in results]
     avg = sum(all_scores) / len(all_scores) if all_scores else 0
     passes = sum(1 for s in all_scores if s >= 0.5)
-    lines.append(f"\n## Summary\n")
-    lines.append(f"| Metric | Value |")
-    lines.append(f"|--------|-------|")
+    lines.append("\n## Summary\n")
+    lines.append("| Metric | Value |")
+    lines.append("|--------|-------|")
     lines.append(f"| Average Score | **{avg:.3f}** |")
     lines.append(f"| Pass Rate (>=0.5) | **{passes}/{len(results)}** ({passes/len(results)*100:.0f}%) |")
 
@@ -495,18 +495,18 @@ def generate_report(results: list[dict], mode: str, config: AgentConfig) -> str:
     for r in results:
         by_cat[r.get("category") or "other"].append(r["combined_score"])
 
-    lines.append(f"\n## Per-Category Breakdown\n")
-    lines.append(f"| Category | Cases | Avg Score | Pass Rate |")
-    lines.append(f"|----------|-------|-----------|-----------|")
+    lines.append("\n## Per-Category Breakdown\n")
+    lines.append("| Category | Cases | Avg Score | Pass Rate |")
+    lines.append("|----------|-------|-----------|-----------|")
     for cat, scores in sorted(by_cat.items()):
         a = sum(scores) / len(scores)
         p = sum(1 for s in scores if s >= 0.5)
         lines.append(f"| {cat} | {len(scores)} | {a:.2f} | {p}/{len(scores)} ({p/len(scores)*100:.0f}%) |")
 
     # Detail table
-    lines.append(f"\n## Detailed Results\n")
-    lines.append(f"| ID | Category | KW | Code | Tool | Combined | Time |")
-    lines.append(f"|----|----------|----|------|------|----------|------|")
+    lines.append("\n## Detailed Results\n")
+    lines.append("| ID | Category | KW | Code | Tool | Combined | Time |")
+    lines.append("|----|----------|----|------|------|----------|------|")
     for r in results:
         tool_str = "—"
         if r.get("tool_routing_score") is not None:

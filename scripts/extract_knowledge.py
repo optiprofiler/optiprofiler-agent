@@ -38,7 +38,7 @@ OPTIPROFILER_ROOT = Path(__file__).resolve().parent.parent.parent / "optiprofile
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _join(lines: list[str]) -> str:
-    return " ".join(l.strip() for l in lines).strip()
+    return " ".join(line.strip() for line in lines).strip()
 
 
 def _extract_default(desc: str) -> str | None:
@@ -123,7 +123,9 @@ def _convert_tag_to_md(el: Tag) -> list[str]:
         for child in el.children:
             if isinstance(child, Tag):
                 child_lines = _convert_tag_to_md(child)
-                lines.extend(f"> {l}" if not l.startswith(">") else l for l in child_lines)
+                lines.extend(
+                    f"> {blk}" if not blk.startswith(">") else blk for blk in child_lines
+                )
     elif "admonition" in class_str:
         title = el.find("p", class_="admonition-title")
         body = el.find_all("p")
@@ -281,10 +283,6 @@ def _parse_class_doc(cls) -> dict:
                 prop_doc = inspect.getdoc(prop_obj.fget) or ""
             if not prop_doc:
                 prop_doc = inspect.getdoc(obj) if inspect.getdoc(obj) else ""
-            rtype = ""
-            m = re.search(r"Returns?\s*[-]+\s*(\S+)", prop_doc)
-            if not m:
-                m = re.search(r":\s*([\w\.\[\], ]+)\s*$", prop_doc.split("\n")[0] if prop_doc else "")
             props[name] = {"description": prop_doc.split("\n")[0].strip() if prop_doc else ""}
 
     if props:
