@@ -281,14 +281,23 @@ class KnowledgeRAG:
                 self._client = chromadb.Client()
 
         existing = {c.name for c in self._client.list_collections()}
-        if self._collection_name in existing and not force:
-            col = self._client.get_collection(
-                self._collection_name, embedding_function=ef)
-            meta = col.metadata or {}
-            if meta.get("content_hash") == new_hash:
-                self._collection = col
-                logger.info("Index up-to-date (%d chunks), skipping rebuild.", col.count())
-                return col.count()
+        if self._collection_name in existing:
+            if not force:
+                col = self._client.get_collection(
+                    self._collection_name, embedding_function=ef)
+                meta = col.metadata or {}
+                if meta.get("content_hash") == new_hash:
+                    self._collection = col
+                    logger.info(
+                        "Index up-to-date (%d chunks), skipping rebuild.",
+                        col.count(),
+                    )
+                    return col.count()
+            # Either content drifted (auto-rebuild) or the caller asked
+            # explicitly via ``--force``. In both cases we must drop the
+            # existing collection before re-creating it; ``create_collection``
+            # raises ``InternalError: Collection [...] already exists``
+            # otherwise.
             self._client.delete_collection(self._collection_name)
 
         col = self._client.create_collection(

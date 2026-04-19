@@ -15,7 +15,8 @@ class TestBuildTools:
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
         tools = _build_tools(config)
         # 4 original optiprofiler tools + 4 Hermes-inspired runtime tools
-        assert len(tools) == 8
+        # + 1 web_search tool (optional, scope-restricted to open-world Q)
+        assert len(tools) == 9
 
     def test_tool_names(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
@@ -30,6 +31,7 @@ class TestBuildTools:
             "update_user_profile",
             "recall_past",
             "add_wiki_page",
+            "web_search",
         }
 
     def test_validate_script_tool_works(self):

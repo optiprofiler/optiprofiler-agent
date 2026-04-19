@@ -21,6 +21,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Iterable
 
+from optiprofiler_agent.common.text_clean import strip_thinking
 from optiprofiler_agent.runtime import paths
 
 _SCHEMA = """
@@ -105,9 +106,20 @@ def new_session(label: str | None = None) -> str:
 
 
 def log_turn(session_id: str, role: str, content: str) -> None:
-    """Persist one user / assistant / tool turn. Best-effort, swallows errors."""
+    """Persist one user / assistant / tool turn. Best-effort, swallows errors.
+
+    Assistant turns are scrubbed of ``<think>...</think>`` reasoning blocks
+    before they hit the database. Without this, ``recall_past`` (which is
+    fed back into the model on the next turn) would re-surface the model's
+    private chain-of-thought, both bloating the FTS index and risking
+    confabulation cascades on subsequent turns.
+    """
     if not content:
         return
+    if role == "assistant":
+        content = strip_thinking(content)
+        if not content:
+            return
     try:
         with _connect() as conn:
             # Auto-create the session row if the caller forgot to register it.

@@ -55,6 +55,27 @@ class TestKnowledgeRAG:
         count2 = rag2.build_index()
         assert count2 == count1
 
+    def test_force_rebuild_drops_existing_collection(self, tmp_path):
+        """``--force`` must drop and re-create the collection.
+
+        Regression test: previously, when ``force=True`` and the
+        collection already existed, ``build_index`` skipped the
+        ``delete_collection`` branch entirely and then crashed with
+        ``InternalError: Collection [...] already exists`` inside
+        ``create_collection``.
+        """
+        from optiprofiler_agent.common.rag import KnowledgeRAG
+
+        persist_dir = str(tmp_path / "chroma_db")
+
+        rag1 = KnowledgeRAG(KNOWLEDGE_DIR, persist_dir=persist_dir)
+        count1 = rag1.build_index()
+        assert count1 > 0
+
+        rag2 = KnowledgeRAG(KNOWLEDGE_DIR, persist_dir=persist_dir)
+        count2 = rag2.build_index(force=True)
+        assert count2 == count1
+
     def test_language_filtering(self):
         from optiprofiler_agent.common.rag import KnowledgeRAG
         rag = KnowledgeRAG(KNOWLEDGE_DIR)

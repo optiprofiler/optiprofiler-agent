@@ -110,6 +110,63 @@ def _print_assistant(reply: str, *, title: str = "Assistant") -> None:
     console.print()
 
 
+def _print_tool_trace(messages: list, baseline_len: int) -> None:
+    """Show a one-line trace for each tool the agent invoked this turn.
+
+    Without this, a thinking model can silently *not* call a tool and
+    fabricate a "tool unavailable" excuse, leaving the user no signal of
+    what actually happened. Showing the trace makes the routing visible.
+
+    ``baseline_len`` is the message count *before* the current turn so
+    we only render new tool calls.
+    """
+    new_messages = messages[baseline_len:]
+    seen_calls: list[tuple[str, dict, str]] = []
+    pending: dict[str, tuple[str, dict]] = {}
+
+    for msg in new_messages:
+        tool_calls = getattr(msg, "tool_calls", None) or []
+        for call in tool_calls:
+            call_id = call.get("id") or call.get("name", "")
+            pending[call_id] = (call.get("name", "?"), call.get("args", {}) or {})
+        if type(msg).__name__ == "ToolMessage":
+            tcid = getattr(msg, "tool_call_id", None) or getattr(msg, "name", "")
+            name, args = pending.pop(tcid, (getattr(msg, "name", "?"), {}))
+            content = msg.content if isinstance(msg.content, str) else str(msg.content)
+            seen_calls.append((name, args, content))
+
+    if not seen_calls:
+        return
+
+    lines = []
+    for name, args, content in seen_calls:
+        arg_summary = ", ".join(
+            f"{k}={_short_repr(v)}" for k, v in args.items()
+        ) if args else ""
+        head = content.splitlines()[0] if content else ""
+        if len(head) > 90:
+            head = head[:90] + "..."
+        lines.append(f"[bold]→[/] [cyan]{name}[/]({arg_summary}) [dim]{head}[/]")
+
+    console.print(
+        Panel(
+            "\n".join(lines),
+            title="[bold]tool trace[/]",
+            title_align="left",
+            border_style="dim",
+            padding=(0, 1),
+        )
+    )
+
+
+def _short_repr(value, limit: int = 60) -> str:
+    """Compact repr for tool-trace argument display."""
+    text = repr(value)
+    if len(text) > limit:
+        text = text[: limit - 3] + "..."
+    return text
+
+
 @click.group(invoke_without_command=True)
 @click.version_option(package_name="optiprofiler-agent")
 @click.pass_context
@@ -342,9 +399,14 @@ def check(filepath: str, language: str):
               help="Write report to file instead of stdout.")
 @click.option("--latest", is_flag=True, default=False,
               help="Auto-detect the latest experiment in the given directory.")
+@click.option("--format", "output_format",
+              type=click.Choice(["markdown", "json", "html"]),
+              default="markdown",
+              help="Output format. Ignored when --no-llm is set "
+                   "(that mode always emits the raw summary JSON).")
 def interpret(results_dir: str, provider: str, model: str | None,
               language: str, no_llm: bool, no_profiles: bool,
-              output: str | None, latest: bool):
+              output: str | None, latest: bool, output_format: str):
     """Analyze benchmark results and generate a report."""
     from optiprofiler_agent.agent_c.interpreter import interpret as do_interpret
     from optiprofiler_agent.agent_c.result_loader import find_latest_experiment
@@ -368,13 +430,14 @@ def interpret(results_dir: str, provider: str, model: str | None,
             language=language,
             read_profiles=not no_profiles,
             llm_enabled=not no_llm,
+            output_format=output_format,
         )
 
     if output:
         Path(output).write_text(report, encoding="utf-8")
         console.print(f"[green]Report written to {output}[/]")
     else:
-        if no_llm:
+        if no_llm or output_format in ("json", "html"):
             console.print(report)
         else:
             console.print(Markdown(report))
@@ -630,6 +693,7 @@ def agent(provider: str, model: str | None):
 
         if mode == "agent":
             messages.append(("user", user_input))
+            baseline_len = len(messages)
             try:
                 with console.status("Thinking...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
                     result = unified.invoke({"messages": messages})
@@ -639,6 +703,7 @@ def agent(provider: str, model: str | None):
 
                 reply, messages = _run_lint_loop(unified, reply, messages)
 
+                _print_tool_trace(messages, baseline_len)
                 _print_assistant(reply, title="Assistant")
                 _rt_session.log_turn(session_id, "user", user_input)
                 _rt_session.log_turn(session_id, "assistant", reply)

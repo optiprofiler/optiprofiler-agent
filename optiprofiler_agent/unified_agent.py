@@ -57,6 +57,25 @@ user references something they said before that is not in the current context.
 verified that is missing from the wiki. Pages are picked up by knowledge_search \
 on the next index rebuild. Use rarely; do not duplicate existing pages.
 
+9. **web_search** — Search the public web for OPEN-WORLD context that the \
+OptiProfiler knowledge base cannot supply. Permitted scopes: external \
+solvers (PRIMA, NLopt, etc.) and their known issues; recent papers; \
+decoding tracebacks from third-party libraries (e.g. searching the exact \
+error message from `scipy` or `pycutest`); installation tips for those \
+external tools. STRICTLY NOT permitted: any question about the \
+`optiprofiler` package itself — its API, parameters, examples, install \
+flow, or `benchmark()` usage MUST come from `knowledge_search`. \
+Routing rule: for OptiProfiler-internal questions, try `knowledge_search` \
+first; for clearly open-world questions (e.g. "Search the web for ...", \
+external library issues, recent papers), call `web_search` directly. \
+**You MUST NEVER claim that a tool is "unavailable", "disabled", \
+"not configured", or "I cannot search" without FIRST actually calling \
+the tool.** The tool itself will return a message starting with \
+"web_search disabled: ..." or "web_search error: ..." if it is genuinely \
+not configured; only then may you relay that information to the user. \
+Pre-emptively refusing without invoking the tool is a hallucination \
+and is forbidden.
+
 **Guidelines:**
 - OptiProfiler focuses on **Derivative-Free Optimization (DFO)**.
 - `fun` provides ONLY function values, no gradients.
@@ -264,6 +283,8 @@ def _build_tools(config: AgentConfig) -> list:
         path = _wl.add_page(slug, content, summary=summary, source="agent")
         return f"Wrote {path}"
 
+    from optiprofiler_agent.tools.web_search import web_search
+
     return [
         knowledge_search,
         validate_script,
@@ -273,6 +294,7 @@ def _build_tools(config: AgentConfig) -> list:
         update_user_profile,
         recall_past,
         add_wiki_page,
+        web_search,
     ]
 
 

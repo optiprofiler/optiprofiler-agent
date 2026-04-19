@@ -484,6 +484,16 @@ reasons:
 2. `Protocol` plays better with `typing.runtime_checkable` should we
    later want `isinstance` guards.
 
+**Note on the priority of L4 application sites.** When the §8 structured
+report pipeline was added, it became the more attractive first target
+for a grammar-decoding backend than import validation: the report
+schema is a small enumerated grammar (six sections, a handful of
+`Literal[...]` enums), whereas legal Python imports are an open set
+that grammar-masking would prune awkwardly. If/when a vLLM worker
+becomes available, the recommended sequence is therefore to grammar-
+constrain `BenchmarkReport` generation first (§8.6) and only later
+attempt to grammar-constrain user-emitted Python.
+
 ### 7.7 Adjacent surface: prose-level typo guard
 
 `scripts/check_prose.py` carries four small regex rules
@@ -520,3 +530,298 @@ themselves be clean for L0 to be effective.
   issues but does not retry. This is intentional: `chat` mode is the
   pure advisor without tool routing, and the retry semantics assume an
   agent that can re-plan with new context.
+
+---
+
+## 8. Structured Report Pipeline (Agent C)
+
+§7 addressed correctness in *generated code*. This section addresses
+correctness in *generated narrative reports*: the Markdown analysis
+produced by `opagent interpret` against a benchmark output directory.
+
+The motivating observation is that DFO benchmark reports are highly
+structured artefacts — a fixed set of sections, each with a small
+number of fields — and free-form Markdown emission gives the model
+many low-value freedoms it routinely abuses (inventing solver names,
+fabricating problem identifiers, contradicting summary statistics).
+
+### 8.1 Three-stage pipeline
+
+| Stage | Module | Responsibility |
+|---|---|---|
+| 1. Rule engine | [`agent_c/summary.py`](../optiprofiler_agent/agent_c/summary.py) | Parse `log.txt`, profile PDFs, score files into a `BenchmarkSummary` dataclass. Pure Python, no LLM. |
+| 2. Structured LLM | [`agent_c/interpreter.py`](../optiprofiler_agent/agent_c/interpreter.py) (`_generate_structured_report`) | Bind a `BenchmarkReport` Pydantic schema via `llm.with_structured_output(method="json_schema")`; invoke; validate; retry once on business-invariant errors. |
+| 3. Renderer | [`agent_c/renderer.py`](../optiprofiler_agent/agent_c/renderer.py) | Apply the Jinja template to the validated report. |
+
+Stage 1 already existed; stages 2 and 3 are the additions. The same
+code path supports Markdown, JSON, and HTML output formats — the
+renderer is the only module that knows about presentation.
+
+### 8.2 Schema design
+
+[`report_schema.py`](../optiprofiler_agent/agent_c/report_schema.py)
+defines `BenchmarkReport` as a Pydantic v2 `BaseModel` composed of
+six section sub-models:
+
+```
+BenchmarkReport
+├── overview                : ReportOverview
+├── performance_profile     : PerformanceProfileSection
+├── data_profile            : DataProfileSection
+├── convergence_issues      : ConvergenceIssuesSection
+├── anomalies               : AnomaliesSection
+└── recommendations         : RecommendationsSection
+```
+
+Several decisions matter:
+
+* **Enums via `Literal[...]`** (not `enum.Enum`) so Pydantic emits
+  flat JSON Schema enums that the provider's JSON-Schema mode can
+  enforce at decode time. `Severity`, `ActionKind`, `AnomalyKind`,
+  and `SchemaVersion` are all literal types.
+* **Field descriptions are part of the LLM contract.** Each
+  `Field(..., description=...)` carries instructions ("MUST be one of
+  the solver names listed in the input summary"); when LangChain
+  serialises the schema it includes those descriptions, so the model
+  sees them as part of its tool-spec, not just as comments.
+* **Schema versioning** via `schema_version: Literal["1.0"]` so we can
+  evolve the shape without ambiguity for downstream consumers (web
+  platform, CI report archive).
+* **Cross-field invariants are NOT in the schema.** "Winner solver
+  must be one of `summary.solver_names`" cannot be expressed in JSON
+  Schema (it depends on runtime data). Those go in
+  `report_validator.py` — see §8.4.
+
+### 8.3 `with_structured_output` binding
+
+`_bind_structured_output(llm)` tries
+`llm.with_structured_output(BenchmarkReport, method="json_schema")`
+first, falls back to `method="function_calling"`, then to the
+unmethod-tagged default, and finally returns `None` if all three
+raise. `None` triggers the legacy free-form Markdown path
+(`_legacy_freeform_report`) so users on providers without any
+structured-output support still get a useful report.
+
+This three-tier fallback matters because:
+
+* **OpenAI / MiniMax / Kimi**: prefer `json_schema` — the provider
+  enforces the schema at decode time, with token-level constraints in
+  many implementations.
+* **Anthropic**: `function_calling` is preferred (Claude expresses
+  structured output through tool-use messages).
+* **Older providers**: even the unmethod-tagged path fails; we fall
+  back to plain Markdown.
+
+### 8.4 Business-invariant validator
+
+[`report_validator.py`](../optiprofiler_agent/agent_c/report_validator.py)
+implements `validate_report(report, summary)`. Invariants checked:
+
+| Invariant | Severity |
+|---|---|
+| `performance_profile.winner_at_tau1 ∈ summary.solver_names` | error |
+| `performance_profile.most_robust ∈ summary.solver_names` | error |
+| `data_profile.most_efficient ∈ summary.solver_names` | error |
+| `convergence_issues.entries[*].solver ∈ summary.solver_names` | error |
+| `anomalies.entries[*].affected_solvers[*] ∈ summary.solver_names` | error |
+| `recommendations.actions[*].target_solver ∈ summary.solver_names ∪ {None}` | error |
+| `convergence_issues.entries[*].failure_count ≤ summary failure cap` | warning |
+| `convergence_issues.common_failure_problems[*] ∈ known summary problems` | warning |
+
+Severity assignment follows the same asymmetric rule as §7.4.3:
+unambiguous reference errors trigger a retry; ambiguous overshoots
+become user-visible warnings. The `format_feedback_for_llm()` helper
+deliberately omits warnings from retry feedback for the same
+over-correction-flip-flop reason discussed in §7.
+
+### 8.5 Retry orchestration
+
+The retry loop in `_generate_structured_report` mirrors §7.5: on
+errors it appends a single `HumanMessage(content=feedback)` and
+re-invokes the same `structured_llm`. `MAX_REPORT_RETRIES = 1`,
+matching the §7 budget. Warnings on the second pass are surfaced to
+the user but do not trigger a third attempt.
+
+### 8.6 Renderer and the metadata-grounding split
+
+[`renderer.py`](../optiprofiler_agent/agent_c/renderer.py) renders the
+validated report with [`report.md.j2`](../optiprofiler_agent/agent_c/templates/report.md.j2).
+The template receives **two** objects:
+
+* `report` — the LLM-produced narrative
+* `summary` — the rule-engine ground truth
+
+Objective metadata (solver names, scores table, dimension range,
+problem libraries) is taken from `summary`, **never** from `report`.
+This guarantees that the user-visible numbers cannot be hallucinated
+even if the LLM mis-narrates around them.
+
+`render_html(report, summary)` reuses `render_markdown` and wraps the
+output in a self-contained HTML shell; the optional `markdown` package
+upgrades the result, otherwise it falls back to a `<pre>`-wrapped
+Markdown view. Either way, no new top-level dependency is introduced.
+
+### 8.7 Why this is the better first target for L4 grammar decoding
+
+The `BenchmarkReport` schema is a near-ideal candidate for grammar-
+constrained decoding:
+
+* **Small grammar**: six section types, all `Literal[...]` enums
+  enumerable in well under 30 productions.
+* **High mask ROI**: enum fields are short (single word) — masking
+  saves the model from an entire category of failure (`switch_solvr`
+  typo, made-up severity level) on every production.
+* **Bounded blast radius**: the worst case of a grammar pruning the
+  model's intended token is "fall back to an allowed enum value",
+  which is operationally fine. Compare with code emission, where
+  pruning a token can make the code unreachable or syntactically
+  broken.
+
+This re-orders the L4 backlog: when a self-hosted vLLM worker becomes
+available, port the report schema first; revisit import-checking
+grammar later (or never, given L0–L2 already at >99% on
+reference-class hallucinations).
+
+### 8.8 Test coverage
+
+| Test file | Cases | What it pins down |
+|---|---:|---|
+| `tests/test_report_schema.py` | 9 | schema instantiation, JSON round-trip, enum/Literal rejection, descriptive text in JSON Schema |
+| `tests/test_report_renderer.py` | 11 | every section header present, scores table grounded in summary, empty-section fallback strings, HTML wrapper renders headline |
+| `tests/test_report_validator.py` | 11 | unknown solver/problem produces correct severity, failure-count overshoot is warning, feedback string omits warnings, user-facing format includes both severities |
+| `tests/test_interpreter.py` | (modified) | structured-output absence falls back to free-form path with exactly one invoke |
+
+### 8.9 Limitations
+
+* **Provider must support some form of structured output.** The
+  three-tier fallback covers everything we ship today, but a hand-rolled
+  HTTP-based provider could still land in the free-form path; this is
+  by design.
+* **The schema covers DFO benchmark reports only.** Other report types
+  (e.g. solver tuning sweeps, regression test summaries) would need
+  parallel schemas; the renderer is generic enough to host them but
+  no other report family is wired today.
+
+---
+
+## 9. Web Search (scope-restricted)
+
+The agent ships with one optional outbound tool: `web_search`, backed
+by Tavily through `langchain-tavily`. Two questions drove its design:
+(1) when does *any* outbound tool make sense in an agent that already
+has a curated RAG index? and (2) how do we prevent the outbound tool
+from becoming a hallucination amplifier?
+
+### 9.1 Scope
+
+The tool is wired into the unified `agent` command only. It is
+**deliberately not** exposed to:
+
+* `chat` (pure advisor) — the advisor's value comes from being
+  authoritative on OptiProfiler; web hits would dilute this.
+* `interpret` (report) — report facts must come from the user's
+  benchmark output, not the web.
+
+Inside `agent`, the system prompt enforces a two-rule policy:
+
+* **Allowed**: open-world facts about external solvers, recent papers,
+  GitHub issues, decoding tracebacks from third-party libraries
+  (e.g. `scipy`, `pycutest`), and installation tips for those tools.
+* **Disallowed**: anything about the `optiprofiler` package itself —
+  API, parameters, examples, install flow. Those must come from
+  `knowledge_search`.
+
+The policy is enforced at the *prompt* layer (model-side routing),
+not in code, because only the LLM can route by intent. The tool
+docstring repeats the policy so the model sees it as part of the
+tool's own contract.
+
+### 9.2 Graceful degradation
+
+[`tools/web_search.py`](../optiprofiler_agent/tools/web_search.py)
+follows a strict no-raise contract. Three failure modes return a
+single-line explanation rather than an exception:
+
+| Condition | Returned string |
+|---|---|
+| `langchain-tavily` not installed | `web_search disabled: install with pip install optiprofiler-agent[web]...` |
+| `TAVILY_API_KEY` not set | `web_search disabled: set the TAVILY_API_KEY environment variable...` |
+| Provider call raises | `web_search error: <message>` |
+
+This means the rest of the agent boots and runs in environments where
+web search is undesired or unconfigured (CI, air-gapped deployments,
+the default `pip install`). The tool simply tells the model "I am
+disabled, answer from your own knowledge with a clear caveat."
+
+### 9.3 Why Tavily
+
+Three providers were considered:
+
+* **Tavily** — LangChain first-party integration; results are
+  pre-cleaned for LLM consumption (titles, snippets, URLs in a flat
+  schema); 1000 free requests/month.
+* **DuckDuckGo (`duckduckgo-search`)** — no API key, but rate-limited
+  and snippet quality varies.
+* **Brave Search API** — high quality, requires key, smaller free
+  tier.
+
+Tavily was chosen for the LLM-friendly response shape and for keeping
+the dependency surface small (`langchain-tavily` only).
+
+### 9.4 Result formatting
+
+`_format_results` collapses the Tavily payload into a numbered
+text block:
+
+```
+[1] <title>
+<snippet, truncated to 500 chars>
+url: <url>
+
+[2] ...
+```
+
+Snippet truncation matters: raw Tavily snippets can be 1-2k tokens,
+which floods the agent's context and crowds out the actual reasoning.
+500 characters per hit, three hits per call (the `max_results=3`
+default) is enough signal without dominating the turn.
+
+### 9.5 Why this composes with §7 and §8
+
+The hallucination defences in §7 and the structured-output discipline
+in §8 only work if the inputs to the agent are themselves trustworthy.
+A naive web-search tool would smuggle untrusted facts into the
+RAG-shaped surface area of the agent. The scope policy keeps web
+search confined to *open-world* questions where the alternative is
+"the model invents an answer from training data anyway", which is
+strictly worse than "the model summarises a search result and cites
+the URL."
+
+### 9.6 Test coverage
+
+`tests/test_web_search.py` (10 cases) pins down: empty query rejection,
+import-error degradation, missing-key degradation, formatted-result
+shape, no-hits message, exception swallowing, snippet truncation,
+docstring scope keywords (the model-side contract), and
+system-prompt scope keywords (defence in depth against a refactor that
+loses the RAG-first / debug-allowed wording).
+
+### 9.7 Limitations
+
+* **The scope policy is prompt-enforced.** A determined model with
+  enough confusion can still ask `web_search` an OptiProfiler
+  question. The downstream §7 import validator catches the most
+  damaging consequence (fabricated `from optiprofiler.x import y`),
+  and `knowledge_search` always returns higher-quality results when
+  the answer is in the wiki, so in practice the model picks the right
+  tool the vast majority of the time. A code-level allowlist (e.g.
+  reject queries matching `\boptiprofiler\b`) would be possible but
+  was deferred — false positives would be more annoying than the
+  rare scope leak.
+* **No web-search retry / cache**. Each call hits the network. A
+  thin cache keyed by query hash is a likely follow-up if cost or
+  latency becomes an issue.
+* **The unified agent's trajectory dump (§5) does not redact API
+  keys**. `TAVILY_API_KEY` is read from the environment and never
+  echoed in tool output, but operators should confirm their dump
+  retention policy before sharing trajectories externally.

@@ -101,6 +101,61 @@ def test_session_log_roundtrip():
     assert any(s["session_id"] == sid for s in sessions)
 
 
+def test_session_log_strips_thinking_from_assistant():
+    """Thinking-model reasoning blocks must never reach ``sessions.db``.
+
+    If they did, ``recall_past`` would re-feed the model its own private
+    chain-of-thought on the next turn, polluting both retrieval and
+    downstream responses.
+    """
+    from optiprofiler_agent.runtime import bootstrap, session_log
+
+    bootstrap.ensure()
+    sid = session_log.new_session()
+    session_log.log_turn(
+        sid,
+        "assistant",
+        "<think>scheming about secrets</think>Final answer: use BOBYQA.",
+    )
+    # User turns must NOT be stripped — they're verbatim user input.
+    session_log.log_turn(sid, "user", "<think>not a tag I emitted</think>keep me")
+
+    # Search by a token that's *only* present inside the stripped block;
+    # if stripping worked, the assistant turn should not match.
+    leaked = session_log.search("scheming")
+    assert all(h.role != "assistant" for h in leaked), (
+        "assistant <think> content leaked into FTS index"
+    )
+
+    # The visible portion of the assistant turn must still be searchable.
+    visible = session_log.search("BOBYQA")
+    assert any("Final answer" in h.content for h in visible)
+    assert all("<think>" not in h.content for h in visible if h.role == "assistant")
+
+    # User turn was preserved verbatim.
+    user_hits = session_log.search("keep")
+    assert any(h.role == "user" and "<think>" in h.content for h in user_hits)
+
+
+def test_trajectory_strips_thinking_from_assistant(tmp_path, monkeypatch):
+    target = tmp_path / "trajdump"
+    monkeypatch.setenv("OPAGENT_TRAJECTORY_DIR", str(target))
+    from optiprofiler_agent.runtime import bootstrap, trajectory
+
+    bootstrap.ensure()
+    trajectory.append(
+        "sid",
+        "assistant",
+        "<think>private plan</think>Hello, user.",
+    )
+    files = list(target.glob("*.jsonl"))
+    assert files
+    body = files[0].read_text(encoding="utf-8")
+    assert "Hello, user." in body
+    assert "<think>" not in body
+    assert "private plan" not in body
+
+
 def test_session_search_handles_punctuation():
     """FTS5 reserved characters in the query must not raise."""
     from optiprofiler_agent.runtime import bootstrap, session_log

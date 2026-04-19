@@ -24,6 +24,7 @@ import os
 import time
 from pathlib import Path
 
+from optiprofiler_agent.common.text_clean import strip_thinking
 from optiprofiler_agent.runtime import paths
 
 ENV_DIR = "OPAGENT_TRAJECTORY_DIR"
@@ -57,9 +58,20 @@ def output_dir() -> Path:
 
 
 def append(session_id: str, role: str, content: str) -> None:
-    """Append one turn to ``<dir>/<session_id>.jsonl``. Best-effort."""
+    """Append one turn to ``<dir>/<session_id>.jsonl``. Best-effort.
+
+    Assistant turns are stripped of ``<think>...</think>`` reasoning blocks
+    so trajectory dumps stay aligned with what the user actually saw — and
+    so any downstream RL / SFT pipeline that consumes these JSONL files
+    trains on the surfaced answer rather than the model's private
+    scratchpad.
+    """
     if not enabled() or not content:
         return
+    if role == "assistant":
+        content = strip_thinking(content)
+        if not content:
+            return
     try:
         out = output_dir()
         out.mkdir(parents=True, exist_ok=True)

@@ -164,8 +164,14 @@ class TestInterpretNoLLM:
 class TestInterpretWithLLM:
 
     @patch("optiprofiler_agent.common.llm_client.create_llm")
-    def test_interpret_calls_llm(self, mock_create, fake_experiment):
+    def test_interpret_falls_back_to_freeform(self, mock_create, fake_experiment):
+        """When structured output is not supported AND the manual JSON
+        path also fails to find JSON in the response, the legacy
+        free-form Markdown path must still produce a usable report."""
         mock_llm = MagicMock()
+        mock_llm.with_structured_output.side_effect = NotImplementedError(
+            "provider does not support structured output"
+        )
         mock_llm.invoke.return_value = MagicMock(
             content="# Benchmark Report\n\nsolver_a is better."
         )
@@ -179,7 +185,143 @@ class TestInterpretWithLLM:
             read_profiles=False,
         )
         assert "solver_a" in result
-        mock_llm.invoke.assert_called_once()
+        # invoke is called once by the manual-JSON attempt (which finds
+        # no JSON) and once by the final legacy free-form fallback.
+        assert mock_llm.invoke.call_count == 2
+
+    @patch("optiprofiler_agent.common.llm_client.create_llm")
+    def test_interpret_strips_thinking_in_freeform_fallback(
+        self, mock_create, fake_experiment
+    ):
+        """Reasoning models such as MiniMax-M2 / DeepSeek-R1 emit
+        ``<think>...</think>`` blocks. They MUST never leak into the
+        report file."""
+        mock_llm = MagicMock()
+        mock_llm.with_structured_output.side_effect = NotImplementedError("nope")
+        mock_llm.invoke.return_value = MagicMock(
+            content=(
+                "<think>The user wants me to analyse...</think>\n\n"
+                "# Benchmark Report\n\nsolver_a wins."
+            )
+        )
+        mock_create.return_value = mock_llm
+
+        from optiprofiler_agent.agent_c.interpreter import interpret
+        result = interpret(
+            results_dir=fake_experiment,
+            config=AgentConfig(llm=MagicMock()),
+            llm_enabled=True,
+            read_profiles=False,
+        )
+        assert "<think>" not in result
+        assert "</think>" not in result
+        assert "user wants me to analyse" not in result
+        assert "solver_a wins" in result
+
+    @patch("optiprofiler_agent.common.llm_client.create_llm")
+    def test_manual_json_path_recovers_from_thinking_model(
+        self, mock_create, fake_experiment
+    ):
+        """When ``with_structured_output`` cannot parse a thinking-model
+        response, the manual JSON path strips the reasoning block and
+        unwraps a ```json ... ``` fence to produce a valid report."""
+        mock_llm = MagicMock()
+        # Provider rejects structured output (typical for generic
+        # OpenAI-compatible endpoints behind thinking models).
+        mock_llm.with_structured_output.side_effect = NotImplementedError(
+            "json_schema not supported"
+        )
+        # The raw response a thinking model would emit. Note the
+        # leading ``<think>`` block + fenced JSON.
+        report_json = (
+            '{"schema_version":"1.0",'
+            '"key_findings":["solver_a wins at tau=1"],'
+            '"overview":{"headline":"solver_a dominates.",'
+            '"setup":"Two solvers, dim 1-5."},'
+            '"performance_profile":{"winner_at_tau1":"solver_a",'
+            '"most_robust":"solver_a",'
+            '"ranking_change":"Stable across tolerances."},'
+            '"data_profile":{"most_efficient":"solver_a",'
+            '"commentary":"solver_a uses fewer evaluations."},'
+            '"convergence_issues":{"entries":[],'
+            '"common_failure_problems":[]},'
+            '"anomalies":{"entries":[]},'
+            '"recommendations":{"actions":[],"caveats":""}}'
+        )
+        mock_llm.invoke.return_value = MagicMock(
+            content=(
+                "<think>The user wants me to analyse the experiment. "
+                "I need to identify the winner...</think>\n\n"
+                f"```json\n{report_json}\n```"
+            )
+        )
+        mock_create.return_value = mock_llm
+
+        from optiprofiler_agent.agent_c.interpreter import interpret
+        result = interpret(
+            results_dir=fake_experiment,
+            config=AgentConfig(llm=MagicMock()),
+            llm_enabled=True,
+            read_profiles=False,
+        )
+        # Structured-template output should appear, NOT the raw think
+        # block, NOT the raw JSON.
+        assert "<think>" not in result
+        assert "schema_version" not in result  # raw JSON not leaked
+        assert "## Key Findings" in result
+        assert "solver_a wins at tau=1" in result
+        assert "schema v1.0" in result  # rendered footer
+        # The legacy free-form path was NOT used: only the single
+        # manual-JSON invoke happened.
+        assert mock_llm.invoke.call_count == 1
+
+
+class TestThinkingHelpers:
+    """Unit tests for the ``<think>`` / JSON-extraction utilities."""
+
+    def test_strip_thinking_removes_paired_block(self):
+        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        out = _strip_thinking("<think>plan</think>\nfinal answer")
+        assert out == "final answer"
+
+    def test_strip_thinking_handles_thinking_tag(self):
+        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        out = _strip_thinking("<thinking>...</thinking>real")
+        assert out == "real"
+
+    def test_strip_thinking_handles_reasoning_tag(self):
+        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        out = _strip_thinking("<reasoning>X</reasoning>Y")
+        assert out == "Y"
+
+    def test_strip_thinking_no_op_without_tags(self):
+        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        assert _strip_thinking("just text") == "just text"
+
+    def test_strip_thinking_handles_empty(self):
+        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        assert _strip_thinking("") == ""
+        assert _strip_thinking(None) == ""
+
+    def test_extract_json_unwraps_fenced_block(self):
+        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        out = _extract_json_blob('prose ```json\n{"a": 1}\n``` more')
+        assert out == '{"a": 1}'
+
+    def test_extract_json_after_thinking_block(self):
+        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        out = _extract_json_blob('<think>x</think>{"a": 1, "b": [2, 3]}')
+        assert out == '{"a": 1, "b": [2, 3]}'
+
+    def test_extract_json_balances_nested_braces(self):
+        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        out = _extract_json_blob('lead {"x": {"y": 1}} trail')
+        assert out == '{"x": {"y": 1}}'
+
+    def test_extract_json_ignores_braces_inside_strings(self):
+        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        out = _extract_json_blob('{"s": "has } brace"}')
+        assert out == '{"s": "has } brace"}'
 
 
 # ---------------------------------------------------------------------------
