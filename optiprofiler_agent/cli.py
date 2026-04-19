@@ -24,9 +24,19 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+# Enable arrow keys, Ctrl-A/E, history (↑/↓) for ``input()``. Without this
+# import, terminals echo raw ANSI escapes such as ``^[[D`` when the user
+# presses the left arrow inside a prompt. ``readline`` may be missing on
+# minimal Windows builds, so guard the import.
+try:
+    import readline  # noqa: F401
+except ImportError:
+    pass
+
 import click
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.panel import Panel
 from rich.spinner import SPINNERS
 
 from optiprofiler_agent import __version__
@@ -60,6 +70,22 @@ def _print_agent_banner(config: AgentConfig) -> None:
     console.print(f"  [dim]LLM Provider:[/] {config.llm.provider} | [dim]Model:[/] {config.llm.model}")
     console.print(f"  {_LLM_DISCLAIMER}")
     console.print("  [dim]Type /help for commands[/]\n")
+
+
+def _print_assistant(reply: str, *, title: str = "Assistant") -> None:
+    """Render the assistant's reply inside a bordered panel so multi-turn
+    conversations are easy to scan in the terminal scrollback."""
+    console.print()
+    console.print(
+        Panel(
+            Markdown(reply),
+            title=f"[bold]{title}[/]",
+            title_align="left",
+            border_style=_LOGO_OPA_COLOR,
+            padding=(0, 1),
+        )
+    )
+    console.print()
 
 
 @click.group(invoke_without_command=True)
@@ -130,13 +156,10 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
 
         try:
             reply = agent.chat(user_input)
-            console.print()
-            console.print(Markdown(reply))
+            _print_assistant(reply, title="Advisor")
 
             if validate:
                 _validate_reply(reply)
-
-            console.print()
         except Exception as e:
             console.print(f"[bold red]Error:[/] {e}\n")
 
@@ -520,9 +543,7 @@ def agent(provider: str, model: str | None):
                 reply = result["messages"][-1].content
                 messages = result["messages"]
 
-                console.print()
-                console.print(Markdown(reply))
-                console.print()
+                _print_assistant(reply, title="Assistant")
 
             except Exception as e:
                 console.print(f"[bold red]Error:[/] {e}\n")
@@ -532,9 +553,7 @@ def agent(provider: str, model: str | None):
                 with console.status("Thinking...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):
                     reply = advisor.chat(user_input)
 
-                console.print()
-                console.print(Markdown(reply))
-                console.print()
+                _print_assistant(reply, title="Advisor")
 
             except Exception as e:
                 console.print(f"[bold red]Error:[/] {e}\n")

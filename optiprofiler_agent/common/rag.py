@@ -26,7 +26,7 @@ import logging
 import re
 from pathlib import Path
 
-from optiprofiler_agent.common.quiet_ml import suppress_hf_transformers_noise
+from optiprofiler_agent.common.quiet_ml import silence_stdio, suppress_hf_transformers_noise
 
 logger = logging.getLogger(__name__)
 
@@ -245,12 +245,17 @@ class KnowledgeRAG:
 
         new_hash = _content_hash(chunks)
 
-        ef = SentenceTransformerEF(model_name=self._embedding_model_name)
+        # Heavy ML loaders (sentence-transformers, the underlying BERT loader,
+        # chromadb's onnx runtime) print directly to stdout/stderr on first
+        # use; silence that window so it does not garble the spinner. Real
+        # exceptions are still surfaced via ``silence_stdio``.
+        with silence_stdio():
+            ef = SentenceTransformerEF(model_name=self._embedding_model_name)
 
-        if self._persist_dir:
-            self._client = chromadb.PersistentClient(path=self._persist_dir)
-        else:
-            self._client = chromadb.Client()
+            if self._persist_dir:
+                self._client = chromadb.PersistentClient(path=self._persist_dir)
+            else:
+                self._client = chromadb.Client()
 
         existing = {c.name for c in self._client.list_collections()}
         if self._collection_name in existing and not force:
