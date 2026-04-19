@@ -58,3 +58,14 @@ op_test/
 # Local eval harness outputs (may include upstream API error payloads)
 results.json
 report.md
+
+# Agent runtime data (OPAGENT_HOME). Default is ~/.opagent/ (outside repo),
+# but devs sometimes set OPAGENT_HOME=./.opagent for sandboxed testing —
+# never commit any of that back into the package source tree.
+.opagent/
+.opagent_test/
+**/.bootstrapped.json
+**/sessions.db
+**/sessions.db-*
+optiprofiler_agent/runtime/wiki/auto/
+trajectories/

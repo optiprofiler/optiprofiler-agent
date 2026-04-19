@@ -16,6 +16,7 @@ last_updated: 2025-04-13
 ## API Reference
 
 ### Python
+- [Imports and Public API](api/python/imports-and-exports.md) — what you can `from optiprofiler import …`
 - [benchmark()](api/python/benchmark.md) — full Python parameter reference
 - [Problem Class](api/python/problem-class.md) — Problem, Feature, FeaturedProblem classes
 - [Problem Library Tools](api/python/plib-tools.md) — s2mpj_load, pycutest_select, etc.

@@ -24,25 +24,37 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Enable arrow keys, Ctrl-A/E, history (↑/↓) for ``input()``. Without this
-# import, terminals echo raw ANSI escapes such as ``^[[D`` when the user
-# presses the left arrow inside a prompt. ``readline`` may be missing on
-# minimal Windows builds, so guard the import.
-try:
-    import readline  # noqa: F401
-except ImportError:
-    pass
-
 import click
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.spinner import SPINNERS
+from rich.text import Text
 
 from optiprofiler_agent import __version__
+from optiprofiler_agent.common import input_loop
 from optiprofiler_agent.config import AgentConfig, LLMConfig, PROVIDER_REGISTRY
 
 console = Console()
+
+# Dedicated console used only to *render* prompt labels into ANSI bytes
+# that we hand to prompt_toolkit. We force terminal + truecolor so the
+# capture buffer keeps the escape sequences.
+_PROMPT_RENDER_CONSOLE = Console(
+    force_terminal=True,
+    color_system="truecolor",
+    highlight=False,
+)
+
+
+def _render_prompt(label: str, *, color: str) -> str:
+    """Render a Rich-styled prompt label to an ANSI string that
+    prompt_toolkit can measure correctly. Returns the bytes including
+    a trailing space, ready to be passed to ``input_loop.prompt``."""
+    text = Text(f"{label} ", style=f"bold {color}")
+    with _PROMPT_RENDER_CONSOLE.capture() as capture:
+        _PROMPT_RENDER_CONSOLE.print(text, end="")
+    return capture.get()
 
 # Thinking spinner: one braille cell per frame — Grade-1 o → p → a (⠕ ⠏ ⠁).
 SPINNERS["opa"] = {
@@ -66,10 +78,20 @@ _LLM_DISCLAIMER = (
 
 
 def _print_agent_banner(config: AgentConfig) -> None:
-    """Startup lines under the ASCII logo: provider + LLM disclaimer."""
-    console.print(f"  [dim]LLM Provider:[/] {config.llm.provider} | [dim]Model:[/] {config.llm.model}")
-    console.print(f"  {_LLM_DISCLAIMER}")
-    console.print("  [dim]Type /help for commands[/]\n")
+    """Startup lines under the ASCII logo: provider + LLM disclaimer.
+
+    ``highlight=False`` is intentional: Rich's default ``ReprHighlighter``
+    paints any digit/version-like substring blue, which broke the dim
+    grey palette of the banner (e.g. the ``1.`` in ``v0.1.0`` and the
+    ``7`` in ``MiniMax-M7`` were rendered in cyan).
+    """
+    console.print(_LOGO, highlight=False)
+    console.print(
+        f"  [dim]LLM Provider:[/] {config.llm.provider} | [dim]Model:[/] {config.llm.model}",
+        highlight=False,
+    )
+    console.print(f"  {_LLM_DISCLAIMER}", highlight=False)
+    console.print("  [dim]Type /help for commands[/]\n", highlight=False)
 
 
 def _print_assistant(reply: str, *, title: str = "Assistant") -> None:
@@ -111,6 +133,11 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
          verbose: bool, validate: bool):
     """Interactive chat with the OptiProfiler Product Advisor."""
     from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import session_log as _rt_session
+    from optiprofiler_agent.runtime import trajectory as _rt_traj
+
+    _rt_bootstrap.ensure()
 
     config = AgentConfig(
         llm=LLMConfig(provider=provider, model=model),
@@ -127,13 +154,16 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
     console.print("  Commands: /reset /prompt /quit\n")
 
     agent = AdvisorAgent(config)
+    session_id = _rt_session.new_session(label="chat")
+    prompt_session = input_loop.make_session(label="chat")
+    you_label = _render_prompt("You:", color="cyan")
 
     if verbose:
         console.print(f"[dim]System prompt: {len(agent.system_prompt)} chars[/]\n")
 
     while True:
         try:
-            user_input = console.input("[bold cyan]You:[/] ").strip()
+            user_input = input_loop.prompt(you_label, session=prompt_session).strip()
         except (EOFError, KeyboardInterrupt):
             console.print("\nBye!")
             break
@@ -157,11 +187,69 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
         try:
             reply = agent.chat(user_input)
             _print_assistant(reply, title="Advisor")
+            _rt_session.log_turn(session_id, "user", user_input)
+            _rt_session.log_turn(session_id, "assistant", reply)
+            _rt_traj.append(session_id, "user", user_input)
+            _rt_traj.append(session_id, "assistant", reply)
 
             if validate:
                 _validate_reply(reply)
         except Exception as e:
             console.print(f"[bold red]Error:[/] {e}\n")
+
+
+def _run_lint_loop(unified, reply: str, messages: list) -> tuple[str, list]:
+    """L2 hallucination guard: validate the agent reply, and if errors are
+    found, give the LLM exactly one chance to self-correct.
+
+    Returns the (possibly rewritten) reply and the updated message list.
+    Surviving issues are surfaced to the user via a yellow warning panel.
+    Any internal error in the lint loop is logged to ``[dim]`` and the
+    original reply is returned unchanged — we never block delivery on a
+    validator bug.
+    """
+    try:
+        from optiprofiler_agent.validators import lint_loop as _ll
+    except Exception:
+        return reply, messages
+
+    try:
+        report = _ll.lint_reply(reply)
+    except Exception as exc:
+        console.print(f"[dim]validator skipped: {exc}[/]")
+        return reply, messages
+
+    if report.has_errors:
+        feedback = _ll.format_feedback_for_llm(report)
+        if feedback:
+            messages = list(messages) + [("user", feedback)]
+            try:
+                with console.status(
+                    "Re-checking with validator feedback...",
+                    spinner="opa",
+                    spinner_style=_LOGO_OPA_COLOR,
+                ):
+                    retry_result = unified.invoke({"messages": messages})
+                reply = retry_result["messages"][-1].content
+                messages = retry_result["messages"]
+                report = _ll.lint_reply(reply)
+            except Exception as exc:
+                console.print(f"[dim]validator retry skipped: {exc}[/]")
+
+    if report.issues:
+        lines = _ll.format_for_user(report)
+        body = "\n".join(f"• {line}" for line in lines)
+        console.print(
+            Panel(
+                body,
+                title="[bold yellow]Validator notes[/]",
+                title_align="left",
+                border_style="yellow",
+                padding=(0, 1),
+            )
+        )
+
+    return reply, messages
 
 
 def _validate_reply(reply: str):
@@ -469,26 +557,32 @@ def agent(provider: str, model: str | None):
     Supports /agent, /chat, /debug, /interpret mode switching.
     """
     from optiprofiler_agent.unified_agent import create_unified_agent
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import session_log as _rt_session
+    from optiprofiler_agent.runtime import trajectory as _rt_traj
+
+    _rt_bootstrap.ensure()
 
     config = AgentConfig(
         llm=LLMConfig(provider=provider, model=model),
         rag_enabled=True,
     )
 
-    console.print(_LOGO)
     _print_agent_banner(config)
 
     unified = create_unified_agent(config)
     advisor = None
     mode = "agent"
     messages: list = []
+    session_id = _rt_session.new_session(label="agent")
+    prompt_session = input_loop.make_session(label="agent")
+    you_label_agent = _render_prompt("You:", color="cyan")
+    you_label_chat = _render_prompt("You:", color="green")
 
     while True:
         try:
-            if mode == "agent":
-                user_input = console.input("[bold cyan]You:[/] ").strip()
-            else:
-                user_input = console.input("[bold green]You:[/] ").strip()
+            label = you_label_agent if mode == "agent" else you_label_chat
+            user_input = input_loop.prompt(label, session=prompt_session).strip()
         except (EOFError, KeyboardInterrupt):
             console.print("\nBye!")
             break
@@ -543,7 +637,13 @@ def agent(provider: str, model: str | None):
                 reply = result["messages"][-1].content
                 messages = result["messages"]
 
+                reply, messages = _run_lint_loop(unified, reply, messages)
+
                 _print_assistant(reply, title="Assistant")
+                _rt_session.log_turn(session_id, "user", user_input)
+                _rt_session.log_turn(session_id, "assistant", reply)
+                _rt_traj.append(session_id, "user", user_input)
+                _rt_traj.append(session_id, "assistant", reply)
 
             except Exception as e:
                 console.print(f"[bold red]Error:[/] {e}\n")
@@ -554,6 +654,10 @@ def agent(provider: str, model: str | None):
                     reply = advisor.chat(user_input)
 
                 _print_assistant(reply, title="Advisor")
+                _rt_session.log_turn(session_id, "user", user_input)
+                _rt_session.log_turn(session_id, "assistant", reply)
+                _rt_traj.append(session_id, "user", user_input)
+                _rt_traj.append(session_id, "assistant", reply)
 
             except Exception as e:
                 console.print(f"[bold red]Error:[/] {e}\n")
@@ -654,6 +758,141 @@ def wiki_stats():
     console.print("  [bold]By category:[/]")
     for cat, count in sorted(categories.items()):
         console.print(f"    {cat}: {count} pages")
+
+
+@main.group()
+def memory():
+    """Inspect / edit the agent's persistent memory (USER.md + MEMORY.md)."""
+
+
+@memory.command("show")
+def memory_show():
+    """Print the current frozen-snapshot memory block."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import memory as _rt_memory
+
+    _rt_bootstrap.ensure()
+    snap = _rt_memory.frozen_snapshot()
+    if not snap:
+        console.print("[dim]Memory is empty.[/]")
+        return
+    console.print(Markdown(snap))
+
+
+@memory.command("edit")
+@click.argument("which", type=click.Choice(["user", "memory"]))
+def memory_edit(which: str):
+    """Open USER.md or MEMORY.md in $EDITOR for hand-editing."""
+    import os as _os
+    import subprocess
+
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import paths as _rt_paths
+
+    _rt_bootstrap.ensure()
+    target = _rt_paths.user_path() if which == "user" else _rt_paths.memory_path()
+    editor = _os.environ.get("EDITOR", "vi")
+    subprocess.call([editor, str(target)])
+
+
+@memory.command("clear")
+@click.confirmation_option(prompt="Erase all stored MEMORY.md facts?")
+def memory_clear():
+    """Reset MEMORY.md (does not touch USER.md)."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import memory as _rt_memory
+
+    _rt_bootstrap.ensure()
+    _rt_memory.clear_facts()
+    console.print("[green]MEMORY.md cleared.[/]")
+
+
+@main.group()
+def session():
+    """Search / list past chat sessions stored in sessions.db."""
+
+
+@session.command("search")
+@click.argument("query")
+@click.option("--limit", default=10, type=int)
+def session_search(query: str, limit: int):
+    """Full-text search past chat turns (FTS5)."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import session_log as _rt_session
+
+    _rt_bootstrap.ensure()
+    hits = _rt_session.search(query, limit=limit)
+    if not hits:
+        console.print("[dim]No matches.[/]")
+        return
+    for h in hits:
+        snippet = h.content if len(h.content) <= 200 else h.content[:200] + "..."
+        console.print(f"[bold]{h.role}[/]  [dim]{h.session_id[:8]}[/]  {snippet}\n")
+
+
+@session.command("list")
+@click.option("--limit", default=20, type=int)
+def session_list(limit: int):
+    """List recent chat sessions."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import session_log as _rt_session
+
+    _rt_bootstrap.ensure()
+    rows = _rt_session.list_sessions(limit=limit)
+    if not rows:
+        console.print("[dim]No sessions yet.[/]")
+        return
+    for r in rows:
+        from datetime import datetime, timezone
+        ts = datetime.fromtimestamp(r["started_at"], tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
+        label = r.get("label") or "-"
+        console.print(f"  {r['session_id'][:8]}  {ts}  turns={r['turn_count']:>4}  [{label}]")
+
+
+@main.group()
+def home():
+    """Inspect the OPAGENT_HOME runtime directory layout."""
+
+
+@home.command("path")
+def home_path():
+    """Print all canonical runtime paths (resolves OPAGENT_HOME)."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import paths as _rt_paths
+
+    _rt_bootstrap.ensure()
+    for name, p in _rt_paths.all_writable_paths().items():
+        marker = "[green]OK[/]" if p.exists() else "[dim]·[/]"
+        console.print(f"  {marker}  {name:<12} {p}")
+
+
+@main.group()
+def skills():
+    """List bundled and user-installed skills."""
+
+
+@skills.command("list")
+def skills_list():
+    """Show user-side skill packages under OPAGENT_HOME/skills/."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+    from optiprofiler_agent.runtime import paths as _rt_paths
+    from optiprofiler_agent.runtime import plugin as _rt_plugin
+
+    _rt_bootstrap.ensure()
+    sdir = _rt_paths.skills_dir()
+    if sdir.exists():
+        items = sorted(p for p in sdir.iterdir() if p.is_dir())
+        if items:
+            console.print("[bold]User skills:[/]")
+            for p in items:
+                console.print(f"  - {p.name}  [dim]({p})[/]")
+        else:
+            console.print("[dim]No user skills installed.[/]")
+    for ext in _rt_plugin.external_skill_dirs():
+        console.print(f"\n[bold]External skills root:[/] {ext}")
+        for p in sorted(ext.iterdir()):
+            if p.is_dir():
+                console.print(f"  - {p.name}")
 
 
 if __name__ == "__main__":

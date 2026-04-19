@@ -11,16 +11,26 @@ from optiprofiler_agent.unified_agent import _build_tools, create_unified_agent
 
 class TestBuildTools:
 
-    def test_returns_four_tools(self):
+    def test_returns_expected_tool_count(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
         tools = _build_tools(config)
-        assert len(tools) == 4
+        # 4 original optiprofiler tools + 4 Hermes-inspired runtime tools
+        assert len(tools) == 8
 
     def test_tool_names(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
         tools = _build_tools(config)
         names = {t.name for t in tools}
-        assert names == {"knowledge_search", "validate_script", "debug_error", "interpret_results"}
+        assert names == {
+            "knowledge_search",
+            "validate_script",
+            "debug_error",
+            "interpret_results",
+            "remember",
+            "update_user_profile",
+            "recall_past",
+            "add_wiki_page",
+        }
 
     def test_validate_script_tool_works(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))

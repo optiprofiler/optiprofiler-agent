@@ -26,7 +26,7 @@ import logging
 import re
 from pathlib import Path
 
-from optiprofiler_agent.common.quiet_ml import silence_stdio, suppress_hf_transformers_noise
+from optiprofiler_agent.common.quiet_ml import silence_fd, suppress_hf_transformers_noise
 
 logger = logging.getLogger(__name__)
 
@@ -204,10 +204,15 @@ class KnowledgeRAG:
     def _gather_chunks(self) -> list[dict]:
         """Walk wiki/ pages and _sources/ JSON to produce chunks.
 
-        Primary source: wiki/ compiled markdown pages.
+        Primary source: wiki/ compiled markdown pages shipped with the package.
         Secondary source: _sources/ raw JSON (for parameter-level detail).
-        Old flat directories (common/, python/, matlab/, etc.) are no longer
-        scanned — the wiki replaces them.
+        Tertiary sources (Hermes-inspired):
+
+        * ``OPAGENT_HOME/wiki/auto/`` — agent-written pages from the
+          ``add_wiki_page`` tool. Scanned with the ``wiki/auto`` prefix so
+          the two-stage retriever still treats them as wiki pages.
+        * Plugin ``external_wiki_dirs`` — opt-in advanced extension dirs from
+          ``config.yaml``.
         """
         chunks: list[dict] = []
 
@@ -228,6 +233,23 @@ class KnowledgeRAG:
                     "source": f"enums.json#{cls_name}",
                 })
 
+        try:
+            from optiprofiler_agent.runtime import paths as _rt_paths
+            from optiprofiler_agent.runtime import plugin as _rt_plugin
+        except ImportError:
+            _rt_paths = None
+            _rt_plugin = None
+
+        if _rt_paths is not None:
+            auto_dir = _rt_paths.auto_wiki_dir()
+            if auto_dir.exists():
+                chunks.extend(_walk_wiki_dir(auto_dir, base_prefix="wiki/auto"))
+
+        if _rt_plugin is not None:
+            for ext_dir in _rt_plugin.external_wiki_dirs():
+                prefix = f"plugin/{ext_dir.name}"
+                chunks.extend(_walk_wiki_dir(ext_dir, base_prefix=prefix))
+
         return chunks
 
     def build_index(self, force: bool = False) -> int:
@@ -246,10 +268,11 @@ class KnowledgeRAG:
         new_hash = _content_hash(chunks)
 
         # Heavy ML loaders (sentence-transformers, the underlying BERT loader,
-        # chromadb's onnx runtime) print directly to stdout/stderr on first
-        # use; silence that window so it does not garble the spinner. Real
-        # exceptions are still surfaced via ``silence_stdio``.
-        with silence_stdio():
+        # the tokenizers Rust crate, chromadb's onnx runtime) write directly
+        # to OS file descriptors 1 and 2, bypassing Python-level redirects.
+        # ``silence_fd`` redirects at the fd level so the spinner above stays
+        # clean. Real exceptions still surface their captured output.
+        with silence_fd():
             ef = SentenceTransformerEF(model_name=self._embedding_model_name)
 
             if self._persist_dir:

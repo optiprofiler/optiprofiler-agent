@@ -63,6 +63,17 @@ TERM_RULES: list[tuple[str, str, str]] = [
     (r"(?<![-_/`])(?<!\w)\boptiprofiler\b(?![-_./`\]])", "OptiProfiler",
      "Capitalize: 'OptiProfiler' (except in code/paths)"),
 
+    # Package-name typos that LLMs / docs occasionally produce. The package
+    # is one word, lowercase, no hyphen, no underscore.
+    (r"\boptiprobe\b", "optiprofiler",
+     "Package typo: the package is 'optiprofiler', not 'optiprobe'"),
+    (r"\bopti-profiler\b", "optiprofiler",
+     "Package typo: 'opti-profiler' is not a valid Python identifier; use 'optiprofiler'"),
+    (r"\bopti_profiler\b", "optiprofiler",
+     "Package typo: 'opti_profiler' is not the package name; use 'optiprofiler'"),
+    (r"\boptiprofile\b(?!r)", "optiprofiler",
+     "Package typo: missing trailing 'r' in 'optiprofiler'"),
+
     # Common optimization terminology
     (r"\bobjective function value\b", None,
      None),  # correct — skip

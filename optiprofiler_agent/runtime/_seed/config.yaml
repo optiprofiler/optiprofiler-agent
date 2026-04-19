@@ -1,0 +1,23 @@
+# OptiProfiler Agent — user-level configuration.
+#
+# Everything in this file is OPTIONAL. Delete a section to fall back to the
+# built-in defaults. Most users do not need to touch this file at all; the
+# agent works out of the box once it is created.
+#
+# ---------------------------------------------------------------------------
+# Advanced / developer-facing knobs (opt-in)
+# ---------------------------------------------------------------------------
+
+# Save every chat turn as a ShareGPT-style JSONL trajectory for replay /
+# offline analysis / RL fine-tuning. The directory is created on demand.
+# Equivalent to setting OPAGENT_TRAJECTORY_DIR in the environment.
+trajectory:
+  enabled: false
+  # dir: ~/.opagent/trajectories     # uncomment to override default
+
+# Extra wiki / skill directories scanned in addition to the bundled ones.
+# Useful if you maintain a private domain knowledge base, or share skills
+# across teammates via a git-tracked folder.
+plugin:
+  external_wiki_dirs: []
+  external_skill_dirs: []

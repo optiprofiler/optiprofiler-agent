@@ -24,9 +24,9 @@ from langgraph.prebuilt import create_react_agent
 from optiprofiler_agent.config import AgentConfig
 from optiprofiler_agent.common.llm_client import create_llm
 
-_SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT_BASE = """\
 You are the **OptiProfiler AI Assistant**, an expert in optimization benchmarking \
-with OptiProfiler. You have three specialized capabilities available as tools:
+with OptiProfiler. You have these specialized capabilities available as tools:
 
 1. **knowledge_search** — Search the OptiProfiler knowledge base to answer \
 questions about the API, parameters, solver interface, features, problem libraries, \
@@ -42,6 +42,21 @@ Use when the user pastes an error message or traceback.
 and generate a summary report. Use when the user has run a benchmark and wants \
 to understand the results.
 
+5. **remember** — Persist one short factual note to long-term memory. Use \
+sparingly, only for facts the user explicitly asks you to keep, or stable \
+preferences that will help across future sessions.
+
+6. **update_user_profile** — Update one whitelisted profile field (name, role, \
+preferred_solver, preferred_language, project_root). Use only when the user \
+states a stable preference clearly.
+
+7. **recall_past** — Full-text search of previous chat turns. Use when the \
+user references something they said before that is not in the current context.
+
+8. **add_wiki_page** — Create a small knowledge-base page for a fact you \
+verified that is missing from the wiki. Pages are picked up by knowledge_search \
+on the next index rebuild. Use rarely; do not duplicate existing pages.
+
 **Guidelines:**
 - OptiProfiler focuses on **Derivative-Free Optimization (DFO)**.
 - `fun` provides ONLY function values, no gradients.
@@ -56,7 +71,39 @@ to understand the results.
 - **Python** `benchmark` takes keyword options: `benchmark([s1, s2], ptype='u', ...)`.
 - Before writing MATLAB `benchmark` example code, call **knowledge_search** with a query such as \
 "MATLAB benchmark function signature options struct" so retrieved docs override generic optimization habits.
+
+**Python imports — facts to repeat verbatim, never paraphrase:**
+- The package is named **`optiprofiler`** (one word, lowercase, no hyphen, no underscore). \
+Common typos to avoid: `optiprobe`, `opti_profiler`, `opti-profiler`.
+- The public API is **flat**: `from optiprofiler import benchmark, Problem, Feature, FeaturedProblem, \
+s2mpj_load, s2mpj_select, pycutest_load, pycutest_select, get_plib_config, set_plib_config`. \
+There is **no** `optiprofiler.solvers`, `optiprofiler.algorithms`, or `optiprofiler.utils` submodule.
+- Solvers are **third-party callables you import yourself** (e.g. `from prima import bobyqa`), \
+not symbols from the `optiprofiler` package.
+- If you are unsure whether a symbol exists, call **knowledge_search** with a query like \
+"Python imports and exports public API" before writing the import line. Do not invent paths.
 """
+
+
+def _compose_system_prompt() -> str:
+    """Prepend the persistent-memory frozen snapshot (if any) to the base prompt.
+
+    The snapshot is computed *at agent build time*, not per turn, so the
+    LangGraph ReAct loop can keep its prompt static. CLI rebuilds the agent
+    on every fresh chat session, so newly remembered facts surface on the
+    next session without extra plumbing.
+    """
+    try:
+        from optiprofiler_agent.runtime import memory as _rt_memory
+        snapshot = _rt_memory.frozen_snapshot()
+    except Exception:
+        snapshot = ""
+    if not snapshot:
+        return _SYSTEM_PROMPT_BASE
+    return snapshot + "\n" + _SYSTEM_PROMPT_BASE
+
+
+_SYSTEM_PROMPT = _SYSTEM_PROMPT_BASE  # backwards-compat for tests / imports
 
 
 def _build_tools(config: AgentConfig) -> list:
@@ -161,7 +208,72 @@ def _build_tools(config: AgentConfig) -> list:
         except Exception as e:
             return f"Error analyzing results: {e}"
 
-    return [knowledge_search, validate_script, debug_error, interpret_results]
+    @tool
+    def remember(
+        fact: Annotated[str, "One short factual sentence to persist"],
+        tags: Annotated[list[str], "Optional list of short tags"] = [],
+    ) -> str:
+        """Append a fact to the agent's long-term MEMORY.md."""
+        from optiprofiler_agent.runtime import memory as _mem
+
+        line = _mem.append_fact(fact, tags=tags)
+        if not line:
+            return "Nothing to remember (empty fact)."
+        return f"Stored: {line}"
+
+    @tool
+    def update_user_profile(
+        field: Annotated[str, "One of: name, role, preferred_solver, preferred_language, project_root"],
+        value: Annotated[str, "The new value"],
+    ) -> str:
+        """Set one whitelisted USER profile field."""
+        from optiprofiler_agent.runtime import memory as _mem
+
+        try:
+            line = _mem.update_user_profile(field, value)
+        except ValueError as exc:
+            return f"Error: {exc}"
+        return f"Updated profile: {line}"
+
+    @tool
+    def recall_past(
+        query: Annotated[str, "Keywords to search past chat turns"],
+        limit: Annotated[int, "Max number of hits to return"] = 5,
+    ) -> str:
+        """Full-text search past chat turns from previous sessions."""
+        from optiprofiler_agent.runtime import session_log as _sl
+
+        hits = _sl.search(query, limit=limit)
+        if not hits:
+            return "No matching past turns."
+        lines = []
+        for h in hits:
+            snippet = h.content if len(h.content) <= 240 else h.content[:240] + "..."
+            lines.append(f"[{h.role} @ session {h.session_id[:8]}] {snippet}")
+        return "\n".join(lines)
+
+    @tool
+    def add_wiki_page(
+        slug: Annotated[str, "Short slug (will be sanitized)"],
+        content: Annotated[str, "Markdown body of the page"],
+        summary: Annotated[str, "One-line summary"] = "",
+    ) -> str:
+        """Create a new agent-authored wiki page under OPAGENT_HOME/wiki/auto/."""
+        from optiprofiler_agent.runtime import wiki_local as _wl
+
+        path = _wl.add_page(slug, content, summary=summary, source="agent")
+        return f"Wrote {path}"
+
+    return [
+        knowledge_search,
+        validate_script,
+        debug_error,
+        interpret_results,
+        remember,
+        update_user_profile,
+        recall_past,
+        add_wiki_page,
+    ]
 
 
 def create_unified_agent(config: AgentConfig | None = None):
@@ -179,7 +291,7 @@ def create_unified_agent(config: AgentConfig | None = None):
     agent = create_react_agent(
         llm,
         tools=tools,
-        prompt=_SYSTEM_PROMPT,
+        prompt=_compose_system_prompt(),
     )
 
     return agent

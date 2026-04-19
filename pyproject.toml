@@ -29,6 +29,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "click>=8.0",
     "rich>=13.0",
+    "prompt-toolkit>=3.0",
 ]
 
 [project.optional-dependencies]
@@ -72,6 +73,7 @@ optiprofiler_agent = [
     "agent_a/prompts/*.md",
     "agent_b/prompts/*.md",
     "agent_c/prompts/*.md",
+    "runtime/_seed/**/*",
 ]
 
 [tool.ruff]
