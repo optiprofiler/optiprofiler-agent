@@ -138,7 +138,7 @@ model rarely picks the wrong one. Source of truth is
 **Routing discipline.** The system prompt contains a hard rule that the
 model must call the tool **before** claiming it is unavailable, to
 prevent a common failure mode where the model "imagines" that web
-search is disabled and refuses pre-emptively. The tool itself returns a
+search is disabled and refuses preemptively. The tool itself returns a
 `web_search disabled: ...` string when keys are missing, which the
 model is then explicitly allowed to relay.
 
@@ -152,7 +152,7 @@ prompt — a real cost — so the bar is high.
 
 The unified agent is convenient but pays one extra LLM round-trip per
 turn (the routing decision). For workflows where the routing is fixed
-in advance, we ship three specialists, each invokable directly from the
+in advance, we ship three specialists, each invocable directly from the
 CLI:
 
 | Agent          | Module                              | When the unified router would just route here |
