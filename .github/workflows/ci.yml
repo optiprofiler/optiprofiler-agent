@@ -20,14 +20,14 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.10", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
@@ -39,29 +39,48 @@ jobs:
 
       # Guard: critical new test modules must exist + be picked up by collection.
       # Catches accidental rename / move that would silently drop coverage of
-      # init / onboarding / env-precedence / first-run hook.
+      # init / onboarding / env-precedence / first-run hook. Implemented in
+      # Python (not bash) so the same logic works identically on macOS and
+      # Linux runners and on every shell flavour, and so a pytest collection
+      # error fails LOUDLY here instead of silently in a piped tail.
       - name: Verify new test modules are collected
         shell: bash
+        env:
+          OPAGENT_HOME: ${{ runner.temp }}/opagent_verify
+          OPAGENT_NO_AUTO_INIT: "1"
         run: |
-          set -euo pipefail
-          REQUIRED=(
-            tests/test_onboarding.py
-            tests/test_config_env_precedence.py
-            tests/test_cli_first_run.py
-            tests/test_runtime.py
+          python - <<'PY'
+          import subprocess, sys, pathlib
+          required = [
+              "tests/test_onboarding.py",
+              "tests/test_config_env_precedence.py",
+              "tests/test_cli_first_run.py",
+              "tests/test_runtime.py",
+          ]
+          missing = [f for f in required if not pathlib.Path(f).is_file()]
+          if missing:
+              print(f"::error::missing required test files: {missing}")
+              sys.exit(1)
+          # --co fails loud, captures stderr too, no fragile pipes.
+          r = subprocess.run(
+              [sys.executable, "-m", "pytest", "tests/", "--collect-only", "-q",
+               "--ignore=tests/test_rag.py"],
+              capture_output=True, text=True,
           )
-          for f in "${REQUIRED[@]}"; do
-            test -f "$f" || { echo "::error::missing required test file $f"; exit 1; }
-          done
-          collected=$(pytest tests/ --collect-only -q --ignore=tests/test_rag.py 2>&1 | tail -1)
-          echo "Collected: $collected"
-          # 250 = post-rename floor (Apr 2026); update if you intentionally
-          # remove tests, NOT to silence flakes.
-          n=$(echo "$collected" | grep -oE '[0-9]+' | head -1)
-          if [ "${n:-0}" -lt 230 ]; then
-            echo "::error::test collection dropped to $n (expected >= 230)"
-            exit 1
-          fi
+          sys.stdout.write(r.stdout)
+          sys.stderr.write(r.stderr)
+          if r.returncode != 0:
+              print(f"::error::pytest --collect-only exited {r.returncode}")
+              sys.exit(r.returncode)
+          # Last non-empty line is "<N> tests collected in <T>s" or similar.
+          tail = [ln for ln in r.stdout.splitlines() if ln.strip()][-1]
+          n = int("".join(c for c in tail.split()[0] if c.isdigit()) or 0)
+          floor = 230  # post-rename floor (Apr 2026); bump only when removing tests intentionally.
+          if n < floor:
+              print(f"::error::test collection dropped to {n} (expected >= {floor}); tail='{tail}'")
+              sys.exit(1)
+          print(f"OK: {n} tests collected (floor {floor}).")
+          PY
 
       # Smoke: verify the auto-init hook degrades cleanly without a TTY.
       # CI has no stdin, so the wizard MUST skip rather than block forever.
@@ -72,32 +91,47 @@ jobs:
           OPAGENT_HOME: ${{ runner.temp }}/opagent_ci
           OPAGENT_NO_AUTO_INIT: "1"
         run: |
+          set -e
+          echo "::group::opagent --version"
           opagent --version
+          echo "::endgroup::"
+          echo "::group::opagent --help"
           opagent --help > /dev/null
-          # Run init explicitly with --no-interactive to confirm scriptable mode
-          opagent init --no-interactive || true
+          echo "::endgroup::"
+          echo "::group::opagent init --no-interactive"
+          # --no-interactive must exit 0 (success when nothing to do); failing
+          # here = a real regression in the scriptable init path, not a flake.
+          opagent init --no-interactive
+          echo "::endgroup::"
 
+      # Tests run from a writable, isolated home so anything that calls
+      # bootstrap.ensure() never depends on the runner's $HOME being clean.
+      # No -x: surface ALL failures across the matrix in one push, not just
+      # the first. --tb=short keeps logs readable; -ra prints a tidy summary.
       - name: Run core tests (skip RAG)
-        run: pytest tests/ -v --ignore=tests/test_rag.py -x
+        env:
+          OPAGENT_HOME: ${{ runner.temp }}/opagent_tests
+          OPAGENT_NO_AUTO_INIT: "1"
+        run: pytest tests/ -v -ra --tb=short --ignore=tests/test_rag.py
 
   test-rag:
     name: RAG tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Cache pip packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: rag-pip-${{ hashFiles('pyproject.toml') }}
 
       - name: Cache HuggingFace models
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/huggingface
           key: hf-models-${{ hashFiles('pyproject.toml') }}
@@ -112,14 +146,14 @@ jobs:
     name: Eval (dry-run, no LLM)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Cache pip packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: eval-pip-${{ hashFiles('pyproject.toml') }}
@@ -147,9 +181,9 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -163,9 +197,9 @@ jobs:
     name: Prose & terminology lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 

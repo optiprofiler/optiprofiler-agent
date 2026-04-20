@@ -48,6 +48,25 @@ def test_bootstrap_idempotent_and_copies_seeds():
     assert paths.auto_wiki_dir().exists()
     assert paths.skills_dir().exists()
     assert paths.manifest_path().exists()
+    # `.env` is the renamed-on-copy seed (`.env.template` -> `.env`). It MUST
+    # land here or the onboarding wizard has no commented hints to merge into,
+    # and a brand-new install would also start with an empty secrets file.
+    # This guards against the .gitignore `.env.*` pattern silently dropping
+    # the seed from the source tree on a fresh checkout.
+    env_file = paths.env_path()
+    assert env_file.exists(), (
+        f"{env_file} missing — `.env.template` did not get copied. "
+        "Most likely the seed was excluded from git by an over-broad "
+        ".gitignore rule. See .gitignore exception for "
+        "optiprofiler_agent/runtime/_seed/.env.template."
+    )
+    env_text = env_file.read_text(encoding="utf-8")
+    # Spot-check that template hints made it through — the wizard's merge
+    # step relies on these comment lines being preserved.
+    assert "# KIMI_API_KEY=" in env_text or "# MINIMAX_API_KEY=" in env_text, (
+        "Seed `.env.template` was copied but is empty / lacks commented "
+        "provider hints. Did someone replace it with an empty file?"
+    )
 
     user_text = paths.memory_path().read_text(encoding="utf-8")
     paths.memory_path().write_text(user_text + "\n- user-edit-marker\n", encoding="utf-8")
@@ -55,6 +74,29 @@ def test_bootstrap_idempotent_and_copies_seeds():
     m2 = bootstrap.ensure()
     assert m1["seeded"] == m2["seeded"]
     assert "user-edit-marker" in paths.memory_path().read_text(encoding="utf-8")
+
+
+def test_seed_template_present_in_source_tree():
+    """Source-tree guard: catch the .gitignore-eats-seed-file bug at import time.
+
+    The wheel ships ``runtime/_seed/.env.template`` via package-data, but the
+    source tree must also contain it — every test that exercises the
+    onboarding flow assumes ``bootstrap.ensure()`` can find a non-empty
+    template to copy. Catches the failure mode where a `.env.*` ignore
+    pattern silently strips the file from a fresh ``git clone``.
+    """
+    from optiprofiler_agent.runtime import paths
+
+    seed = paths.bundled_seed_dir() / ".env.template"
+    assert seed.is_file(), (
+        f"missing {seed}. If you just adjusted .gitignore, make sure it "
+        "still allows this path (see the explicit `!` exception)."
+    )
+    body = seed.read_text(encoding="utf-8")
+    assert "MINIMAX_API_KEY" in body and "OPAGENT_DEFAULT_PROVIDER" in body, (
+        "seed template is present but does not look like the expected "
+        "skeleton — refusing to ship a degenerate template."
+    )
 
 
 def test_memory_append_and_snapshot():

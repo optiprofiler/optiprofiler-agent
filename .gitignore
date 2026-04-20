@@ -1,7 +1,15 @@
-# Secrets (never commit real keys)
+# Secrets (never commit real keys).
+# `.env.*` catches per-environment overrides like `.env.local`, `.env.staging`.
+# Two intentional exceptions:
+#   - `.env.example`            — the project-local override template at repo root
+#   - `.env.template` under     — the bundled seed copied into ~/.opagent/.env on
+#     `runtime/_seed/`            first run; SHIPS in the wheel via package-data,
+#                                 so it must also exist in the source tree (and
+#                                 therefore in git) or CI / fresh clones break.
 .env
 .env.*
 !.env.example
+!optiprofiler_agent/runtime/_seed/.env.template
 
 # Python
 __pycache__/

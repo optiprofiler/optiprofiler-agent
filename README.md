@@ -11,7 +11,7 @@ AI Agent system for [OptiProfiler](https://www.optprof.com), covering the full u
 | **Interpreter** ([`interpreter/`](optiprofiler_agent/interpreter/)) | Analyze profile scores and curves, generate structured reports | After testing (on success) |
 | **Unified Agent** ([`unified_agent.py`](optiprofiler_agent/unified_agent.py)) | Single conversational interface that dynamically selects tools from all three sub-agents | Anytime |
 
-> Roadmap of upcoming work — including L4 constrained decoding, web search in the debugger path, and the long-term self-evolution loop — lives in [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> Top-down technical architecture (function-calling layout, the nine tools the unified agent exposes, validators, persistence, and how to extend any of it) lives in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Roadmap of upcoming work — including L4 constrained decoding, web search in the debugger path, and the long-term self-evolution loop — lives in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Installation
 
