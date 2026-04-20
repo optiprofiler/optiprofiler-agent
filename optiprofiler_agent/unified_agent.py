@@ -186,7 +186,7 @@ def _build_tools(config: AgentConfig) -> list:
     ) -> str:
         """Diagnose a benchmark script error and suggest a fix.
         Provide the code and the error traceback."""
-        from optiprofiler_agent.agent_b.debugger import debug_script
+        from optiprofiler_agent.debugger.debugger import debug_script
 
         result = debug_script(code=code, error=error, config=config)
 
@@ -202,8 +202,8 @@ def _build_tools(config: AgentConfig) -> list:
     ) -> str:
         """Analyze benchmark results and generate a summary report.
         Point to the output directory (e.g., 'out/') or a specific experiment folder."""
-        from optiprofiler_agent.agent_c.interpreter import interpret
-        from optiprofiler_agent.agent_c.result_loader import find_latest_experiment
+        from optiprofiler_agent.interpreter.interpreter import interpret
+        from optiprofiler_agent.interpreter.result_loader import find_latest_experiment
 
         target = results_dir
         if use_latest:

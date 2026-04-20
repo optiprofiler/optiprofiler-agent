@@ -21,8 +21,8 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
-from optiprofiler_agent.agent_c.report_schema import BenchmarkReport
-from optiprofiler_agent.agent_c.summary import BenchmarkSummary
+from optiprofiler_agent.interpreter.report_schema import BenchmarkReport
+from optiprofiler_agent.interpreter.summary import BenchmarkSummary
 
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"

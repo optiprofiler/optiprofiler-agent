@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from optiprofiler_agent.agent_c.result_loader import ProfilePaths
-from optiprofiler_agent.agent_c.summary import BenchmarkSummary, build_summary
+from optiprofiler_agent.interpreter.result_loader import ProfilePaths
+from optiprofiler_agent.interpreter.summary import BenchmarkSummary, build_summary
 from optiprofiler_agent.config import AgentConfig
 
 
@@ -76,7 +76,7 @@ def fake_experiment(tmp_path):
 class TestResultLoader:
 
     def test_load_results_basic(self, fake_experiment):
-        from optiprofiler_agent.agent_c.result_loader import load_results
+        from optiprofiler_agent.interpreter.result_loader import load_results
         results = load_results(fake_experiment)
 
         assert results.language == "python"
@@ -89,7 +89,7 @@ class TestResultLoader:
         assert results.config.maxdim == 5
 
     def test_load_results_problems(self, fake_experiment):
-        from optiprofiler_agent.agent_c.result_loader import load_results
+        from optiprofiler_agent.interpreter.result_loader import load_results
         results = load_results(fake_experiment)
 
         assert "cutest" in results.problems
@@ -98,14 +98,14 @@ class TestResultLoader:
         assert results.problems["cutest"][0].dimension == 3
 
     def test_load_results_wall_times(self, fake_experiment):
-        from optiprofiler_agent.agent_c.result_loader import load_results
+        from optiprofiler_agent.interpreter.result_loader import load_results
         results = load_results(fake_experiment)
 
         assert results.wall_clock_times.get("cutest") == pytest.approx(1.3)
         assert results.n_problems.get("cutest") == 1
 
     def test_missing_test_log_raises(self, tmp_path):
-        from optiprofiler_agent.agent_c.result_loader import load_results
+        from optiprofiler_agent.interpreter.result_loader import load_results
         with pytest.raises(FileNotFoundError, match="test_log"):
             load_results(tmp_path)
 
@@ -146,7 +146,7 @@ class TestBuildSummary:
 class TestInterpretNoLLM:
 
     def test_interpret_returns_json(self, fake_experiment):
-        from optiprofiler_agent.agent_c.interpreter import interpret
+        from optiprofiler_agent.interpreter.interpreter import interpret
         result = interpret(
             results_dir=fake_experiment,
             llm_enabled=False,
@@ -177,7 +177,7 @@ class TestInterpretWithLLM:
         )
         mock_create.return_value = mock_llm
 
-        from optiprofiler_agent.agent_c.interpreter import interpret
+        from optiprofiler_agent.interpreter.interpreter import interpret
         result = interpret(
             results_dir=fake_experiment,
             config=AgentConfig(llm=MagicMock()),
@@ -206,7 +206,7 @@ class TestInterpretWithLLM:
         )
         mock_create.return_value = mock_llm
 
-        from optiprofiler_agent.agent_c.interpreter import interpret
+        from optiprofiler_agent.interpreter.interpreter import interpret
         result = interpret(
             results_dir=fake_experiment,
             config=AgentConfig(llm=MagicMock()),
@@ -257,7 +257,7 @@ class TestInterpretWithLLM:
         )
         mock_create.return_value = mock_llm
 
-        from optiprofiler_agent.agent_c.interpreter import interpret
+        from optiprofiler_agent.interpreter.interpreter import interpret
         result = interpret(
             results_dir=fake_experiment,
             config=AgentConfig(llm=MagicMock()),
@@ -280,46 +280,46 @@ class TestThinkingHelpers:
     """Unit tests for the ``<think>`` / JSON-extraction utilities."""
 
     def test_strip_thinking_removes_paired_block(self):
-        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        from optiprofiler_agent.interpreter.interpreter import _strip_thinking
         out = _strip_thinking("<think>plan</think>\nfinal answer")
         assert out == "final answer"
 
     def test_strip_thinking_handles_thinking_tag(self):
-        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        from optiprofiler_agent.interpreter.interpreter import _strip_thinking
         out = _strip_thinking("<thinking>...</thinking>real")
         assert out == "real"
 
     def test_strip_thinking_handles_reasoning_tag(self):
-        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        from optiprofiler_agent.interpreter.interpreter import _strip_thinking
         out = _strip_thinking("<reasoning>X</reasoning>Y")
         assert out == "Y"
 
     def test_strip_thinking_no_op_without_tags(self):
-        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        from optiprofiler_agent.interpreter.interpreter import _strip_thinking
         assert _strip_thinking("just text") == "just text"
 
     def test_strip_thinking_handles_empty(self):
-        from optiprofiler_agent.agent_c.interpreter import _strip_thinking
+        from optiprofiler_agent.interpreter.interpreter import _strip_thinking
         assert _strip_thinking("") == ""
         assert _strip_thinking(None) == ""
 
     def test_extract_json_unwraps_fenced_block(self):
-        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        from optiprofiler_agent.interpreter.interpreter import _extract_json_blob
         out = _extract_json_blob('prose ```json\n{"a": 1}\n``` more')
         assert out == '{"a": 1}'
 
     def test_extract_json_after_thinking_block(self):
-        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        from optiprofiler_agent.interpreter.interpreter import _extract_json_blob
         out = _extract_json_blob('<think>x</think>{"a": 1, "b": [2, 3]}')
         assert out == '{"a": 1, "b": [2, 3]}'
 
     def test_extract_json_balances_nested_braces(self):
-        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        from optiprofiler_agent.interpreter.interpreter import _extract_json_blob
         out = _extract_json_blob('lead {"x": {"y": 1}} trail')
         assert out == '{"x": {"y": 1}}'
 
     def test_extract_json_ignores_braces_inside_strings(self):
-        from optiprofiler_agent.agent_c.interpreter import _extract_json_blob
+        from optiprofiler_agent.interpreter.interpreter import _extract_json_blob
         out = _extract_json_blob('{"s": "has } brace"}')
         assert out == '{"s": "has } brace"}'
 
@@ -331,13 +331,13 @@ class TestThinkingHelpers:
 class TestProfileReader:
 
     def test_read_all_profiles_empty_paths(self):
-        from optiprofiler_agent.agent_c.profile_reader import read_all_profiles
+        from optiprofiler_agent.interpreter.profile_reader import read_all_profiles
         paths = ProfilePaths()
         result = read_all_profiles(paths)
         assert result == {}
 
     def test_read_all_profiles_missing_file_skipped(self, tmp_path):
-        from optiprofiler_agent.agent_c.profile_reader import read_all_profiles
+        from optiprofiler_agent.interpreter.profile_reader import read_all_profiles
         paths = ProfilePaths(perf_hist=tmp_path / "nonexistent.pdf")
         result = read_all_profiles(paths)
         assert "perf_hist" not in result

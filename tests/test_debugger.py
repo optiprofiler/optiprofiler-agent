@@ -5,7 +5,7 @@ All tests use mocked LLM calls; no real API key needed.
 
 from unittest.mock import MagicMock, patch
 
-from optiprofiler_agent.agent_b.debugger import (
+from optiprofiler_agent.debugger.debugger import (
     DebugResult,
     _extract_code_from_reply,
     _validate_code,
@@ -132,7 +132,7 @@ class TestDebugScript:
         )
         assert result.classification.error_type == "numerical"
 
-    @patch("optiprofiler_agent.agent_b.debugger._handle_runtime_with_llm")
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
     def test_runtime_error_calls_llm_handler(self, mock_llm):
         mock_llm.return_value = (GOOD_CODE, "Fixed it", 1)
         result = debug_script(
@@ -149,7 +149,7 @@ class TestDebugScript:
 
 class TestRunAndDebug:
 
-    @patch("optiprofiler_agent.agent_b.local_runner.run_script")
+    @patch("optiprofiler_agent.debugger.local_runner.run_script")
     def test_success_on_first_run(self, mock_run):
         mock_run.return_value = MagicMock(
             success=True, stdout="OK", stderr="", traceback=None, timed_out=False,
@@ -162,8 +162,8 @@ class TestRunAndDebug:
         assert result.attempts == 1
         assert result.validation_passed is True
 
-    @patch("optiprofiler_agent.agent_b.debugger.debug_script")
-    @patch("optiprofiler_agent.agent_b.local_runner.run_script")
+    @patch("optiprofiler_agent.debugger.debugger.debug_script")
+    @patch("optiprofiler_agent.debugger.local_runner.run_script")
     def test_fix_and_rerun_success(self, mock_run, mock_debug):
         fail_result = MagicMock(
             success=False, stdout="", stderr="NameError: x",
@@ -186,8 +186,8 @@ class TestRunAndDebug:
         assert result.classification.error_type == "none"
         assert result.attempts == 2
 
-    @patch("optiprofiler_agent.agent_b.debugger.debug_script")
-    @patch("optiprofiler_agent.agent_b.local_runner.run_script")
+    @patch("optiprofiler_agent.debugger.debugger.debug_script")
+    @patch("optiprofiler_agent.debugger.local_runner.run_script")
     def test_no_fix_available_stops(self, mock_run, mock_debug):
         fail_result = MagicMock(
             success=False, stdout="", stderr="Error",
@@ -206,7 +206,7 @@ class TestRunAndDebug:
         result = run_and_debug(code="bad code", config=_make_config())
         assert result.validation_passed is False
 
-    @patch("optiprofiler_agent.agent_b.local_runner.run_script")
+    @patch("optiprofiler_agent.debugger.local_runner.run_script")
     def test_timeout_on_first_run(self, mock_run):
         mock_run.return_value = MagicMock(
             success=False, stdout="", stderr="",
@@ -215,7 +215,7 @@ class TestRunAndDebug:
         result = run_and_debug(code=GOOD_CODE, config=_make_config())
         assert result.classification.error_type in ("timeout", "runtime_error")
 
-    @patch("optiprofiler_agent.agent_b.local_runner.run_script")
+    @patch("optiprofiler_agent.debugger.local_runner.run_script")
     def test_progress_callback_called(self, mock_run):
         mock_run.return_value = MagicMock(
             success=True, stdout="OK", stderr="", traceback=None, timed_out=False,

@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from optiprofiler_agent.agent_c.report_schema import (
+from optiprofiler_agent.interpreter.report_schema import (
     AnomaliesSection,
     AnomalyEntry,
     BenchmarkReport,

@@ -14,13 +14,13 @@ def _has_test_data():
 class TestResultLoader:
 
     def test_find_latest_experiment(self):
-        from optiprofiler_agent.agent_c.result_loader import find_latest_experiment
+        from optiprofiler_agent.interpreter.result_loader import find_latest_experiment
 
         latest = find_latest_experiment(str(OP_TEST_OUT))
         assert latest.exists()
 
     def test_load_results(self):
-        from optiprofiler_agent.agent_c.result_loader import (
+        from optiprofiler_agent.interpreter.result_loader import (
             find_latest_experiment,
             load_results,
         )
@@ -32,7 +32,7 @@ class TestResultLoader:
         assert len(results.solver_scores) > 0
 
     def test_detect_language(self):
-        from optiprofiler_agent.agent_c.result_loader import (
+        from optiprofiler_agent.interpreter.result_loader import (
             find_latest_experiment,
             load_results,
         )

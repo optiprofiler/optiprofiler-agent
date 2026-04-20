@@ -18,10 +18,26 @@ the CLI can call it on every launch.
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import stat
 from pathlib import Path
 
 from optiprofiler_agent.runtime import paths
+
+
+# Seed files that should land in ``~/.opagent/`` under a different name than
+# their bundled source. The template ships as ``.env.template`` (so it is
+# obvious it is a template), but is written out as ``.env`` so the dotenv
+# loader picks it up without the user renaming anything.
+_SEED_RENAMES: dict[str, str] = {
+    ".env.template": ".env",
+}
+
+# Seed files containing secrets — restrict to user-only read/write after copy
+# so a misconfigured umask doesn't leak the API key to other users on a
+# multi-tenant box.
+_SECRET_FILES: frozenset[str] = frozenset({".env"})
 
 try:
     from importlib.metadata import version as _pkg_version
@@ -72,13 +88,22 @@ def ensure() -> dict:
 
     for seed_file in _seed_files():
         rel = seed_file.relative_to(seed_root)
-        target = home / rel
+        rel_str = str(rel)
+        target_name = _SEED_RENAMES.get(rel_str, rel_str)
+        target = home / target_name
         if target.exists():
-            seeded.add(str(rel))
+            seeded.add(rel_str)
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(seed_file, target)
-        seeded.add(str(rel))
+        # Lock down secrets-bearing files (POSIX only). Best-effort on
+        # Windows / odd filesystems — failure here must never block bootstrap.
+        if target.name in _SECRET_FILES and os.name == "posix":
+            try:
+                os.chmod(target, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
+            except OSError:
+                pass
+        seeded.add(rel_str)
         changed = True
 
     if changed or manifest.get("version") != _PKG_VERSION:

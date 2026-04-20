@@ -21,8 +21,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from optiprofiler_agent.agent_c.report_schema import BenchmarkReport
-from optiprofiler_agent.agent_c.summary import BenchmarkSummary
+from optiprofiler_agent.interpreter.report_schema import BenchmarkReport
+from optiprofiler_agent.interpreter.summary import BenchmarkSummary
 
 
 Severity = Literal["error", "warning"]

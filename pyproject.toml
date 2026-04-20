@@ -74,11 +74,12 @@ optiprofiler_agent = [
     "knowledge/**/*.json",
     "knowledge/SCHEMA.md",
     "knowledge/enums.json",
-    "agent_a/prompts/*.md",
-    "agent_b/prompts/*.md",
-    "agent_c/prompts/*.md",
-    "agent_c/templates/*.j2",
+    "advisor/prompts/*.md",
+    "debugger/prompts/*.md",
+    "interpreter/prompts/*.md",
+    "interpreter/templates/*.j2",
     "runtime/_seed/**/*",
+    "runtime/_seed/.env.template",
 ]
 
 [tool.ruff]

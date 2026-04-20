@@ -27,9 +27,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 SCAN_DIRS = [
     REPO_ROOT / "optiprofiler_agent" / "knowledge",
-    REPO_ROOT / "optiprofiler_agent" / "agent_a" / "prompts",
-    REPO_ROOT / "optiprofiler_agent" / "agent_b" / "prompts",
-    REPO_ROOT / "optiprofiler_agent" / "agent_c" / "prompts",
+    REPO_ROOT / "optiprofiler_agent" / "advisor" / "prompts",
+    REPO_ROOT / "optiprofiler_agent" / "debugger" / "prompts",
+    REPO_ROOT / "optiprofiler_agent" / "interpreter" / "prompts",
     REPO_ROOT / "docs",
 ]
 

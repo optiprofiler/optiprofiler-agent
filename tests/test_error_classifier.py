@@ -1,6 +1,6 @@
 """Tests for Agent B's error classifier — all 5 error types."""
 
-from optiprofiler_agent.agent_b.error_classifier import classify_error
+from optiprofiler_agent.debugger.error_classifier import classify_error
 
 
 class TestErrorClassifier:

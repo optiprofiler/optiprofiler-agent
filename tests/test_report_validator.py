@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from optiprofiler_agent.agent_c.report_schema import (
+from optiprofiler_agent.interpreter.report_schema import (
     AnomaliesSection,
     AnomalyEntry,
     BenchmarkReport,
@@ -14,12 +14,12 @@ from optiprofiler_agent.agent_c.report_schema import (
     RecommendationsSection,
     ReportOverview,
 )
-from optiprofiler_agent.agent_c.report_validator import (
+from optiprofiler_agent.interpreter.report_validator import (
     format_feedback_for_llm,
     format_for_user,
     validate_report,
 )
-from optiprofiler_agent.agent_c.summary import BenchmarkSummary
+from optiprofiler_agent.interpreter.summary import BenchmarkSummary
 
 
 def _make_summary(

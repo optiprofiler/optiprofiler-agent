@@ -167,19 +167,97 @@ def _short_repr(value, limit: int = 60) -> str:
     return text
 
 
+# Subcommands that don't need an LLM key — skip the auto-init prompt for
+# them so users can introspect / configure without being interrupted.
+_NO_KEY_REQUIRED: frozenset[str] = frozenset({
+    "init", "wiki", "memory", "session", "home", "skills", "index", "check",
+})
+
+
+def _maybe_run_first_time_init(ctx: click.Context) -> None:
+    """Run ``opagent init`` automatically when no API key is reachable.
+
+    Opt-out via ``OPAGENT_NO_AUTO_INIT=1`` (handy in CI).  Bails out
+    cleanly when stdin is not a tty so unattended runs degrade to the
+    usual "missing key" error instead of hanging on ``input()``.
+    """
+    import os
+
+    if os.environ.get("OPAGENT_NO_AUTO_INIT"):
+        return
+    if ctx.invoked_subcommand in _NO_KEY_REQUIRED:
+        return
+
+    from optiprofiler_agent import onboarding
+
+    if onboarding.has_any_provider_key():
+        return
+
+    if not sys.stdin.isatty():
+        console.print(
+            "[yellow]No API key detected and stdin is not a tty.[/]\n"
+            "Run [bold]opagent init[/] in an interactive shell, or set one of: "
+            + ", ".join(onboarding.known_provider_env_vars())
+            + "."
+        )
+        return
+
+    console.print(
+        "[yellow]No API key found in shell env, ./.env, or "
+        "~/.opagent/.env.[/] Launching one-time setup..."
+    )
+    result = onboarding.run_init(force=False, no_interactive=False)
+    if result.skipped or not result.written_path:
+        console.print(
+            "[yellow]Setup did not complete[/] "
+            f"({result.reason or 'no provider configured'}).\n"
+            "Re-run [bold]opagent init[/] when ready."
+        )
+        ctx.exit(1)
+    # Re-load env files so the freshly-written keys are visible to the
+    # subcommand we're about to invoke (without forcing a process restart).
+    from optiprofiler_agent import config as _config
+    _config._load_env_files()
+    console.print("")
+
+
 @click.group(invoke_without_command=True)
 @click.version_option(package_name="optiprofiler-agent")
 @click.pass_context
 def main(ctx):
     """OptiProfiler Agent — AI assistant for optimization benchmarking."""
+    _maybe_run_first_time_init(ctx)
     if ctx.invoked_subcommand is None:
         ctx.invoke(agent)
 
 
 @main.command()
-@click.option("--provider", default="minimax",
+@click.option("--force", is_flag=True, default=False,
+              help="Overwrite existing API keys without asking.")
+@click.option("--no-interactive", is_flag=True, default=False,
+              help="Skip the interactive wizard (returns non-zero if nothing is configured).")
+def init(force: bool, no_interactive: bool):
+    """Configure ~/.opagent/.env interactively (provider + API key).
+
+    On a fresh install, just run ``opagent`` and the wizard fires
+    automatically. This subcommand is the explicit entry point for
+    re-configuring later, switching providers, or scripting setup in a
+    Dockerfile / CI bootstrap.
+    """
+    from optiprofiler_agent import onboarding
+
+    result = onboarding.run_init(force=force, no_interactive=no_interactive)
+    if result.skipped:
+        console.print(f"[yellow]init skipped:[/] {result.reason or 'no action taken'}")
+        sys.exit(0 if no_interactive else 1)
+    console.print(f"[green]Configured provider:[/] {result.provider}")
+    console.print(f"[dim]File:[/] {result.written_path}")
+
+
+@main.command()
+@click.option("--provider", default=None,
               type=click.Choice(list(PROVIDER_REGISTRY.keys())),
-              help="LLM provider to use.")
+              help="LLM provider (default: $OPAGENT_DEFAULT_PROVIDER, then first configured key, then minimax).")
 @click.option("--model", default=None, help="Model name (overrides provider default).")
 @click.option("--rag", is_flag=True, default=False, help="Enable RAG retrieval.")
 @click.option("--rag-top-k", default=5, type=int, help="Number of RAG chunks to retrieve.")
@@ -189,7 +267,7 @@ def main(ctx):
 def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
          verbose: bool, validate: bool):
     """Interactive chat with the OptiProfiler Product Advisor."""
-    from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+    from optiprofiler_agent.advisor.advisor import AdvisorAgent
     from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
     from optiprofiler_agent.runtime import session_log as _rt_session
     from optiprofiler_agent.runtime import trajectory as _rt_traj
@@ -386,9 +464,9 @@ def check(filepath: str, language: str):
 
 @main.command()
 @click.argument("results_dir", type=click.Path(exists=True))
-@click.option("--provider", default="minimax",
+@click.option("--provider", default=None,
               type=click.Choice(list(PROVIDER_REGISTRY.keys())),
-              help="LLM provider for report generation.")
+              help="LLM provider for report generation (default: from OPAGENT_DEFAULT_PROVIDER).")
 @click.option("--model", default=None, help="Model name (overrides provider default).")
 @click.option("--language", default="English", help="Report language.")
 @click.option("--no-llm", is_flag=True, default=False,
@@ -408,8 +486,8 @@ def interpret(results_dir: str, provider: str, model: str | None,
               language: str, no_llm: bool, no_profiles: bool,
               output: str | None, latest: bool, output_format: str):
     """Analyze benchmark results and generate a report."""
-    from optiprofiler_agent.agent_c.interpreter import interpret as do_interpret
-    from optiprofiler_agent.agent_c.result_loader import find_latest_experiment
+    from optiprofiler_agent.interpreter.interpreter import interpret as do_interpret
+    from optiprofiler_agent.interpreter.result_loader import find_latest_experiment
 
     if latest:
         try:
@@ -456,9 +534,9 @@ def interpret(results_dir: str, provider: str, model: str | None,
               help="Timeout in seconds for each run (with --run).")
 @click.option("--save-fixed", default=None, type=click.Path(),
               help="Save the fixed code to this file (with --run).")
-@click.option("--provider", default="minimax",
+@click.option("--provider", default=None,
               type=click.Choice(list(PROVIDER_REGISTRY.keys())),
-              help="LLM provider for debugging.")
+              help="LLM provider for debugging (default: from OPAGENT_DEFAULT_PROVIDER).")
 @click.option("--model", default=None, help="Model name (overrides provider default).")
 @click.option("--max-retries", default=3, type=int, help="Maximum fix attempts.")
 @click.option("--code-limit", default=0, type=int,
@@ -477,7 +555,7 @@ def debug(filepath: str, traceback_file: str | None, error_text: str | None,
     )
 
     if run:
-        from optiprofiler_agent.agent_b.debugger import run_and_debug
+        from optiprofiler_agent.debugger.debugger import run_and_debug
 
         def _on_progress(msg: str):
             console.print(f"[dim]{msg}[/]")
@@ -492,7 +570,7 @@ def debug(filepath: str, traceback_file: str | None, error_text: str | None,
             progress_callback=_on_progress,
         )
     else:
-        from optiprofiler_agent.agent_b.debugger import debug_script
+        from optiprofiler_agent.debugger.debugger import debug_script
 
         if traceback_file:
             error = open(traceback_file, encoding="utf-8").read()
@@ -547,7 +625,7 @@ def _slash_debug(args: str, config: AgentConfig):
         console.print(f"[red]File not found: {filepath}[/]\n")
         return
 
-    from optiprofiler_agent.agent_b.debugger import run_and_debug
+    from optiprofiler_agent.debugger.debugger import run_and_debug
 
     code = filepath.read_text(encoding="utf-8")
     console.print(f"[bold]Running & debugging {filepath}...[/]\n")
@@ -582,8 +660,8 @@ def _slash_interpret(args: str, config: AgentConfig):
         console.print(f"[red]Directory not found: {results_dir}[/]\n")
         return
 
-    from optiprofiler_agent.agent_c.interpreter import interpret as do_interpret
-    from optiprofiler_agent.agent_c.result_loader import find_latest_experiment
+    from optiprofiler_agent.interpreter.interpreter import interpret as do_interpret
+    from optiprofiler_agent.interpreter.result_loader import find_latest_experiment
 
     if latest:
         try:
@@ -608,9 +686,9 @@ def _slash_interpret(args: str, config: AgentConfig):
 
 
 @main.command()
-@click.option("--provider", default="minimax",
+@click.option("--provider", default=None,
               type=click.Choice(list(PROVIDER_REGISTRY.keys())),
-              help="LLM provider.")
+              help="LLM provider (default: from OPAGENT_DEFAULT_PROVIDER).")
 @click.option("--model", default=None, help="Model name (overrides provider default).")
 def agent(provider: str, model: str | None):
     """Interactive unified agent with tool-use capabilities.
@@ -671,7 +749,7 @@ def agent(provider: str, model: str | None):
 
         if cmd == "/chat":
             if advisor is None:
-                from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+                from optiprofiler_agent.advisor.advisor import AdvisorAgent
                 advisor = AdvisorAgent(config)
             mode = "chat"
             console.print("[dim]▸ Chat mode (advisor)[/]\n")

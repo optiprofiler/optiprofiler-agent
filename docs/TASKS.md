@@ -16,9 +16,9 @@
 - [x] Write `knowledge/examples.md`: 6 Python + 2 MATLAB runnable examples (DFO-only)
 - [x] Write `knowledge/problem_libs_guide.md`: built-in and custom problem libraries
 - [x] Write `knowledge/matlab_guide.md`: MATLAB API, solver signatures, differences from Python
-- [x] Write `agent_a/prompts/system_prompt.md`: role definition + DFO constraint + knowledge injection
-- [x] Write `agent_a/prompts/few_shots.md`: 7 Q&A pairs (factual, config, interface adaptation, DFO guidance)
-- [x] Implement `agent_a/advisor.py`: core Agent A class (prompt assembly + LLM call + think-tag stripping)
+- [x] Write `advisor/prompts/system_prompt.md`: role definition + DFO constraint + knowledge injection
+- [x] Write `advisor/prompts/few_shots.md`: 7 Q&A pairs (factual, config, interface adaptation, DFO guidance)
+- [x] Implement `advisor/advisor.py`: core Agent A class (prompt assembly + LLM call + think-tag stripping)
 - [x] Write `scripts/chat.py`: interactive CLI for Agent A testing
 - [x] Write `scripts/test_llm_connection.py`: LLM API connectivity test
 - [x] Implement `common/interface_adapter.py`: solver signature analysis + wrapper generation
@@ -83,19 +83,19 @@
 
 ## Phase B-0: Agent B Auto-Debug Core (Weeks 3-4, depends on sandbox platform)
 
-- [x] Implement `agent_b/error_classifier.py`: error classifier
+- [x] Implement `debugger/error_classifier.py`: error classifier
   - Interface mismatch (signature analysis)
   - Runtime error (traceback pattern matching)
   - Missing dependency (ModuleNotFoundError)
   - Timeout
   - Numerical issue (NaN/Inf)
-- [x] Implement `agent_b/debugger.py`:
+- [x] Implement `debugger/debugger.py`:
   - Interface mismatch → call `interface_adapter.py` to generate wrapper
   - Runtime error → LLM analysis (code + traceback → fix)
   - Retry orchestration (max 2-3 attempts)
   - Diagnostic report generation (structured Markdown)
-- [x] Write `agent_b/prompts/system_prompt.md`: Python debugging expert role
-- [x] Write `agent_b/prompts/fix_templates.md`: common fix patterns
+- [x] Write `debugger/prompts/system_prompt.md`: Python debugging expert role
+- [x] Write `debugger/prompts/fix_templates.md`: common fix patterns
 - [ ] Write test cases (covering 5 error types)
 
 **Deliverable**: given code + traceback, outputs a fix or diagnostic report — **DONE (core)**
@@ -112,30 +112,30 @@
 
 ## Phase C-0: Agent C Data Analysis Engine (Weeks 3-4, independent)
 
-- [x] Implement `agent_c/result_loader.py`:
+- [x] Implement `interpreter/result_loader.py`:
   - Parse log.txt (experiment config, solver scores, per-run results)
   - Parse report.txt (problem table, convergence failures)
   - Auto-detect Python/MATLAB language
   - Discover PDF file paths (profiles, history plots)
-- [x] Implement `agent_c/profile_reader.py`:
+- [x] Implement `interpreter/profile_reader.py`:
   - Extract step-function curves from performance/data profile PDFs (PyMuPDF)
   - Extract bar chart data from log-ratio profile PDFs
   - Support single-page and multi-page (summary) PDFs
-- [x] Implement `agent_c/score_analyzer.py`:
+- [x] Implement `interpreter/score_analyzer.py`:
   - Solver rankings from log.txt scores
   - Head-to-head comparison from profile curves
   - Precision cliff detection across tolerances
   - Convergence failure pattern analysis
   - Timing outlier detection
   - Curve crossover detection
-- [x] Implement `agent_c/anomaly_detector.py`:
+- [x] Implement `interpreter/anomaly_detector.py`:
   - Extreme function values (solver failure)
   - Total evaluation failures
   - Universal convergence failure detection
   - Timing anomalies
   - Profile curve plateaus
   - Solver divergence at tight tolerances
-- [x] Implement `agent_c/summary.py`: combine all analyzers into BenchmarkSummary JSON
+- [x] Implement `interpreter/summary.py`: combine all analyzers into BenchmarkSummary JSON
 - [ ] Write unit tests
 
 **Deliverable**: given results_dir, outputs structured JSON summary — **DONE (core)**
@@ -144,9 +144,9 @@
 
 ## Phase C-1: Natural Language Report (Weeks 4-5)
 
-- [x] Write `agent_c/prompts/system_prompt.md`: optimization benchmark expert (DFO + Dolan-Moré methodology)
-- [x] Write `agent_c/prompts/report_template.md`: report template
-- [x] Implement `agent_c/interpreter.py`: JSON summary → LLM polish → Markdown report (with no-LLM fallback)
+- [x] Write `interpreter/prompts/system_prompt.md`: optimization benchmark expert (DFO + Dolan-Moré methodology)
+- [x] Write `interpreter/prompts/report_template.md`: report template
+- [x] Implement `interpreter/interpreter.py`: JSON summary → LLM polish → Markdown report (with no-LLM fallback)
 - [x] CLI: `opagent interpret <results_dir>` (with --no-llm, --no-profiles, --latest, --output)
 - [x] CLI: `opagent debug <script> --traceback <file>`
 - [ ] Write test cases

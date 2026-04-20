@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from optiprofiler_agent.agent_b.error_classifier import (
+from optiprofiler_agent.debugger.error_classifier import (
     ErrorClassification,
     classify_error_with_llm,
 )
@@ -384,7 +384,7 @@ def run_and_debug(
         Final result (may include the successfully-fixed code).
     """
     _progress_callback = progress_callback
-    from optiprofiler_agent.agent_b.local_runner import run_script
+    from optiprofiler_agent.debugger.local_runner import run_script
 
     config = config or AgentConfig()
     max_rounds = config.max_debug_retries

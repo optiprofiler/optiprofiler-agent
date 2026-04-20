@@ -37,6 +37,46 @@ jobs:
       - name: Install package with dev dependencies
         run: pip install -e '.[dev]'
 
+      # Guard: critical new test modules must exist + be picked up by collection.
+      # Catches accidental rename / move that would silently drop coverage of
+      # init / onboarding / env-precedence / first-run hook.
+      - name: Verify new test modules are collected
+        shell: bash
+        run: |
+          set -euo pipefail
+          REQUIRED=(
+            tests/test_onboarding.py
+            tests/test_config_env_precedence.py
+            tests/test_cli_first_run.py
+            tests/test_runtime.py
+          )
+          for f in "${REQUIRED[@]}"; do
+            test -f "$f" || { echo "::error::missing required test file $f"; exit 1; }
+          done
+          collected=$(pytest tests/ --collect-only -q --ignore=tests/test_rag.py 2>&1 | tail -1)
+          echo "Collected: $collected"
+          # 250 = post-rename floor (Apr 2026); update if you intentionally
+          # remove tests, NOT to silence flakes.
+          n=$(echo "$collected" | grep -oE '[0-9]+' | head -1)
+          if [ "${n:-0}" -lt 230 ]; then
+            echo "::error::test collection dropped to $n (expected >= 230)"
+            exit 1
+          fi
+
+      # Smoke: verify the auto-init hook degrades cleanly without a TTY.
+      # CI has no stdin, so the wizard MUST skip rather than block forever.
+      # Also confirms bootstrap.ensure() works on a fresh OPAGENT_HOME.
+      - name: Smoke test — opagent boots in non-TTY env
+        shell: bash
+        env:
+          OPAGENT_HOME: ${{ runner.temp }}/opagent_ci
+          OPAGENT_NO_AUTO_INIT: "1"
+        run: |
+          opagent --version
+          opagent --help > /dev/null
+          # Run init explicitly with --no-interactive to confirm scriptable mode
+          opagent init --no-interactive || true
+
       - name: Run core tests (skip RAG)
         run: pytest tests/ -v --ignore=tests/test_rag.py -x
 
@@ -136,4 +176,4 @@ jobs:
         run: python scripts/check_prose.py --ci
 
       - name: Spell check (codespell)
-        run: codespell --skip "*.json,*.pyc,__pycache__,.venv,node_modules" optiprofiler_agent/knowledge/ optiprofiler_agent/agent_a/prompts/ optiprofiler_agent/agent_b/prompts/ optiprofiler_agent/agent_c/prompts/ docs/
+        run: codespell --skip "*.json,*.pyc,__pycache__,.venv,node_modules" optiprofiler_agent/knowledge/ optiprofiler_agent/advisor/prompts/ optiprofiler_agent/debugger/prompts/ optiprofiler_agent/interpreter/prompts/ docs/

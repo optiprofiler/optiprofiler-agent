@@ -4,7 +4,7 @@
 class TestLocalRunner:
 
     def test_successful_script(self):
-        from optiprofiler_agent.agent_b.local_runner import run_script
+        from optiprofiler_agent.debugger.local_runner import run_script
 
         result = run_script("print('hello world')")
         assert result.success
@@ -12,7 +12,7 @@ class TestLocalRunner:
         assert result.exit_code == 0
 
     def test_failing_script(self):
-        from optiprofiler_agent.agent_b.local_runner import run_script
+        from optiprofiler_agent.debugger.local_runner import run_script
 
         result = run_script("raise ValueError('test error')")
         assert not result.success
@@ -20,7 +20,7 @@ class TestLocalRunner:
         assert "ValueError" in result.stderr
 
     def test_traceback_extraction(self):
-        from optiprofiler_agent.agent_b.local_runner import run_script
+        from optiprofiler_agent.debugger.local_runner import run_script
 
         result = run_script("1/0")
         assert not result.success
@@ -29,14 +29,14 @@ class TestLocalRunner:
         assert "Traceback" in tb
 
     def test_timeout(self):
-        from optiprofiler_agent.agent_b.local_runner import run_script
+        from optiprofiler_agent.debugger.local_runner import run_script
 
         result = run_script("import time; time.sleep(60)", timeout=2)
         assert result.timed_out
         assert not result.success
 
     def test_syntax_error(self):
-        from optiprofiler_agent.agent_b.local_runner import run_script
+        from optiprofiler_agent.debugger.local_runner import run_script
 
         result = run_script("def foo(:\n  pass")
         assert not result.success
@@ -45,7 +45,7 @@ class TestLocalRunner:
     def test_timeout_kills_child_processes(self):
         """Verify that child processes spawned by the script are also killed."""
         import subprocess
-        from optiprofiler_agent.agent_b.local_runner import run_script
+        from optiprofiler_agent.debugger.local_runner import run_script
 
         code = (
             "import multiprocessing, time\n"

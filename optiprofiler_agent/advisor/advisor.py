@@ -10,7 +10,7 @@ Python or MATLAB, only the relevant language knowledge is included.
 Usage::
 
     from optiprofiler_agent.config import AgentConfig
-    from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+    from optiprofiler_agent.advisor.advisor import AdvisorAgent
 
     agent = AdvisorAgent(AgentConfig())
     reply = agent.chat("What is the default n_jobs?")

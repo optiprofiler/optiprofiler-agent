@@ -10,6 +10,12 @@ The goal is twofold:
 2. Document the design clearly enough that a contributor can extend it
    without reading the Hermes source.
 
+> **Forward-looking work.** Items planned but not yet shipped — including
+> remote trajectory upload, SFT/DPO dataset auto-derivation, and the
+> wiki-self-update loop — live in [`ROADMAP.md`](ROADMAP.md) under the
+> *Long-term self-evolution loop* horizon. This document covers what is
+> already in the codebase as of v0.1.
+
 ---
 
 ## 1. Background and motivation
@@ -44,6 +50,7 @@ because:
 
 ```
 ~/.opagent/
+├── .env                   # user-level secrets (mode 0600) — written by `opagent init`
 ├── MEMORY.md              # agent's declarative facts (append-only)
 ├── USER.md                # user profile (whitelisted fields)
 ├── wiki/auto/             # agent-written wiki pages (RAG indexes them)
@@ -58,10 +65,48 @@ The pip-installed package itself ships **only read-only seed files** under
 `optiprofiler_agent/runtime/_seed/`. On first launch,
 [`runtime.bootstrap.ensure()`](../optiprofiler_agent/runtime/bootstrap.py)
 copies any missing seed file into `OPAGENT_HOME`. **Existing user files are
-never overwritten**, even after `pip install --upgrade`.
+never overwritten**, even after `pip install --upgrade`. Files listed in
+`bootstrap._SECRET_FILES` (currently just `.env`) are also `chmod 0600` on
+POSIX so the bundled template never lands world-readable.
 
 `OPAGENT_HOME` can be overridden with the `OPAGENT_HOME` environment
 variable — handy for CI, sandboxes, and per-project isolation.
+
+### 2.1 Provider configuration (`opagent init`)
+
+Secrets resolution is intentionally **multi-source**, so corp users with
+shell-managed env vars and casual users with a single user-level file
+both Just Work. Precedence (highest → lowest), implemented in
+[`config._load_env_files`](../optiprofiler_agent/config.py):
+
+1. Real shell `export` (already in `os.environ` before Python starts)
+2. `./.env` in the current working directory (project-local override)
+3. `~/.opagent/.env` (user-level, written by the wizard)
+4. `PROVIDER_REGISTRY` defaults
+
+`opagent init` ([`onboarding.py`](../optiprofiler_agent/onboarding.py)) is
+the interactive front-end. It:
+
+- detects which provider keys already exist (so users see
+  `Detected existing API key(s) for: kimi, minimax`, not `'unknown'`)
+- writes `OPAGENT_DEFAULT_PROVIDER=<choice>` so subsequent commands
+  without `--provider` resolve to the user's pick
+- never erases sibling provider keys — switching from minimax to kimi
+  keeps both keys in the file and just flips the default
+- supports a `custom` provider for any OpenAI-compatible endpoint
+  (vLLM, internal gateway, unlisted vendor) via
+  `OPAGENT_CUSTOM_BASE_URL` / `_MODEL` / `_API_KEY`
+- supports two **non-custom** overrides for the common
+  "pin a model version" / "route through a proxy" use cases without
+  forcing users onto `provider=custom`:
+  - `OPAGENT_DEFAULT_MODEL=kimi-k2-thinking`
+  - `OPAGENT_DEFAULT_BASE_URL=https://my-corp-proxy/v1`
+
+Auto-trigger: the first `opagent` invocation on a fresh machine
+([`cli._maybe_run_first_time_init`](../optiprofiler_agent/cli.py))
+launches the wizard if no provider key resolves; non-TTY environments
+(CI, piped input) degrade gracefully with a printed warning instead of
+hanging on `input()`. Set `OPAGENT_NO_AUTO_INIT=1` to disable entirely.
 
 ---
 
@@ -533,7 +578,7 @@ themselves be clean for L0 to be effective.
 
 ---
 
-## 8. Structured Report Pipeline (Agent C)
+## 8. Structured Report Pipeline (Interpreter sub-agent)
 
 §7 addressed correctness in *generated code*. This section addresses
 correctness in *generated narrative reports*: the Markdown analysis
@@ -549,9 +594,9 @@ fabricating problem identifiers, contradicting summary statistics).
 
 | Stage | Module | Responsibility |
 |---|---|---|
-| 1. Rule engine | [`agent_c/summary.py`](../optiprofiler_agent/agent_c/summary.py) | Parse `log.txt`, profile PDFs, score files into a `BenchmarkSummary` dataclass. Pure Python, no LLM. |
-| 2. Structured LLM | [`agent_c/interpreter.py`](../optiprofiler_agent/agent_c/interpreter.py) (`_generate_structured_report`) | Bind a `BenchmarkReport` Pydantic schema via `llm.with_structured_output(method="json_schema")`; invoke; validate; retry once on business-invariant errors. |
-| 3. Renderer | [`agent_c/renderer.py`](../optiprofiler_agent/agent_c/renderer.py) | Apply the Jinja template to the validated report. |
+| 1. Rule engine | [`interpreter/summary.py`](../optiprofiler_agent/interpreter/summary.py) | Parse `log.txt`, profile PDFs, score files into a `BenchmarkSummary` dataclass. Pure Python, no LLM. |
+| 2. Structured LLM | [`interpreter/interpreter.py`](../optiprofiler_agent/interpreter/interpreter.py) (`_generate_structured_report`) | Bind a `BenchmarkReport` Pydantic schema via `llm.with_structured_output(method="json_schema")`; invoke; validate; retry once on business-invariant errors. |
+| 3. Renderer | [`interpreter/renderer.py`](../optiprofiler_agent/interpreter/renderer.py) | Apply the Jinja template to the validated report. |
 
 Stage 1 already existed; stages 2 and 3 are the additions. The same
 code path supports Markdown, JSON, and HTML output formats — the
@@ -559,7 +604,7 @@ renderer is the only module that knows about presentation.
 
 ### 8.2 Schema design
 
-[`report_schema.py`](../optiprofiler_agent/agent_c/report_schema.py)
+[`report_schema.py`](../optiprofiler_agent/interpreter/report_schema.py)
 defines `BenchmarkReport` as a Pydantic v2 `BaseModel` composed of
 six section sub-models:
 
@@ -614,7 +659,7 @@ This three-tier fallback matters because:
 
 ### 8.4 Business-invariant validator
 
-[`report_validator.py`](../optiprofiler_agent/agent_c/report_validator.py)
+[`report_validator.py`](../optiprofiler_agent/interpreter/report_validator.py)
 implements `validate_report(report, summary)`. Invariants checked:
 
 | Invariant | Severity |
@@ -644,8 +689,8 @@ the user but do not trigger a third attempt.
 
 ### 8.6 Renderer and the metadata-grounding split
 
-[`renderer.py`](../optiprofiler_agent/agent_c/renderer.py) renders the
-validated report with [`report.md.j2`](../optiprofiler_agent/agent_c/templates/report.md.j2).
+[`renderer.py`](../optiprofiler_agent/interpreter/renderer.py) renders the
+validated report with [`report.md.j2`](../optiprofiler_agent/interpreter/templates/report.md.j2).
 The template receives **two** objects:
 
 * `report` — the LLM-produced narrative

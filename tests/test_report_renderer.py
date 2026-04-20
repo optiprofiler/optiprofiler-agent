@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from optiprofiler_agent.agent_c.renderer import render_html, render_markdown
-from optiprofiler_agent.agent_c.report_schema import (
+from optiprofiler_agent.interpreter.renderer import render_html, render_markdown
+from optiprofiler_agent.interpreter.report_schema import (
     AnomaliesSection,
     AnomalyEntry,
     BenchmarkReport,
@@ -15,7 +15,7 @@ from optiprofiler_agent.agent_c.report_schema import (
     RecommendationsSection,
     ReportOverview,
 )
-from optiprofiler_agent.agent_c.summary import BenchmarkSummary
+from optiprofiler_agent.interpreter.summary import BenchmarkSummary
 
 
 def _make_summary() -> BenchmarkSummary:

@@ -20,7 +20,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from optiprofiler_agent.config import AgentConfig, LLMConfig
-from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+from optiprofiler_agent.advisor.advisor import AdvisorAgent
 
 console = Console()
 

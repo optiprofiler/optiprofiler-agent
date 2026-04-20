@@ -559,7 +559,7 @@ def main():
     )
 
     if args.mode == "advisor":
-        from optiprofiler_agent.agent_a.advisor import AdvisorAgent
+        from optiprofiler_agent.advisor.advisor import AdvisorAgent
         agent = AdvisorAgent(config)
         runner = run_advisor
     else:

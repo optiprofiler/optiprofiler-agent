@@ -58,6 +58,16 @@ def config_path() -> Path:
     return home() / "config.yaml"
 
 
+def env_path() -> Path:
+    """User-level secrets file (``~/.opagent/.env``).
+
+    Loaded by ``optiprofiler_agent.config`` after ``./.env`` so a project-
+    local file shadows it, and after the real shell environment so
+    ``export FOO=...`` always wins.
+    """
+    return home() / ".env"
+
+
 def manifest_path() -> Path:
     return home() / ".bootstrapped.json"
 
@@ -81,5 +91,6 @@ def all_writable_paths() -> dict[str, Path]:
         "session_db": session_db_path(),
         "trajectory": trajectory_dir(),
         "config": config_path(),
+        "env": env_path(),
         "manifest": manifest_path(),
     }

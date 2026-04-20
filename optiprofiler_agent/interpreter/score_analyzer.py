@@ -13,8 +13,8 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 
-from optiprofiler_agent.agent_c.result_loader import BenchmarkResults
-from optiprofiler_agent.agent_c.profile_reader import ProfilePage, LogRatioPage
+from optiprofiler_agent.interpreter.result_loader import BenchmarkResults
+from optiprofiler_agent.interpreter.profile_reader import ProfilePage, LogRatioPage
 
 
 # ---------------------------------------------------------------------------

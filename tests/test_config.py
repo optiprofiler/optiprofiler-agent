@@ -14,7 +14,22 @@ from optiprofiler_agent.config import (
 
 class TestLLMConfig:
 
-    def test_default_provider_is_minimax(self):
+    def test_default_provider_is_minimax_when_nothing_configured(self, monkeypatch):
+        """Historical fallback: empty env → minimax.
+
+        Note: ``_default_provider`` now also auto-picks the first configured
+        provider when ``OPAGENT_DEFAULT_PROVIDER`` is unset (so a stray
+        ``KIMI_API_KEY`` in the dev shell would otherwise flip the default).
+        We strip every provider env var here to lock in the truly-empty
+        fallback contract.
+        """
+        for k in (
+            "OPAGENT_DEFAULT_PROVIDER",
+            "MINIMAX_API_KEY", "KIMI_API_KEY", "OPENAI_API_KEY",
+            "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+            "OPAGENT_CUSTOM_API_KEY",
+        ):
+            monkeypatch.delenv(k, raising=False)
         cfg = LLMConfig()
         assert cfg.provider == "minimax"
         assert cfg.model == "MiniMax-M2.7"
@@ -22,12 +37,33 @@ class TestLLMConfig:
 
     @pytest.mark.parametrize("provider", list(PROVIDER_REGISTRY.keys()))
     def test_all_providers_have_defaults(self, provider):
-        if provider == "anthropic":
-            cfg = LLMConfig(provider=provider, api_key="test-key")
-        else:
-            cfg = LLMConfig(provider=provider, api_key="test-key")
+        if provider == "custom":
+            # ``custom`` reads model from OPAGENT_CUSTOM_MODEL; the registry
+            # entry intentionally has ``default_model: None`` so we don't
+            # silently mask a missing env var with a wrong default.
+            return
+        cfg = LLMConfig(provider=provider, api_key="test-key")
         info = PROVIDER_REGISTRY[provider]
         assert cfg.model == info["default_model"]
+
+    def test_provider_none_resolves_via_default_factory(self, monkeypatch):
+        """LLMConfig(provider=None) must trigger the same resolution as LLMConfig().
+
+        The CLI passes ``provider=None`` when ``--provider`` is omitted so
+        that ``OPAGENT_DEFAULT_PROVIDER`` (and the first-configured-key
+        fallback) is honored. Without the explicit None-check in
+        __post_init__, ``provider`` would stay literally None and break
+        every downstream attribute lookup.
+        """
+        for k in (
+            "OPAGENT_DEFAULT_PROVIDER", "MINIMAX_API_KEY", "KIMI_API_KEY",
+            "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+        ):
+            monkeypatch.delenv(k, raising=False)
+        monkeypatch.setenv("KIMI_API_KEY", "k")
+        cfg = LLMConfig(provider=None, api_key="ignored")
+        assert cfg.provider == "kimi"
+        assert cfg.model == PROVIDER_REGISTRY["kimi"]["default_model"]
 
     def test_kimi_provider_defaults(self):
         cfg = LLMConfig(provider="kimi", api_key="test")

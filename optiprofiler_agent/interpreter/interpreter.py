@@ -30,13 +30,13 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from optiprofiler_agent.agent_c.renderer import render_html, render_markdown
-from optiprofiler_agent.agent_c.report_schema import BenchmarkReport
-from optiprofiler_agent.agent_c.report_validator import (
+from optiprofiler_agent.interpreter.renderer import render_html, render_markdown
+from optiprofiler_agent.interpreter.report_schema import BenchmarkReport
+from optiprofiler_agent.interpreter.report_validator import (
     format_feedback_for_llm,
     validate_report,
 )
-from optiprofiler_agent.agent_c.summary import BenchmarkSummary, build_summary
+from optiprofiler_agent.interpreter.summary import BenchmarkSummary, build_summary
 from optiprofiler_agent.config import AgentConfig
 
 
