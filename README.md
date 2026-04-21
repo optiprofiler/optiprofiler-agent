@@ -16,15 +16,20 @@ AI Agent system for [OptiProfiler](https://www.optprof.com), covering the full u
 ## Installation
 
 ```bash
+# Default: includes the three flagship agents (advisor, debugger, interpreter)
 pip install optiprofiler-agent
 
-# With RAG support (recommended)
+# With local RAG over the bundled knowledge base (chromadb + sentence-transformers).
+# Heavier install (~1 GB transitive); enable when you want grounded retrieval.
 pip install 'optiprofiler-agent[rag]'
 
-# With PDF profile reading
-pip install 'optiprofiler-agent[interpret]'
+# Anthropic Claude provider (only if you plan to use --provider anthropic).
+pip install 'optiprofiler-agent[anthropic]'
 
-# Everything
+# Tavily-backed web_search tool.
+pip install 'optiprofiler-agent[web]'
+
+# Everything (rag + anthropic + web)
 pip install 'optiprofiler-agent[all]'
 ```
 
@@ -226,9 +231,9 @@ Options:
 
 ### `opagent interpret`
 
-Analyze benchmark results and generate a natural-language report.
-
-> **Note:** To read PDF profile curves (the default), install `[interpret]` extras: `pip install 'optiprofiler-agent[interpret]'`. Use `--no-profiles` to skip PDF reading without the extra.
+Analyze benchmark results and generate a natural-language report. PDF
+profile curve reading (PyMuPDF) is included in the default install; pass
+`--no-profiles` if you want to skip PDF parsing for any reason.
 
 ```bash
 opagent interpret RESULTS_DIR [OPTIONS]

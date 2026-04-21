@@ -17,6 +17,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+# PyMuPDF is a *core* dependency (declared in pyproject.toml) — interpret is
+# one of the three flagship agents, so we no longer treat the PDF backend as
+# optional. A missing install at this point means the package is broken, not
+# that the user opted out of an extra; let the standard ImportError fire.
+import fitz
+
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -469,14 +475,6 @@ def read_profile_pdf(
     list[ProfilePage | LogRatioPage]
         One entry per page in the PDF.
     """
-    try:
-        import fitz  # noqa: F811
-    except ImportError:
-        raise ImportError(
-            "PyMuPDF is required for PDF profile reading. "
-            "Install it with: pip install PyMuPDF"
-        )
-
     pdf_path = Path(pdf_path)
 
     # Auto-detect profile type and basis from filename/path

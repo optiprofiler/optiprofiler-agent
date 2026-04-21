@@ -31,15 +31,18 @@ dependencies = [
     "rich>=13.0",
     "prompt-toolkit>=3.0",
     "jinja2>=3.0",
+    # PyMuPDF backs `opagent interpret` (one of the three flagship agents).
+    # It is the *only* upstream of profile_reader.read_all_profiles, so
+    # without it the interpret subsystem ImportErrors on first call.
+    # Promoted to a core dep in 0.1.0a1 — wheels are small and ship for all
+    # supported (CPython 3.10–3.13) × (linux/macos/win) combinations.
+    "PyMuPDF>=1.24",
 ]
 
 [project.optional-dependencies]
 rag = [
     "chromadb>=0.5",
     "sentence-transformers>=3.0",
-]
-interpret = [
-    "PyMuPDF>=1.24",
 ]
 anthropic = [
     "langchain-anthropic>=0.3",
@@ -48,7 +51,7 @@ web = [
     "langchain-tavily>=0.2",
 ]
 all = [
-    "optiprofiler-agent[rag,interpret,anthropic,web]",
+    "optiprofiler-agent[rag,anthropic,web]",
 ]
 dev = [
     "pytest>=7.0",

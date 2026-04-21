@@ -77,7 +77,7 @@ debugger's diagnostic report so users can audit provenance.
 **Problem.** Diagnosing "why does `opagent` hang / fail silently" today
 requires checking: provider env var present, network reach to LLM
 endpoint, `~/.opagent/` integrity, RAG index built, optional extras
-installed (`[rag]`, `[interpret]`, `[web]`).
+installed (`[rag]`, `[anthropic]`, `[web]`).
 
 **Approach.** Add `opagent doctor` that runs each check, prints a
 green/yellow/red table (rich), and exits non-zero on any red. Mirrors
