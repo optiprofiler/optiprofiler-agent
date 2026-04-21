@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "optiprofiler-agent"
-version = "0.1.0dev0"
+version = "0.1.0a1"
 description = "AI Agent system for OptiProfiler — advisor, debugger, and results interpreter. CLI: opagent (recommended) or optiprofiler-agent."
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
