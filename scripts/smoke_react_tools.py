@@ -41,7 +41,7 @@ def main() -> int:
         print("Set SMOKE_PROVIDER=deepseek or mimo", file=sys.stderr)
         return 2
     if not key:
-        print(f"Missing API key (DEEPSEEK_API_KEY or MIMO_API_KEY)", file=sys.stderr)
+        print("Missing API key (DEEPSEEK_API_KEY or MIMO_API_KEY)", file=sys.stderr)
         return 2
 
     rag = os.environ.get("SMOKE_RAG", "").strip().lower() in ("1", "true", "yes")
