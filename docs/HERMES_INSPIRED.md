@@ -88,7 +88,7 @@ both Just Work. Precedence (highest → lowest), implemented in
 the interactive front-end. It:
 
 - detects which provider keys already exist (so users see
-  `Detected existing API key(s) for: kimi, minimax`, not `'unknown'`)
+  `Detected existing API key(s) for: kimi, minimax, deepseek`, not `'unknown'`)
 - writes `OPAGENT_DEFAULT_PROVIDER=<choice>` so subsequent commands
   without `--provider` resolve to the user's pick
 - never erases sibling provider keys — switching from minimax to kimi

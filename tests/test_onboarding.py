@@ -24,7 +24,7 @@ def _isolated_home(tmp_path, monkeypatch):
     # truthy and the wizard would prompt for overwrite).
     for key in (
         "MINIMAX_API_KEY", "KIMI_API_KEY", "OPENAI_API_KEY",
-        "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+        "DEEPSEEK_API_KEY", "MIMO_API_KEY", "ANTHROPIC_API_KEY",
         "OPAGENT_CUSTOM_API_KEY", "OPAGENT_DEFAULT_PROVIDER",
     ):
         monkeypatch.delenv(key, raising=False)
@@ -88,10 +88,10 @@ def test_builtin_provider_writes_key_and_default(monkeypatch):
 
 
 def test_custom_provider_writes_four_keys(monkeypatch):
-    """The 6th choice (custom) collects base_url + model + key."""
+    """The 7th choice (custom) collects base_url + model + key."""
     _patch_stdin(
         monkeypatch,
-        "6\nhttps://api.foo.com/v1\nfoo-model\nsk-foo\n",
+        "7\nhttps://api.foo.com/v1\nfoo-model\nsk-foo\n",
     )
     from optiprofiler_agent import onboarding
     from optiprofiler_agent.runtime import paths

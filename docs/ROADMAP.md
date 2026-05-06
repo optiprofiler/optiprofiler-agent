@@ -45,7 +45,7 @@ extending a valid `BenchmarkReport` JSON path can be emitted. Concretely:
   (`BenchmarkReport.model_json_schema()`) and pass it to the backend.
 - Gate behind a runtime flag (`config.llm.constrained_decoding=True`) so
   this only kicks in for self-hosted vLLM deployments. API-only
-  providers (OpenAI / MiniMax / Kimi) keep the manual-JSON fallback.
+  providers (OpenAI / MiniMax / Kimi / DeepSeek / MiMo) keep the manual-JSON fallback.
 
 **Why report-schema first, not Python imports.** Reports are a closed,
 finite grammar; Python is Turing-complete. A grammar-masking decoder
@@ -102,6 +102,48 @@ documented `opagent check` flow on a bad script see a misleading
 **Success metric.** A representative "bad-script" suite (≥ 5 cases) is
 flagged before any LLM call, eliminating the `looks good!` false
 positive that prompted this entry.
+
+### N4b. In-session `/model` and `/provider` switch
+
+**Problem.** Today `--provider` / `--model` are only honored at process
+launch (`opagent --provider kimi --model kimi-k2.5`). When a user hits
+mid-conversation friction — provider 529 overloaded errors, a model that
+keeps hallucinating, a Claude-only tool they want to try — the only
+escape hatch is to `/quit`, restart with new flags, and lose the chat
+context. This is exactly the moment they *most* want a one-keystroke
+switch.
+
+**Approach.**
+
+- Add `/model` and `/provider` slash commands in both the unified-agent
+  and advisor loops (`cli.py` `agent()` / `chat()`).
+- `/model` with **no argument**: print a small table of *currently
+  reachable* options:
+  - all built-in providers whose `env_key` resolves (so we never list a
+    provider the user has no key for),
+  - their configured / default model (`OPAGENT_DEFAULT_MODEL` overrides
+    plus the registry default),
+  - and the active one marked with `*`.
+  Reuse `onboarding.detect_configured_providers()` so the listing
+  matches what `opagent init` already shows.
+- `/model <name>` or `/provider <name> [model]`: rebuild `LLMConfig`,
+  call `create_llm`, then re-bind the underlying agent
+  (`create_unified_agent` / `AdvisorAgent`) **without clearing
+  `messages`** so the conversation history survives the swap.
+- Fail soft: if the requested provider has no key reachable, print the
+  same hint we use elsewhere ("set `KIMI_API_KEY=...` or run `opagent
+  init`") instead of crashing the loop.
+
+**Why now.** The user-reported 529 from MiniMax (`overloaded_error`,
+2026-04 logs) had no in-session workaround other than restarting the
+CLI. With multiple keys configured this is purely a UX gap, not a new
+capability.
+
+**Success metric.** Switching between any two configured providers
+mid-chat preserves both message history and the prompt-toolkit input
+session; covered by a `tests/test_cli_slash_commands.py` integration
+test that drives `/model kimi` after a turn and asserts the next
+`invoke()` reaches the new client.
 
 ### N4. `prompt_toolkit` history + tab completion
 

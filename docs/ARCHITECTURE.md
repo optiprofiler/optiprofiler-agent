@@ -91,7 +91,7 @@ result is appended to the conversation, and the model decides what to
 do next. We picked it for three reasons:
 
 - **Provider-portable**: works identically against Kimi, MiniMax,
-  DeepSeek, OpenAI, Anthropic — anything that exposes function-calling
+  DeepSeek, MiMo, OpenAI, Anthropic — anything that exposes function-calling
   through `langchain-openai` or `langchain-anthropic`.
 - **Stateless tools**: each tool is a pure-ish Python function that
   reads from disk / runtime and returns a string. No tool needs to know
@@ -303,9 +303,9 @@ def create_llm(cfg: LLMConfig) -> BaseChatModel:
     return ChatOpenAI(model=..., base_url=cfg.base_url, ...)
 ```
 
-Every other provider — Kimi, MiniMax, DeepSeek, OpenAI, plus the
-`custom` slot for any OpenAI-compatible endpoint we don't ship a preset
-for — flows through `ChatOpenAI` with a custom `base_url`. Adding a new
+Every other provider — Kimi, MiniMax, DeepSeek, MiMo, OpenAI, plus
+the `custom` slot for any OpenAI-compatible endpoint we don't ship a
+preset for — flows through `ChatOpenAI` with a custom `base_url`. Adding a new
 preset is a one-row addition to `PROVIDER_REGISTRY` in `config.py`; no
 agent code changes.
 

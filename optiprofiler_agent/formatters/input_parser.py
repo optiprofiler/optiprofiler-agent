@@ -152,7 +152,7 @@ def classify_intent_with_llm(text: str, llm) -> Intent:
     """Use an LLM to classify ambiguous queries.
 
     Falls back to keyword classification if the LLM response is
-    unparseable. Requires a LangChain BaseChatModel instance.
+    unparsable. Requires a LangChain BaseChatModel instance.
     """
     from langchain_core.messages import HumanMessage, SystemMessage
 

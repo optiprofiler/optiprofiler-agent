@@ -26,7 +26,7 @@ class TestLLMConfig:
         for k in (
             "OPAGENT_DEFAULT_PROVIDER",
             "MINIMAX_API_KEY", "KIMI_API_KEY", "OPENAI_API_KEY",
-            "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+            "DEEPSEEK_API_KEY", "MIMO_API_KEY", "ANTHROPIC_API_KEY",
             "OPAGENT_CUSTOM_API_KEY",
         ):
             monkeypatch.delenv(k, raising=False)
@@ -57,7 +57,7 @@ class TestLLMConfig:
         """
         for k in (
             "OPAGENT_DEFAULT_PROVIDER", "MINIMAX_API_KEY", "KIMI_API_KEY",
-            "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+            "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "MIMO_API_KEY", "ANTHROPIC_API_KEY",
         ):
             monkeypatch.delenv(k, raising=False)
         monkeypatch.setenv("KIMI_API_KEY", "k")
@@ -79,7 +79,12 @@ class TestLLMConfig:
     def test_deepseek_provider_defaults(self):
         cfg = LLMConfig(provider="deepseek", api_key="test")
         assert cfg.base_url == "https://api.deepseek.com/v1"
-        assert cfg.model == "deepseek-chat"
+        assert cfg.model == "deepseek-v4-flash"
+
+    def test_mimo_provider_defaults(self):
+        cfg = LLMConfig(provider="mimo", api_key="test")
+        assert cfg.base_url == "https://api.xiaomimimo.com/v1"
+        assert cfg.model == "mimo-v2-flash"
 
     def test_anthropic_provider_defaults(self):
         cfg = LLMConfig(provider="anthropic", api_key="test")

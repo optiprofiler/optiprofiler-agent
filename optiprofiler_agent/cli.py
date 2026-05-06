@@ -606,12 +606,49 @@ def _print_help(mode: str):
     console.print("[bold]Commands:[/]")
     console.print("  [bold]/agent[/]              Switch to unified agent mode")
     console.print("  [bold]/chat[/]               Switch to advisor chat mode")
+    console.print("  [bold]/model[/]              Switch LLM provider")
     if mode == "chat":
         console.print("  [bold]/reset[/]              Clear chat history")
     console.print("  [bold]/debug[/] <file>       Run & debug a script")
     console.print("  [bold]/interpret[/] <dir>    Analyze benchmark results")
     console.print("  [bold]/help[/]               Show this help")
     console.print("  [bold]/quit[/]               Exit\n")
+
+
+def _slash_model(current_provider: str) -> str | None:
+    """Interactive provider picker. Returns the chosen provider name, or
+    *None* if the user cancels / picks the same one."""
+    from optiprofiler_agent.onboarding import detect_configured_providers
+
+    available = detect_configured_providers()
+    if not available:
+        console.print("[yellow]No API keys detected. Run [bold]opagent init[/] first.[/]\n")
+        return None
+
+    console.print("[bold]Available providers (with API key):[/]")
+    for i, name in enumerate(available, 1):
+        marker = " [dim](current)[/]" if name == current_provider else ""
+        console.print(f"  {i}. {name}{marker}")
+    console.print("  0. [dim]cancel[/]")
+
+    try:
+        raw = input(f"\nPick 0-{len(available)} [{current_provider}]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        console.print()
+        return None
+
+    if not raw or raw == "0":
+        return None
+    try:
+        idx = int(raw) - 1
+        if 0 <= idx < len(available):
+            chosen = available[idx]
+            return None if chosen == current_provider else chosen
+    except ValueError:
+        if raw in available:
+            return None if raw == current_provider else raw
+    console.print("[yellow]Invalid choice.[/]\n")
+    return None
 
 
 def _slash_debug(args: str, config: AgentConfig):
@@ -753,6 +790,24 @@ def agent(provider: str, model: str | None):
                 advisor = AdvisorAgent(config)
             mode = "chat"
             console.print("[dim]▸ Chat mode (advisor)[/]\n")
+            continue
+
+        if cmd.startswith("/model"):
+            new_provider = _slash_model(config.llm.provider)
+            if new_provider:
+                config = AgentConfig(
+                    llm=LLMConfig(provider=new_provider),
+                    rag_enabled=True,
+                )
+                unified = create_unified_agent(config)
+                advisor = None
+                messages.clear()
+                console.print(
+                    f"[green]▸ Switched to [bold]{config.llm.provider}[/] "
+                    f"([bold]{config.llm.model}[/])[/]\n"
+                )
+            else:
+                console.print()
             continue
 
         if cmd == "/reset" and mode == "chat":

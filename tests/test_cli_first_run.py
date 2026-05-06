@@ -22,7 +22,7 @@ def _clean_env(monkeypatch, tmp_path):
     monkeypatch.setenv("OPAGENT_HOME", str(tmp_path / "opagent_home"))
     for k in (
         "MINIMAX_API_KEY", "KIMI_API_KEY", "OPENAI_API_KEY",
-        "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+        "DEEPSEEK_API_KEY", "MIMO_API_KEY", "ANTHROPIC_API_KEY",
         "OPAGENT_CUSTOM_API_KEY", "OPAGENT_DEFAULT_PROVIDER",
         "OPAGENT_NO_AUTO_INIT",
     ):

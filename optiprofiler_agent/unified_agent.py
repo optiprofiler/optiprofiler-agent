@@ -28,6 +28,12 @@ _SYSTEM_PROMPT_BASE = """\
 You are the **OptiProfiler AI Assistant**, an expert in optimization benchmarking \
 with OptiProfiler. You have these specialized capabilities available as tools:
 
+**Identity:** You are this OptiProfiler assistant. When the user asks what \
+model or provider you use, reply with *exactly* the runtime values shown in \
+the ``[Runtime]`` block at the top of this system prompt — do **not** guess, \
+fabricate, or name a different vendor (e.g. do not say "Claude" when the \
+runtime says "deepseek").
+
 1. **knowledge_search** — Search the OptiProfiler knowledge base to answer \
 questions about the API, parameters, solver interface, features, problem libraries, \
 performance profiles, data profiles, log-ratio profiles, and general usage.
@@ -73,7 +79,7 @@ external library issues, recent papers), call `web_search` directly. \
 the tool.** The tool itself will return a message starting with \
 "web_search disabled: ..." or "web_search error: ..." if it is genuinely \
 not configured; only then may you relay that information to the user. \
-Pre-emptively refusing without invoking the tool is a hallucination \
+Preemptively refusing without invoking the tool is a hallucination \
 and is forbidden.
 
 **Guidelines:**
@@ -104,22 +110,43 @@ not symbols from the `optiprofiler` package.
 """
 
 
-def _compose_system_prompt() -> str:
-    """Prepend the persistent-memory frozen snapshot (if any) to the base prompt.
+def _compose_system_prompt(config: AgentConfig | None = None) -> str:
+    """Build the full system prompt with runtime identity + memory snapshot.
+
+    The ``[Runtime]`` block tells the model exactly which provider and model
+    id are being used so it can answer "which model are you?" truthfully
+    instead of hallucinating "Claude" / "GPT-4" etc.
 
     The snapshot is computed *at agent build time*, not per turn, so the
     LangGraph ReAct loop can keep its prompt static. CLI rebuilds the agent
     on every fresh chat session, so newly remembered facts surface on the
     next session without extra plumbing.
     """
+    parts: list[str] = []
+
+    # 1. Runtime identity
+    if config is not None:
+        llm = config.llm
+        parts.append(
+            f"[Runtime]\n"
+            f"provider = {llm.provider}\n"
+            f"model    = {llm.model}\n"
+            f"base_url = {llm.base_url or '(official default)'}\n"
+        )
+
+    # 2. Persistent-memory snapshot
     try:
         from optiprofiler_agent.runtime import memory as _rt_memory
         snapshot = _rt_memory.frozen_snapshot()
     except Exception:
         snapshot = ""
-    if not snapshot:
-        return _SYSTEM_PROMPT_BASE
-    return snapshot + "\n" + _SYSTEM_PROMPT_BASE
+    if snapshot:
+        parts.append(snapshot)
+
+    # 3. Main system instructions
+    parts.append(_SYSTEM_PROMPT_BASE)
+
+    return "\n".join(parts)
 
 
 _SYSTEM_PROMPT = _SYSTEM_PROMPT_BASE  # backwards-compat for tests / imports
@@ -313,7 +340,7 @@ def create_unified_agent(config: AgentConfig | None = None):
     agent = create_react_agent(
         llm,
         tools=tools,
-        prompt=_compose_system_prompt(),
+        prompt=_compose_system_prompt(config),
     )
 
     return agent

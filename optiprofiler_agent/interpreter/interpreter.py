@@ -392,8 +392,8 @@ def _bind_structured_output(llm):
     """Best-effort ``with_structured_output`` binding.
 
     Tries ``method='json_schema'`` first (preferred for OpenAI-compatible
-    providers including Kimi / MiniMax), falls back to function-calling,
-    and returns ``None`` if neither is available.
+    providers including Kimi / MiniMax / DeepSeek / MiMo), falls back to
+    function-calling, and returns ``None`` if neither is available.
     """
     for method in ("json_schema", "function_calling"):
         try:

@@ -1,7 +1,7 @@
 """Configuration for the OptiProfiler Agent system.
 
 Supports multiple LLM providers via a unified configuration.
-All OpenAI-compatible providers (Kimi, MiniMax, DeepSeek, etc.)
+All OpenAI-compatible providers (Kimi, MiniMax, DeepSeek, MiMo, etc.)
 use the same ``langchain-openai`` backend — only base_url differs.
 
 Environment / secrets resolution order, matching the conventions used by
@@ -104,8 +104,16 @@ PROVIDER_REGISTRY: dict[str, dict] = {
     },
     "deepseek": {
         "base_url": "https://api.deepseek.com/v1",
-        "default_model": "deepseek-chat",
+        # Prefer V4; legacy ``deepseek-chat`` / ``deepseek-reasoner`` aliases are
+        # slated for removal (see https://api-docs.deepseek.com ).
+        "default_model": "deepseek-v4-flash",
         "env_key": "DEEPSEEK_API_KEY",
+    },
+    "mimo": {
+        # 小米 MiMo OpenAI 兼容接口（官方控制台 https://platform.xiaomimimo.com/ ）
+        "base_url": "https://api.xiaomimimo.com/v1",
+        "default_model": "mimo-v2-flash",
+        "env_key": "MIMO_API_KEY",
     },
     "anthropic": {
         "base_url": None,

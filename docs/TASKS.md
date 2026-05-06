@@ -7,7 +7,7 @@
 ## Phase A-0: Knowledge Base & Agent A Core (Week 1)
 
 - [x] Initialize repository: `pyproject.toml`, LICENSE, `.gitignore`, `.env.example`
-- [x] Implement `config.py`: multi-provider LLM config (Kimi / MiniMax / OpenAI / DeepSeek / Anthropic)
+- [x] Implement `config.py`: multi-provider LLM config (Kimi / MiniMax / OpenAI / DeepSeek / MiMo / Anthropic)
 - [x] Implement `common/llm_client.py`: unified LLM call wrapper via LangChain
 - [x] Implement `common/knowledge_base.py`: load JSON knowledge + markdown guides + query interface
 - [x] Write `knowledge/api_params.json`: benchmark() parameters (feature/profile/problem options + core solver/fun spec)

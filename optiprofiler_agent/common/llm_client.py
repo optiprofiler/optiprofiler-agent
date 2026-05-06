@@ -41,7 +41,7 @@ _thinking_tool_replay_compat_cls: type | None = None
 
 def _needs_thinking_tool_replay_patch(cfg: LLMConfig) -> bool:
     """True when the upstream stack is known to 400 without ``reasoning_content``."""
-    if cfg.provider in ("minimax", "kimi"):
+    if cfg.provider in ("minimax", "kimi", "mimo", "deepseek"):
         return True
     if cfg.provider != "custom" or not cfg.base_url:
         return False
@@ -54,6 +54,9 @@ def _needs_thinking_tool_replay_patch(cfg: LLMConfig) -> bool:
             "minimaxi",
             "moonshot",
             "kimi",
+            "mimo-v2",
+            "xiaomimimo",
+            "deepseek",
         )
     )
 
@@ -105,7 +108,7 @@ def _get_thinking_tool_replay_compat_cls() -> type:
 def create_llm(cfg: LLMConfig) -> BaseChatModel:
     """Create a LangChain chat model from *cfg*.
 
-    For OpenAI-compatible providers (Kimi, MiniMax, DeepSeek, OpenAI itself)
+    For OpenAI-compatible providers (Kimi, MiniMax, DeepSeek, MiMo, OpenAI)
     we use ``ChatOpenAI`` with a custom ``base_url``.
 
     For Anthropic we use ``ChatAnthropic`` (requires ``pip install

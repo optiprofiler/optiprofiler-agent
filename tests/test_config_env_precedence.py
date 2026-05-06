@@ -30,7 +30,7 @@ def isolated_paths(tmp_path, monkeypatch):
     # Strip any ambient provider env so the test starts from a clean slate.
     for k in (
         "MINIMAX_API_KEY", "KIMI_API_KEY", "OPENAI_API_KEY",
-        "DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY",
+        "DEEPSEEK_API_KEY", "MIMO_API_KEY", "ANTHROPIC_API_KEY",
         "OPAGENT_CUSTOM_BASE_URL", "OPAGENT_CUSTOM_MODEL",
         "OPAGENT_CUSTOM_API_KEY", "OPAGENT_DEFAULT_PROVIDER",
         "OPAGENT_DEFAULT_MODEL", "OPAGENT_DEFAULT_BASE_URL",

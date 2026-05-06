@@ -1,5 +1,7 @@
 """Unit tests for OpenAI-compat LLM client quirks (thinking + tool_calls)."""
 
+import pytest
+
 from optiprofiler_agent.common.llm_client import create_llm, inject_reasoning_content_placeholders
 from optiprofiler_agent.config import LLMConfig
 
@@ -37,6 +39,15 @@ def test_inject_skips_user_and_assistant_without_tools():
 
 def test_create_llm_minimax_wraps_compat_subclass():
     llm = create_llm(LLMConfig(provider="minimax", api_key="sk-test"))
+    assert type(llm).__name__ == "_ThinkingToolReplayCompatChatOpenAI"
+
+
+@pytest.mark.parametrize(
+    "provider",
+    ["mimo", "deepseek"],
+)
+def test_create_llm_mimo_deepseek_wraps_compat_subclass(provider):
+    llm = create_llm(LLMConfig(provider=provider, api_key="sk-test"))
     assert type(llm).__name__ == "_ThinkingToolReplayCompatChatOpenAI"
 
 

@@ -44,6 +44,7 @@ _BUILTIN_ORDER: tuple[str, ...] = (
     "kimi",
     "openai",
     "deepseek",
+    "mimo",
     "anthropic",
 )
 
@@ -104,7 +105,7 @@ def active_default_provider() -> str | None:
 
 # Match a ``KEY=value`` line, optionally preceded by whitespace and an
 # inline ``#`` comment marker. We deliberately tolerate the seed template's
-# commented-out hints (``# MINIMAX_API_KEY=...``) so the wizard re-uses the
+# commented-out hints (``# MINIMAX_API_KEY=...``) so the wizard reuses the
 # template line in place, keeping the file readable.
 _ENV_LINE_RE = re.compile(r"^\s*#?\s*([A-Z][A-Z0-9_]*)\s*=.*$")
 

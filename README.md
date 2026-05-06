@@ -79,7 +79,8 @@ A real `export` always beats every dotenv file; a project-local `.env` overrides
 | `minimax` | `MINIMAX_API_KEY` | Historical fallback when nothing else is configured. |
 | `kimi` | `KIMI_API_KEY` | |
 | `openai` | `OPENAI_API_KEY` | |
-| `deepseek` | `DEEPSEEK_API_KEY` | |
+| `deepseek` | `DEEPSEEK_API_KEY` | V4 models (`deepseek-v4-flash`, `deepseek-v4-pro`) |
+| `mimo` | `MIMO_API_KEY` | Xiaomi MiMo (`mimo-v2-flash`, `mimo-v2-pro`) |
 | `anthropic` | `ANTHROPIC_API_KEY` | Install extras: `pip install 'optiprofiler-agent[anthropic]'` |
 | `custom` | `OPAGENT_CUSTOM_BASE_URL` + `OPAGENT_CUSTOM_MODEL` + `OPAGENT_CUSTOM_API_KEY` | Any OpenAI-compatible endpoint (self-hosted vLLM, internal gateway, unlisted vendor) — no code changes required |
 
@@ -158,7 +159,7 @@ Inside the unified agent, slash shortcuts include `/chat`, `/agent`, `/debug <fi
 from optiprofiler_agent.config import AgentConfig, LLMConfig
 
 config = AgentConfig(
-    llm=LLMConfig(provider="minimax"),  # or "kimi", "openai", "deepseek", "anthropic"
+    llm=LLMConfig(provider="minimax"),  # or "kimi", "openai", "deepseek", "mimo", "anthropic"
     rag_enabled=True,
 )
 
@@ -191,7 +192,7 @@ Interactive conversation with Agent A (Product Advisor).
 opagent chat [OPTIONS]
 
 Options:
-  --provider [kimi|minimax|openai|deepseek|anthropic|custom]
+  --provider [kimi|minimax|openai|deepseek|mimo|anthropic|custom]
                         LLM provider (default: $OPAGENT_DEFAULT_PROVIDER → first
                         configured key → minimax)
   --model TEXT          Model name (overrides $OPAGENT_DEFAULT_MODEL + registry default)
@@ -214,7 +215,7 @@ opagent [OPTIONS]
 opagent agent [OPTIONS]
 
 Options:
-  --provider [kimi|minimax|openai|deepseek|anthropic|custom]
+  --provider [kimi|minimax|openai|deepseek|mimo|anthropic|custom]
   --model TEXT
 ```
 
@@ -308,7 +309,8 @@ API keys are documented above. Each row below is the **fallback** — both colum
 | minimax  | MiniMax-M2.7  | api.minimaxi.com |
 | kimi     | kimi-k2.5     | api.moonshot.cn |
 | openai   | gpt-4o        | OpenAI official |
-| deepseek | deepseek-chat | api.deepseek.com |
+| deepseek | deepseek-v4-flash | api.deepseek.com |
+| mimo     | mimo-v2-flash | api.xiaomimimo.com |
 | anthropic | claude-sonnet-4-20250514 | Anthropic official |
 | custom   | `$OPAGENT_CUSTOM_MODEL` | `$OPAGENT_CUSTOM_BASE_URL` |
 
