@@ -270,9 +270,10 @@ shipped knowledge base.
 
 **Approach.** Tag `v0.1.0`, build via `python -m build`, twine-upload.
 Adopt CalVer (`YY.MM.PATCH`) once we hit monthly cadence; stick with
-SemVer (`0.x.y`) until the API surface stabilises. Automate via the
-existing `.github/workflows/ci.yml` plus a new `release.yml` triggered
-on `v*` tags.
+SemVer (`0.x.y`) until the API surface stabilises. Automate via
+`.github/workflows/ci.yml`: a `v*` tag push runs the full CI suite,
+then the `publish-pypi` job uploads to PyPI only if every prior job
+succeeds (no separate release workflow).
 
 ### L5. MATLAB script generation
 
