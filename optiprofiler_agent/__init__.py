@@ -1,6 +1,6 @@
 """OptiProfiler Agent — AI-powered assistant for optimization benchmarking."""
 
-__version__ = "0.1.0a4"
+__version__ = "0.1.0a5"
 
 from optiprofiler_agent.config import AgentConfig, LLMConfig
 
