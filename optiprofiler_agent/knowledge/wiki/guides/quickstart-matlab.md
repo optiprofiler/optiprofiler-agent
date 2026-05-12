@@ -71,13 +71,18 @@ scores = benchmark(solvers, options)
 
 ## Example 5: Custom Problem Library
 
-Create a subfolder in the `problems` directory with `_load.m` and
-`_select.m` functions, then:
+Create a subfolder in the `problems` directory with `<name>_load.m`
+and `<name>_select.m`, then:
 
 ```matlab
 options.plibs = {'s2mpj', 'myproblems'};
 scores = benchmark({@solver1, @solver2}, options)
 ```
+
+For the full step-by-step template (struct constructor, `evalc`
+stdout-suppression, anonymous-function safety) see the
+[Custom Problem Library — MATLAB](custom-problem-library-matlab.md)
+guide.
 
 ## See Also
 

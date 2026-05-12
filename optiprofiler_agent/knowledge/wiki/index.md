@@ -12,6 +12,7 @@ last_updated: 2025-04-13
 - [Solver Interface](concepts/solver-interface.md) — required solver signatures for each problem type
 - [Problem Types](concepts/problem-types.md) — ptype options (u, b, l, n) and selection parameters
 - [Features](concepts/features.md) — feature_name options that modify test problems
+- [Parallel & Pickle Rules](concepts/parallel-and-pickle.md) — when lambdas break parallel mode
 
 ## API Reference
 
@@ -29,6 +30,10 @@ last_updated: 2025-04-13
 - [Python Quickstart](guides/quickstart-python.md) — installation and first benchmark
 - [MATLAB Quickstart](guides/quickstart-matlab.md) — setup and first benchmark
 - [Custom Solver Guide](guides/custom-solver.md) — writing solver wrappers for OptiProfiler
+- [Custom Feature Guide](guides/custom-feature.md) — every `mod_*` callable with examples
+- [Custom Problem Library — Python](guides/custom-problem-library-python.md) — write `<name>_load` / `<name>_select` in Python
+- [Custom Problem Library — MATLAB](guides/custom-problem-library-matlab.md) — write `<name>_load.m` / `<name>_select.m`
+- [Problem-Set Metadata Helper](guides/problem-metadata.md) — generate `probinfo_<lib>.csv` for fast `select()`
 
 ## Profiles
 

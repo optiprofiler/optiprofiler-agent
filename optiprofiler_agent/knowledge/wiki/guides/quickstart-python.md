@@ -64,12 +64,17 @@ scores = benchmark(
 
 ```python
 def my_solver(fun, x0):
-    # Must use `def`, not `lambda` — lambdas are not picklable
+    # Must use `def`, not `lambda` — see concepts/parallel-and-pickle.md
     from scipy.optimize import minimize
     return minimize(fun, x0, method='Nelder-Mead').x
 
 scores = benchmark([my_solver, other_solver], n_jobs=4)
 ```
+
+The same `def`-not-`lambda` rule applies to any callable that has to
+cross a worker boundary (custom `mod_*` features, `profile_options`
+callables). See [Parallel & Pickle Rules](../concepts/parallel-and-pickle.md)
+for the four exact places this matters.
 
 ## Example 5: Custom Problem Library
 
@@ -82,7 +87,10 @@ scores = benchmark(
 ```
 
 Each custom library directory must contain `<name>_tools.py` with
-`<name>_load` and `<name>_select` functions.
+`<name>_load` and `<name>_select` functions. For the full template,
+typing rules, and a worked end-to-end example see the
+[Custom Problem Library — Python](custom-problem-library-python.md)
+guide.
 
 ## See Also
 

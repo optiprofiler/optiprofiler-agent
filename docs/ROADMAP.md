@@ -201,6 +201,60 @@ the user asks a follow-up containing solver / problem / metric tokens,
 the unified agent gets a tool that fetches the cached report instead
 of re-parsing PDFs. Aligns with M1's session storage.
 
+### M4. Auto-generate custom problem-library interfaces from documentation
+
+**Problem.** Writing a new `<lib>_load` / `<lib>_select` adapter is
+currently a manual task: the user has to read the problem set's API
+docs or source, understand the OptiProfiler `Problem` class contract,
+decide between the "upstream selector" path and the CSV path, write
+the conversion code, and generate `probinfo_<lib>.csv`. This is
+exactly the kind of structured, template-heavy, error-prone work the
+agent should be able to automate.
+
+**Approach.**
+
+1. **New unified-agent tool `scaffold_plib`.**  
+   Triggered when the user says something like "帮我写一下 MYLIB 的接
+   口" or provides a URL / local path to the library's documentation.
+   - Stage A — discovery: the agent fetches or reads the library's
+     docs / source and classifies it:
+     - Does it expose a native loader (like MatCUTEst's `macup`)?
+     - Does it expose a native selector (like MatCUTEst's `secup`)?
+     - What field names / option keys does it use?
+     - What infinity sentinels does it use (e.g. `±1e20`)?
+   - Stage B — code generation: the agent fills in the conversion-shim
+     template from
+     [`guides/custom-problem-library-python.md`](../optiprofiler_agent/knowledge/wiki/guides/custom-problem-library-python.md)
+     (or the MATLAB equivalent), injecting the correct field mappings
+     discovered in Stage A.
+   - Stage C — metadata: if no upstream selector exists, also generate
+     a `collect_info.py` script (template from
+     [`guides/problem-metadata.md`](../optiprofiler_agent/knowledge/wiki/guides/problem-metadata.md))
+     and explain how to run it.
+
+2. **Knowledge base already in place.**  
+   The wiki pages added in v0.1 (Problem class reference,
+   custom-lib Python/MATLAB guides, problem-metadata helper,
+   parallel-and-pickle rules) provide the templates the LLM needs.
+   No new domain knowledge is required — only the RAG retrieval and
+   code-generation plumbing.
+
+3. **Optional: one-shot run.**  
+   If the user's library is locally accessible, a follow-up tool
+   invocation can execute the generated `collect_info.py` and return
+   the `probinfo_<lib>.csv` directly inside the chat session.
+
+**Why mid-term, not near-term.** Stage A (document parsing + API
+classification) requires reliable web/file fetching and multi-step
+reasoning over arbitrary third-party source code — more complex than
+current tools. Near-term we document the pattern; mid-term we automate
+it.
+
+**Success metric.** Given a pointer to a new Python problem library's
+`README` + `_tools.py` stub, the agent produces a working
+`<lib>_load` / `<lib>_select` that passes the validation checklist in
+`custom-problem-library-python.md` without any manual editing.
+
 ---
 
 ## Long-term — self-evolution loop (3-12 months)
