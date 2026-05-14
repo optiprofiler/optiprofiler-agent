@@ -122,6 +122,10 @@ class TestRenderMarkdown:
         assert "cutest" in md
         assert "1 – 5" in md  # dimension range
 
+    def test_metadata_table_omits_internal_language(self):
+        md = render_markdown(_make_full_report(), _make_summary())
+        assert "| Language |" not in md
+
     def test_solver_scores_formatted(self):
         md = render_markdown(_make_full_report(), _make_summary())
         # Scores rendered with four decimals in a dedicated table.

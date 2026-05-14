@@ -27,7 +27,6 @@ order, so downstream tooling can rely on a stable layout.
 | Problem libraries | {{ summary.problem_libraries | join(", ") if summary.problem_libraries else "n/a" }} |
 | Problem type | {{ summary.problem_types }} |
 | Dimension range | {{ summary.dimension_range[0] }} – {{ summary.dimension_range[1] }} |
-| Language | {{ summary.language }} |
 | Feature stamp | `{{ summary.feature_stamp }}` |
 {% if summary.solver_scores -%}
 
