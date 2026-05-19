@@ -55,3 +55,25 @@ class TestErrorClassifier:
         )
         result = classify_error(tb)
         assert result.error_type in ("interface_mismatch", "runtime_error")
+
+    def test_matlab_too_many_input_arguments(self):
+        tb = "Error using my_solver\nToo many input arguments."
+        result = classify_error(tb, language="matlab")
+        assert result.error_type == "interface_mismatch"
+        assert result.confidence >= 0.9
+
+    def test_matlab_undefined_function(self):
+        tb = "Undefined function or variable 'cobyqa'."
+        result = classify_error(tb, language="matlab")
+        assert result.error_type == "dependency_missing"
+        assert result.module_name == "cobyqa"
+
+    def test_matlab_index_exceeds(self):
+        tb = "Index exceeds the number of array elements (2)."
+        result = classify_error(tb, language="matlab")
+        assert result.error_type == "runtime_error"
+
+    def test_matlab_dimension_mismatch(self):
+        tb = "Dimensions of arrays being concatenated are not consistent."
+        result = classify_error(tb, language="matlab")
+        assert result.error_type == "runtime_error"

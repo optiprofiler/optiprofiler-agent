@@ -47,6 +47,11 @@ scores = benchmark({@solver1, @solver2}, options);
 
 Options are passed as a **struct** (the second argument). **Do NOT use name-value pairs like `benchmark(solvers, 'ptype', 'u', ...)`** — that is incorrect MATLAB syntax for this function.
 
+When generating a complete MATLAB script with helper solver functions,
+put executable script statements first and put local `function ... end`
+definitions at the end of the file. Do not start a script answer with a
+function definition and then continue with script-level statements.
+
 ### Solver signatures (both languages)
 
 - Unconstrained: `solver(fun, x0)`

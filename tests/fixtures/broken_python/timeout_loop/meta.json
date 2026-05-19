@@ -1,0 +1,6 @@
+{
+  "id": "timeout_loop",
+  "title": "Script never terminates",
+  "expected_categories": ["timeout"],
+  "expected_error_substr": ["timed out"]
+}

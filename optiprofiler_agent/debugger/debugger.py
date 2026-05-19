@@ -47,50 +47,101 @@ def _load_prompt(name: str) -> str:
     return ""
 
 
-def _handle_interface_mismatch(code: str, error: str) -> tuple[str | None, str]:
+def _normalize_language(language: str) -> str:
+    lang = (language or "python").strip().lower()
+    return "matlab" if lang in ("matlab", "m") else "python"
+
+
+def _handle_interface_mismatch(
+    code: str,
+    error: str,
+    language: str = "python",
+) -> tuple[str | None, str]:
     """Handle interface mismatch by generating a wrapper."""
     try:
-        from optiprofiler_agent.common.interface_adapter import analyze_solver, generate_wrapper
+        from optiprofiler_agent.common.interface_adapter import (
+            analyze_solver,
+            generate_wrapper,
+        )
 
-        analysis = analyze_solver(code)
-        if analysis and analysis.get("needs_wrapper"):
-            wrapper = generate_wrapper(analysis)
+        analysis = analyze_solver(code, language=language)
+        if analysis.needs_wrapper:
+            wrapper = generate_wrapper(analysis, language=language)
             report = (
                 "## Interface Mismatch Detected\n\n"
-                f"Your solver's signature doesn't match OptiProfiler's expected interface.\n\n"
-                f"**Missing parameters:** {', '.join(analysis.get('missing', []))}\n"
-                f"**Extra parameters:** {', '.join(analysis.get('extra', []))}\n\n"
+                "Your solver's signature doesn't match OptiProfiler's expected interface.\n\n"
+                f"**Missing parameters:** {', '.join(analysis.missing_params) or 'none'}\n"
+                f"**Extra parameters:** {', '.join(analysis.extra_params) or 'none'}\n\n"
                 "A wrapper function has been generated to adapt your solver."
             )
             return wrapper, report
     except Exception:
         pass
 
+    if language == "matlab":
+        sig_hint = (
+            "OptiProfiler calls solvers with `function x = solver(fun, x0)` "
+            "for unconstrained problems.\n"
+            "Make sure your solver accepts at least `fun` (function handle) "
+            "and `x0` (initial point).\n"
+        )
+    else:
+        sig_hint = (
+            "OptiProfiler calls solvers with `solver(fun, x0)` for unconstrained problems.\n"
+            "Make sure your solver accepts at least `fun` (callable) and `x0` (initial point).\n"
+        )
+
     report = (
         "## Interface Mismatch Detected\n\n"
         "Your solver function signature doesn't match what OptiProfiler expects.\n\n"
-        "OptiProfiler calls solvers with `solver(fun, x0)` for unconstrained problems.\n"
-        "Make sure your solver accepts at least `fun` (callable) and `x0` (initial point).\n\n"
+        f"{sig_hint}\n"
         f"**Error:** {error[:500]}"
     )
     return None, report
 
 
-def _handle_dependency_missing(classification: ErrorClassification) -> tuple[str | None, str]:
+def _handle_dependency_missing(
+    classification: ErrorClassification,
+    language: str = "python",
+) -> tuple[str | None, str]:
     """Handle missing dependency with install instructions."""
     module = classification.module_name or "unknown"
-    report = (
-        "## Missing Dependency\n\n"
-        f"The module `{module}` is not installed.\n\n"
-        f"**Fix:** Run the following command:\n\n"
-        f"```bash\npip install {module}\n```\n\n"
-        "Then re-run your benchmark script."
-    )
+    if language == "matlab":
+        report = (
+            "## Missing Dependency\n\n"
+            f"The function or variable `{module}` is not defined.\n\n"
+            "**Fix:**\n"
+            "1. Add the directory containing the function to the MATLAB path:\n"
+            f"   ```matlab\n   addpath('/path/to/{module}');\n   ```\n"
+            "2. Install the required toolbox if this is a built-in function.\n"
+            "3. Check spelling and case sensitivity.\n\n"
+            "Then re-run your benchmark script."
+        )
+    else:
+        report = (
+            "## Missing Dependency\n\n"
+            f"The module `{module}` is not installed.\n\n"
+            f"**Fix:** Run the following command:\n\n"
+            f"```bash\npip install {module}\n```\n\n"
+            "Then re-run your benchmark script."
+        )
     return None, report
 
 
-def _handle_timeout(error: str) -> tuple[str | None, str]:
+def _handle_timeout(error: str, language: str = "python") -> tuple[str | None, str]:
     """Handle timeout errors with diagnostic advice."""
+    if language == "matlab":
+        suggestions = (
+            "- Set `maxfev` or equivalent iteration limit in your solver options.\n"
+            "- Reduce `n_runs` to test fewer random starts.\n"
+            "- Use `n_jobs` for parallel execution.\n"
+        )
+    else:
+        suggestions = (
+            "- Set `maxfev` (max function evaluations) in your solver options.\n"
+            "- Reduce `n_runs` to test fewer random starts.\n"
+            "- Use `n_jobs` for parallel execution.\n"
+        )
     report = (
         "## Timeout Detected\n\n"
         "Your benchmark exceeded the time limit. Possible causes:\n\n"
@@ -98,16 +149,26 @@ def _handle_timeout(error: str) -> tuple[str | None, str]:
         "2. **Slow solver:** Your solver may be too slow for the problem set.\n"
         "3. **Infinite loop:** Check if your solver has proper termination conditions.\n\n"
         "**Suggestions:**\n"
-        "- Set `maxfev` (max function evaluations) in your solver options.\n"
-        "- Reduce `n_runs` to test fewer random starts.\n"
-        "- Use `n_jobs` for parallel execution.\n\n"
+        f"{suggestions}\n"
         f"**Error excerpt:** {error[:300]}"
     )
     return None, report
 
 
-def _handle_numerical(error: str) -> tuple[str | None, str]:
+def _handle_numerical(error: str, language: str = "python") -> tuple[str | None, str]:
     """Handle numerical issues with diagnostic advice."""
+    if language == "matlab":
+        suggestions = (
+            "- Wrap your objective with a guard: `if ~isfinite(f), f = 1e30; end`\n"
+            "- Check if your solver handles bound constraints properly.\n"
+            "- Verify the problem is well-scaled.\n"
+        )
+    else:
+        suggestions = (
+            "- Add `try/except` around your solver to catch numerical errors.\n"
+            "- Use `numpy.clip` to bound intermediate values.\n"
+            "- Check if your solver handles the case where `fun(x)` returns very large values.\n"
+        )
     report = (
         "## Numerical Issue Detected\n\n"
         "Your solver produced NaN, Inf, or overflow values. Possible causes:\n\n"
@@ -115,9 +176,7 @@ def _handle_numerical(error: str) -> tuple[str | None, str]:
         "2. **Poor initial point:** The starting point may be in a numerically unstable region.\n"
         "3. **Missing bounds handling:** Your solver may not handle bound constraints properly.\n\n"
         "**Suggestions:**\n"
-        "- Add `try/except` around your solver to catch numerical errors.\n"
-        "- Use `numpy.clip` to bound intermediate values.\n"
-        "- Check if your solver handles the case where `fun(x)` returns very large values.\n\n"
+        f"{suggestions}\n"
         f"**Error excerpt:** {error[:300]}"
     )
     return None, report
@@ -129,27 +188,35 @@ def _handle_runtime_with_llm(
     config: AgentConfig,
     max_retries: int = 3,
     code_char_limit: int = 0,
+    language: str = "python",
 ) -> tuple[str | None, str, int]:
     """Use LLM to analyze and fix runtime errors.
-
-    Parameters
-    ----------
-    code_char_limit : int
-        Max characters of code sent to LLM. 0 means no limit.
 
     Returns (fixed_code, report, attempts).
     """
     from optiprofiler_agent.common.llm_client import create_llm
     from langchain_core.messages import SystemMessage, HumanMessage
 
-    system_prompt = _load_prompt("system_prompt.md")
-    fix_templates = _load_prompt("fix_templates.md")
+    language = _normalize_language(language)
+
+    if language == "matlab":
+        system_prompt = _load_prompt("system_prompt_matlab.md")
+        fix_templates = _load_prompt("fix_templates_matlab.md")
+        expert_desc = "MATLAB debugging expert"
+        code_tag = "matlab"
+        lang_label = "MATLAB"
+    else:
+        system_prompt = _load_prompt("system_prompt.md")
+        fix_templates = _load_prompt("fix_templates.md")
+        expert_desc = "Python debugging expert"
+        code_tag = "python"
+        lang_label = "Python"
 
     if not system_prompt:
         system_prompt = (
-            "You are a Python debugging expert specializing in OptiProfiler benchmark scripts. "
+            f"You are a {expert_desc} specializing in OptiProfiler benchmark scripts. "
             "Analyze the error and provide a corrected version of the code. "
-            "Return ONLY the corrected Python code in a code block."
+            f"Return ONLY the corrected {lang_label} code in a code block."
         )
 
     full_system = system_prompt
@@ -163,14 +230,13 @@ def _handle_runtime_with_llm(
     current_code = code
 
     def _truncate_code(src: str, limit: int) -> str:
-        """Truncate code smartly: keep both head (imports/defs) and tail (main logic)."""
         if limit <= 0 or len(src) <= limit:
             return src
         head_size = limit // 2
         tail_size = limit - head_size - 50
         return (
             src[:head_size]
-            + "\n\n# ... (middle section omitted) ...\n\n"
+            + "\n\n% ... (middle section omitted) ...\n\n"
             + src[-tail_size:]
         )
 
@@ -179,9 +245,10 @@ def _handle_runtime_with_llm(
 
         code_for_llm = _truncate_code(current_code, code_char_limit)
         user_msg = (
-            f"## Code\n\n```python\n{code_for_llm}\n```\n\n"
+            f"## Code\n\n```{code_tag}\n{code_for_llm}\n```\n\n"
             f"## Error\n\n```\n{last_error[-2000:]}\n```\n\n"
-            "Please fix the code. Return the COMPLETE corrected code in a Python code block. "
+            f"Please fix the code. Return the COMPLETE corrected code in a "
+            f"{lang_label} code block. "
             "Include ALL imports and function definitions, not just the changed part."
         )
 
@@ -192,12 +259,12 @@ def _handle_runtime_with_llm(
             ])
 
             reply = response.content
-            fixed = _extract_code_from_reply(reply)
+            fixed = _extract_code_from_reply(reply, language=language)
 
             if not fixed:
                 continue
 
-            validation_errors = _validate_code(fixed)
+            validation_errors = _validate_code(fixed, language=language)
             if not validation_errors:
                 report = (
                     f"## Runtime Error Fixed (attempt {attempts})\n\n"
@@ -217,24 +284,37 @@ def _handle_runtime_with_llm(
         f"The automatic fix did not pass validation after {attempts} attempts.\n\n"
         f"**Original error:** {error[:300]}\n\n"
         "**Suggestion:** Review the error manually and check:\n"
-        "1. Your solver function signature matches `solver(fun, x0)`.\n"
-        "2. All required imports are present.\n"
-        "3. The `benchmark()` call has at least 2 solvers.\n"
     )
+    if language == "matlab":
+        report += (
+            "1. Your solver function signature matches `function x = solver(fun, x0)`.\n"
+            "2. All required paths are on the MATLAB path (`addpath`).\n"
+            "3. The `benchmark()` call has at least 2 solvers.\n"
+        )
+    else:
+        report += (
+            "1. Your solver function signature matches `solver(fun, x0)`.\n"
+            "2. All required imports are present.\n"
+            "3. The `benchmark()` call has at least 2 solvers.\n"
+        )
     return None, report, attempts
 
 
-def _extract_code_from_reply(reply: str) -> str | None:
-    """Extract Python code from an LLM reply."""
+def _extract_code_from_reply(reply: str, language: str = "python") -> str | None:
+    """Extract code from an LLM reply."""
     import re
 
-    # Look for ```python ... ``` blocks
-    pattern = re.compile(r"```python\s*\n(.*?)```", re.DOTALL)
+    language = _normalize_language(language)
+
+    if language == "matlab":
+        pattern = re.compile(r"```(?:matlab|m)\s*\n(.*?)```", re.DOTALL)
+    else:
+        pattern = re.compile(r"```python\s*\n(.*?)```", re.DOTALL)
+
     matches = pattern.findall(reply)
     if matches:
         return matches[0].strip()
 
-    # Look for ``` ... ``` blocks
     pattern = re.compile(r"```\s*\n(.*?)```", re.DOTALL)
     matches = pattern.findall(reply)
     if matches:
@@ -243,15 +323,25 @@ def _extract_code_from_reply(reply: str) -> str | None:
     return None
 
 
-def _validate_code(code: str) -> list[str]:
-    """Validate code using syntax_checker and api_checker.
-
-    Returns a list of error messages (empty if valid).
-    """
+def _validate_code(code: str, language: str = "python") -> list[str]:
+    """Validate code using language-appropriate checkers."""
     errors: list[str] = []
+    language = _normalize_language(language)
+
+    if language == "matlab":
+        try:
+            from optiprofiler_agent.validators.matlab_checker import check_matlab_code
+
+            result = check_matlab_code(code)
+            if result.has_errors:
+                errors.extend(result.errors)
+        except Exception:
+            pass
+        return errors
 
     try:
         from optiprofiler_agent.validators.syntax_checker import check_code_string
+
         result = check_code_string(code)
         if result.has_errors:
             for err in result.errors:
@@ -261,7 +351,8 @@ def _validate_code(code: str) -> list[str]:
 
     try:
         from optiprofiler_agent.validators.api_checker import validate_benchmark_call
-        result = validate_benchmark_call(code)
+
+        result = validate_benchmark_call(code, language="python")
         if result.has_errors:
             for issue in result.issues:
                 if issue.severity == "error":
@@ -280,17 +371,20 @@ def debug_script(
     code: str,
     error: str,
     config: AgentConfig | None = None,
+    language: str = "python",
 ) -> DebugResult:
     """Diagnose and attempt to fix a benchmark script error.
 
     Parameters
     ----------
     code : str
-        The Python source code that produced the error.
+        The source code that produced the error.
     error : str
         The full traceback or error message.
     config : AgentConfig, optional
         Agent configuration (for LLM settings and max retries).
+    language : str
+        ``"python"`` or ``"matlab"``.
 
     Returns
     -------
@@ -298,43 +392,43 @@ def debug_script(
         Classification, optional fixed code, and diagnostic report.
     """
     config = config or AgentConfig()
+    language = _normalize_language(language)
 
-    # Step 1: Classify the error
-    classification = classify_error_with_llm(error, code, config)
+    classification = classify_error_with_llm(error, code, config, language=language)
 
-    # Step 2: Route to handler
     fixed_code: str | None = None
     report: str = ""
     attempts: int = 0
 
     if classification.error_type == "interface_mismatch":
-        fixed_code, report = _handle_interface_mismatch(code, error)
+        fixed_code, report = _handle_interface_mismatch(code, error, language=language)
         attempts = 1
 
     elif classification.error_type == "dependency_missing":
-        fixed_code, report = _handle_dependency_missing(classification)
+        fixed_code, report = _handle_dependency_missing(classification, language=language)
         attempts = 1
 
     elif classification.error_type == "timeout":
-        fixed_code, report = _handle_timeout(error)
+        fixed_code, report = _handle_timeout(error, language=language)
         attempts = 1
 
     elif classification.error_type == "numerical":
-        fixed_code, report = _handle_numerical(error)
+        fixed_code, report = _handle_numerical(error, language=language)
         attempts = 1
 
     else:
-        # runtime_error or unknown — try LLM fix
         fixed_code, report, attempts = _handle_runtime_with_llm(
-            code, error, config,
+            code,
+            error,
+            config,
             max_retries=config.max_debug_retries,
             code_char_limit=config.code_char_limit,
+            language=language,
         )
 
-    # Step 3: Validate the fix if we have one
     validation_passed = False
     if fixed_code:
-        errors = _validate_code(fixed_code)
+        errors = _validate_code(fixed_code, language=language)
         validation_passed = len(errors) == 0
         if errors:
             report += (
@@ -351,6 +445,43 @@ def debug_script(
     )
 
 
+def _run_code_for_language(
+    code: str,
+    language: str,
+    timeout: int,
+    cwd: str | None,
+):
+    """Dispatch to the right sandbox runner.
+
+    * Python → ``local_runner.run_script``.
+    * MATLAB → ``matlab_runner.run_matlab_script`` if a MATLAB binary is
+      resolvable (``MATOP_MATLAB_BIN`` or ``matlab`` on PATH); otherwise
+      a synthetic :class:`RunResult` is returned that explains the gap
+      so the diagnose-fix-rerun loop can still produce a useful report.
+    """
+    if _normalize_language(language) == "matlab":
+        from optiprofiler_agent.debugger.matlab_runner import (
+            MatlabNotAvailable,
+            run_matlab_script,
+        )
+        try:
+            return run_matlab_script(code, timeout=timeout, cwd=cwd)
+        except MatlabNotAvailable as exc:
+            from optiprofiler_agent.debugger.local_runner import RunResult
+            return RunResult(
+                exit_code=-1,
+                stdout="",
+                stderr=(
+                    "MATLAB runner unavailable: " + str(exc) + "\n"
+                    "Static diagnosis only; run_and_debug cannot re-execute the script."
+                ),
+                timed_out=False,
+            )
+
+    from optiprofiler_agent.debugger.local_runner import run_script
+    return run_script(code, timeout=timeout, cwd=cwd)
+
+
 def run_and_debug(
     code: str,
     config: AgentConfig | None = None,
@@ -358,35 +489,13 @@ def run_and_debug(
     cwd: str | None = None,
     save_fixed: str | None = None,
     progress_callback: callable | None = None,
+    language: str = "python",
 ) -> DebugResult:
-    """Run a script, and if it fails, automatically diagnose and fix.
-
-    This implements the full run → diagnose → fix → re-run loop.
-
-    Parameters
-    ----------
-    code : str
-        Python source code to run.
-    config : AgentConfig, optional
-        Agent configuration.
-    timeout : int
-        Wall-clock timeout per run (seconds).
-    cwd : str, optional
-        Working directory for script execution.
-    save_fixed : str, optional
-        If set, write the final fixed code to this path.
-    progress_callback : callable, optional
-        Called with a status message string at each step for live output.
-
-    Returns
-    -------
-    DebugResult
-        Final result (may include the successfully-fixed code).
-    """
+    """Run a script, and if it fails, automatically diagnose and fix."""
     _progress_callback = progress_callback
-    from optiprofiler_agent.debugger.local_runner import run_script
 
     config = config or AgentConfig()
+    language = _normalize_language(language)
     max_rounds = config.max_debug_retries
     current_code = code
     all_reports: list[str] = []
@@ -397,7 +506,9 @@ def run_and_debug(
 
     for round_num in range(1, max_rounds + 1):
         _log(f"[Round {round_num}/{max_rounds}] Running script (timeout={timeout}s)...")
-        run_result = run_script(current_code, timeout=timeout, cwd=cwd)
+        run_result = _run_code_for_language(
+            current_code, language=language, timeout=timeout, cwd=cwd,
+        )
 
         if run_result.success:
             _log(f"[Round {round_num}] Script ran successfully!")
@@ -460,7 +571,7 @@ def run_and_debug(
             )
 
         _log(f"[Round {round_num}] Diagnosing error...")
-        result = debug_script(current_code, error_text, config)
+        result = debug_script(current_code, error_text, config, language=language)
         all_reports.append(result.diagnostic_report)
 
         if result.fixed_code and result.validation_passed:
@@ -507,19 +618,19 @@ def run_and_debug(
             attempts=max_rounds,
             validation_passed=True,
         )
-    else:
-        _log("[Final] Still failing after all attempts.")
-        all_reports.append(
-            "## Final verification: Still failing\n\n"
-            f"```\n{(final_run.traceback or final_run.stderr)[:500]}\n```\n"
-        )
-        return DebugResult(
-            classification=ErrorClassification(
-                error_type="runtime_error", confidence=0.8,
-                details="Could not fully fix the script.",
-            ),
-            fixed_code=current_code,
-            diagnostic_report="\n\n---\n\n".join(all_reports),
-            attempts=max_rounds,
-            validation_passed=False,
-        )
+
+    _log("[Final] Still failing after all attempts.")
+    all_reports.append(
+        "## Final verification: Still failing\n\n"
+        f"```\n{(final_run.traceback or final_run.stderr)[:500]}\n```\n"
+    )
+    return DebugResult(
+        classification=ErrorClassification(
+            error_type="runtime_error", confidence=0.8,
+            details="Could not fully fix the script.",
+        ),
+        fixed_code=current_code,
+        diagnostic_report="\n\n---\n\n".join(all_reports),
+        attempts=max_rounds,
+        validation_passed=False,
+    )

@@ -1,0 +1,6 @@
+{
+  "id": "bad_bounds_shape",
+  "title": "Bounds vector length does not match x0",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["Bounds shape mismatch"]
+}

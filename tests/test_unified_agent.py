@@ -61,6 +61,28 @@ class TestBuildTools:
         result = validate.invoke({"code": bad_code})
         assert "1 provided" in result or "error" in result.lower()
 
+    def test_validate_script_matlab_passes(self):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        validate = next(t for t in tools if t.name == "validate_script")
+
+        code = (
+            "function x = solver(fun, x0)\n"
+            "    x = fminsearch(fun, x0);\n"
+            "end\n"
+        )
+        result = validate.invoke({"code": code, "language": "matlab"})
+        assert "looks good" in result.lower()
+
+    def test_validate_script_matlab_detects_system(self):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        validate = next(t for t in tools if t.name == "validate_script")
+
+        code = "function x = s(fun, x0)\n    system('ls');\nend\n"
+        result = validate.invoke({"code": code, "language": "matlab"})
+        assert "issues found" in result.lower() or "system" in result.lower()
+
     def test_interpret_results_nonexistent_dir(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
         tools = _build_tools(config)

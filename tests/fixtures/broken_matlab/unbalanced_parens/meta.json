@@ -1,0 +1,6 @@
+{
+  "id": "unbalanced_parens",
+  "title": "Unbalanced parentheses in a MATLAB statement",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["Invalid expression", "parenthes"]
+}

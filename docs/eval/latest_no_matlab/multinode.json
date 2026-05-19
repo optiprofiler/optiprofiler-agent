@@ -1,0 +1,332 @@
+{
+  "timestamp_utc": "2026-05-19T01:11:33+00:00",
+  "summary": {
+    "total": 21,
+    "passed": 21,
+    "pass_rate": 1.0,
+    "by_agent": {
+      "debugger": {
+        "total": 15,
+        "passed": 15
+      },
+      "interpreter": {
+        "total": 6,
+        "passed": 6
+      }
+    },
+    "by_task": {
+      "classify_error": {
+        "total": 9,
+        "passed": 9
+      },
+      "validate_code": {
+        "total": 4,
+        "passed": 4
+      },
+      "analyze_solver": {
+        "total": 2,
+        "passed": 2
+      },
+      "load_results": {
+        "total": 1,
+        "passed": 1
+      },
+      "parse_log_snippet": {
+        "total": 1,
+        "passed": 1
+      },
+      "build_summary": {
+        "total": 1,
+        "passed": 1
+      },
+      "summary_json_roundtrip": {
+        "total": 1,
+        "passed": 1
+      },
+      "profile_curves_flag": {
+        "total": 1,
+        "passed": 1
+      },
+      "parse_log_snippet_padded": {
+        "total": 1,
+        "passed": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "dbg_matlab_dep_undefined",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "dependency_missing",
+        "expected_category": "dependency_missing",
+        "actual_module": "cobyqa",
+        "expected_module": "cobyqa"
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_dep_unrecognized",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "dependency_missing",
+        "expected_category": "dependency_missing",
+        "actual_module": "pdfo",
+        "expected_module": "pdfo"
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_iface_too_many",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "interface_mismatch",
+        "expected_category": "interface_mismatch",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_iface_not_enough",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "interface_mismatch",
+        "expected_category": "interface_mismatch",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_runtime_index",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "runtime_error",
+        "expected_category": "runtime_error",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_runtime_dim",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "runtime_error",
+        "expected_category": "runtime_error",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_timeout",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "timeout",
+        "expected_category": "timeout",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_numerical_nan",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "numerical",
+        "expected_category": "numerical",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_numerical_inf",
+      "agent": "debugger",
+      "task": "classify_error",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "actual_category": "numerical",
+        "expected_category": "numerical",
+        "actual_module": null,
+        "expected_module": null
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_checker_safe",
+      "agent": "debugger",
+      "task": "validate_code",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "errors": []
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_checker_system",
+      "agent": "debugger",
+      "task": "validate_code",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "errors": [
+          "Line 1: potentially dangerous call 'system'"
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_checker_shell_escape",
+      "agent": "debugger",
+      "task": "validate_code",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "errors": [
+          "Line 1: shell escape '!' is not allowed"
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_checker_unbalanced",
+      "agent": "debugger",
+      "task": "validate_code",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "errors": [
+          "Unbalanced parentheses/brackets/braces"
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_iface_reordered",
+      "agent": "debugger",
+      "task": "analyze_solver",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "needs_wrapper": true,
+        "func_name": "my_solver",
+        "expected_needs_wrapper": true
+      },
+      "error": null
+    },
+    {
+      "id": "dbg_matlab_iface_canonical",
+      "agent": "debugger",
+      "task": "analyze_solver",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "needs_wrapper": false,
+        "func_name": "my_solver",
+        "expected_needs_wrapper": false
+      },
+      "error": null
+    },
+    {
+      "id": "int_matlab_fixture_load",
+      "agent": "interpreter",
+      "task": "load_results",
+      "passed": true,
+      "elapsed_s": 0.001,
+      "details": {
+        "language": "matlab",
+        "run_results": 2,
+        "solver_scores": 2
+      },
+      "error": null
+    },
+    {
+      "id": "int_matlab_log_snippet",
+      "agent": "interpreter",
+      "task": "parse_log_snippet",
+      "passed": true,
+      "elapsed_s": 0.001,
+      "details": {
+        "run_results": 2,
+        "scores": 2
+      },
+      "error": null
+    },
+    {
+      "id": "int_matlab_build_summary",
+      "agent": "interpreter",
+      "task": "build_summary",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "language": "matlab",
+        "solver_count": 2,
+        "ranking_count": 2
+      },
+      "error": null
+    },
+    {
+      "id": "int_matlab_summary_json_roundtrip",
+      "agent": "interpreter",
+      "task": "summary_json_roundtrip",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "language": "matlab",
+        "missing_keys": []
+      },
+      "error": null
+    },
+    {
+      "id": "int_matlab_no_pdfs_flag_true",
+      "agent": "interpreter",
+      "task": "profile_curves_flag",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "profile_curves_available": true
+      },
+      "error": null
+    },
+    {
+      "id": "int_matlab_dual_run_counter",
+      "agent": "interpreter",
+      "task": "parse_log_snippet_padded",
+      "passed": true,
+      "elapsed_s": 0.0,
+      "details": {
+        "run_results": 1
+      },
+      "error": null
+    }
+  ]
+}

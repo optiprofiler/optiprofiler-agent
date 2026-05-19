@@ -1,0 +1,6 @@
+{
+  "id": "inf_objective",
+  "title": "Objective returns Inf at the starting point",
+  "expected_categories": ["numerical"],
+  "expected_error_substr": ["OverflowError", "Inf"]
+}

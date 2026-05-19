@@ -1,0 +1,6 @@
+{
+  "id": "key_missing_struct",
+  "title": "Missing options struct field",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["Unrecognized field name", "ptype"]
+}

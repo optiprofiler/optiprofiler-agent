@@ -1,0 +1,6 @@
+{
+  "id": "timeout_pause",
+  "title": "MATLAB script exceeds the wall-clock limit",
+  "expected_categories": ["timeout"],
+  "expected_error_substr": ["timed out"]
+}

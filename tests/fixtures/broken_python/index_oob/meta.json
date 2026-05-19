@@ -1,0 +1,6 @@
+{
+  "id": "index_oob",
+  "title": "List index out of range",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["IndexError", "list index out of range"]
+}

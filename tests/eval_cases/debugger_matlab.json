@@ -1,0 +1,128 @@
+[
+  {
+    "id": "dbg_matlab_dep_undefined",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Undefined function or variable 'cobyqa'.",
+    "expected_category": "dependency_missing",
+    "expected_module": "cobyqa"
+  },
+  {
+    "id": "dbg_matlab_dep_unrecognized",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Unrecognized function or variable 'pdfo'.",
+    "expected_category": "dependency_missing",
+    "expected_module": "pdfo"
+  },
+  {
+    "id": "dbg_matlab_iface_too_many",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Error using my_solver\nToo many input arguments.",
+    "expected_category": "interface_mismatch"
+  },
+  {
+    "id": "dbg_matlab_iface_not_enough",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Error using my_solver\nNot enough input arguments.",
+    "expected_category": "interface_mismatch"
+  },
+  {
+    "id": "dbg_matlab_runtime_index",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Index exceeds the number of array elements (2).",
+    "expected_category": "runtime_error"
+  },
+  {
+    "id": "dbg_matlab_runtime_dim",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Dimensions of arrays being concatenated are not consistent.",
+    "expected_category": "runtime_error"
+  },
+  {
+    "id": "dbg_matlab_timeout",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Script timed out after 120 seconds.",
+    "expected_category": "timeout"
+  },
+  {
+    "id": "dbg_matlab_numerical_nan",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Warning: NaN detected in solver output.",
+    "expected_category": "numerical"
+  },
+  {
+    "id": "dbg_matlab_numerical_inf",
+    "agent": "debugger",
+    "task": "classify_error",
+    "language": "matlab",
+    "error_text": "Warning: Inf returned by objective function.",
+    "expected_category": "numerical"
+  },
+  {
+    "id": "dbg_matlab_checker_safe",
+    "agent": "debugger",
+    "task": "validate_code",
+    "language": "matlab",
+    "code": "function f = rosen(x)\nf = sum(100*(x(2:end)-x(1:end-1).^2).^2 + (1-x(1:end-1)).^2);\nend",
+    "expect_valid": true
+  },
+  {
+    "id": "dbg_matlab_checker_system",
+    "agent": "debugger",
+    "task": "validate_code",
+    "language": "matlab",
+    "code": "system('rm -rf /');",
+    "expect_valid": false,
+    "must_contain_issue": "system"
+  },
+  {
+    "id": "dbg_matlab_checker_shell_escape",
+    "agent": "debugger",
+    "task": "validate_code",
+    "language": "matlab",
+    "code": "!rm -rf /\nfunction x = s(fun, x0)\nend",
+    "expect_valid": false,
+    "must_contain_issue": "shell"
+  },
+  {
+    "id": "dbg_matlab_checker_unbalanced",
+    "agent": "debugger",
+    "task": "validate_code",
+    "language": "matlab",
+    "code": "function x = s(fun, x0\n    x = fminsearch(fun, x0;\nend",
+    "expect_valid": false,
+    "must_contain_issue": "unbalanced"
+  },
+  {
+    "id": "dbg_matlab_iface_reordered",
+    "agent": "debugger",
+    "task": "analyze_solver",
+    "language": "matlab",
+    "code": "function x = my_solver(x0, fun)\n    x = fun(x0);\nend",
+    "expect_needs_wrapper": true,
+    "expect_func_name": "my_solver"
+  },
+  {
+    "id": "dbg_matlab_iface_canonical",
+    "agent": "debugger",
+    "task": "analyze_solver",
+    "language": "matlab",
+    "code": "function x = my_solver(fun, x0)\n    x = fminsearch(fun, x0);\nend",
+    "expect_needs_wrapper": false
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "id": "nan_objective",
+  "title": "Objective returns NaN at the starting point",
+  "expected_categories": ["numerical"],
+  "expected_error_substr": ["ValueError", "NaN"]
+}

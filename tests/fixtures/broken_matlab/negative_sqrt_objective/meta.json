@@ -1,0 +1,6 @@
+{
+  "id": "negative_sqrt_objective",
+  "title": "Objective becomes complex at x0",
+  "expected_categories": ["numerical"],
+  "expected_error_substr": ["NaN", "complex"]
+}

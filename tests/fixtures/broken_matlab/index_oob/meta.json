@@ -1,0 +1,6 @@
+{
+  "id": "index_oob",
+  "title": "Array index exceeds length",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["Index", "exceeds"]
+}

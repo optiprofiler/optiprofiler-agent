@@ -1,0 +1,6 @@
+{
+  "id": "bad_field_access",
+  "title": "Struct field does not exist",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["Unrecognized field name", "y"]
+}

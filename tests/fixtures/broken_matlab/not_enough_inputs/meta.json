@@ -1,0 +1,6 @@
+{
+  "id": "not_enough_inputs",
+  "title": "Solver requires a non-optional third argument",
+  "expected_categories": ["interface_mismatch"],
+  "expected_error_substr": ["Not enough input arguments"]
+}

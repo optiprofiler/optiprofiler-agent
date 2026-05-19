@@ -11,6 +11,10 @@ order, so downstream tooling can rely on a stable layout.
 
 > {{ report.overview.headline }}
 
+{% if not summary.profile_curves_available -%}
+> **Note:** Profile curve extraction is not available for these PDFs (common with MATLAB-generated figures). This report is based on solver scores and log data only.
+{% endif %}
+
 {% if report.key_findings -%}
 ## Key Findings
 

@@ -1,0 +1,6 @@
+{
+  "id": "missing_dependency",
+  "title": "Python module is not installed",
+  "expected_categories": ["dependency_missing"],
+  "expected_error_substr": ["ModuleNotFoundError", "optiprofiler_missing_package"]
+}

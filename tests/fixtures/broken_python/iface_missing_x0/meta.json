@@ -1,0 +1,6 @@
+{
+  "id": "iface_missing_x0",
+  "title": "Solver accepts fun but misses x0",
+  "expected_categories": ["interface_mismatch"],
+  "expected_error_substr": ["positional argument", "given"]
+}

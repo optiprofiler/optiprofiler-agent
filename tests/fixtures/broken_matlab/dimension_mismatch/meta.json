@@ -1,0 +1,6 @@
+{
+  "id": "dimension_mismatch",
+  "title": "Array concatenation dimension mismatch",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["Dimensions of arrays", "concatenated"]
+}

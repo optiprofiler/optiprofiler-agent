@@ -1,0 +1,6 @@
+{
+  "id": "undefined_variable",
+  "title": "Typo in starting-point variable name",
+  "expected_categories": ["dependency_missing"],
+  "expected_error_substr": ["Unrecognized function or variable", "x_start"]
+}

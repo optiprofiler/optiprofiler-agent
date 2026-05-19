@@ -180,11 +180,20 @@ def _build_tools(config: AgentConfig) -> list:
 
     @tool
     def validate_script(
-        code: Annotated[str, "Python source code to validate"],
+        code: Annotated[str, "Source code to validate"],
         language: Annotated[str, "python or matlab"] = "python",
     ) -> str:
         """Validate a benchmark script for syntax errors and API usage issues.
         Returns a list of issues found or a success message."""
+        lang = (language or "python").strip().lower()
+        if lang in ("matlab", "m"):
+            from optiprofiler_agent.validators.matlab_checker import check_matlab_code
+
+            result = check_matlab_code(code)
+            if result.has_errors:
+                return "Issues found:\n" + "\n".join(f"- {e}" for e in result.errors)
+            return "Script looks good! No MATLAB safety or structure issues detected."
+
         from optiprofiler_agent.validators.syntax_checker import check_code_string
         from optiprofiler_agent.validators.api_checker import validate_benchmark_call
 
@@ -195,7 +204,7 @@ def _build_tools(config: AgentConfig) -> list:
             for err in syn.errors:
                 issues.append(f"Syntax error at line {err.line}: {err.message}")
 
-        api = validate_benchmark_call(code, language=language)
+        api = validate_benchmark_call(code, language="python")
         if api.has_errors or api.has_warnings:
             for issue in api.issues:
                 issues.append(f"[{issue.severity}] {issue.message}")
@@ -208,24 +217,31 @@ def _build_tools(config: AgentConfig) -> list:
 
     @tool
     def debug_error(
-        code: Annotated[str, "The Python source code that produced the error"],
+        code: Annotated[str, "The source code that produced the error"],
         error: Annotated[str, "The full traceback or error message"],
+        language: Annotated[str, "python or matlab"] = "python",
     ) -> str:
         """Diagnose a benchmark script error and suggest a fix.
         Provide the code and the error traceback."""
         from optiprofiler_agent.debugger.debugger import debug_script
 
-        result = debug_script(code=code, error=error, config=config)
+        lang = (language or "python").strip().lower()
+        code_tag = "matlab" if lang in ("matlab", "m") else "python"
+
+        result = debug_script(
+            code=code, error=error, config=config, language=language,
+        )
 
         output = result.diagnostic_report
         if result.fixed_code:
-            output += f"\n\n## Suggested Fix\n\n```python\n{result.fixed_code}\n```"
+            output += f"\n\n## Suggested Fix\n\n```{code_tag}\n{result.fixed_code}\n```"
         return output
 
     @tool
     def interpret_results(
         results_dir: Annotated[str, "Path to the benchmark results directory"],
         use_latest: Annotated[bool, "Auto-detect latest experiment"] = True,
+        report_language: Annotated[str, "Report language, e.g. English or Chinese"] = "English",
     ) -> str:
         """Analyze benchmark results and generate a summary report.
         Point to the output directory (e.g., 'out/') or a specific experiment folder."""
@@ -246,7 +262,7 @@ def _build_tools(config: AgentConfig) -> list:
             report = interpret(
                 results_dir=target,
                 config=config,
-                language="English",
+                language=report_language,
                 read_profiles=True,
                 llm_enabled=False,
             )

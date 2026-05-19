@@ -1,0 +1,6 @@
+{
+  "id": "zero_division_objective",
+  "title": "Objective divides by zero at x0",
+  "expected_categories": ["numerical"],
+  "expected_error_substr": ["Inf", "division by zero"]
+}

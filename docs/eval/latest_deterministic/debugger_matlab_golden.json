@@ -1,0 +1,209 @@
+{
+  "agent": "debugger",
+  "strategy": "golden",
+  "language": "matlab",
+  "provider": null,
+  "model": null,
+  "timestamp_utc": "2026-05-19T01:14:55+00:00",
+  "n_total": 15,
+  "n_pass": 15,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "bad_bounds_shape",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 17.83,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "bad_field_access",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 16.85,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "dimension_mismatch",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 17.83,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "iface_reorder",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "interface_mismatch",
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 18.97,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "index_oob",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 15.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "key_missing_struct",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 17.37,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "nan_objective",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "numerical",
+      "expected_categories": [
+        "numerical"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 15.74,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "negative_sqrt_objective",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "numerical",
+      "expected_categories": [
+        "numerical"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 22.87,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "not_enough_inputs",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "interface_mismatch",
+      "expected_categories": [
+        "interface_mismatch"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 16.91,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "timeout_pause",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "timeout",
+      "expected_categories": [
+        "timeout"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 55.45,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "too_many_inputs",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "interface_mismatch",
+      "expected_categories": [
+        "interface_mismatch"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 16.14,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "unbalanced_parens",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 19.42,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "undefined_function",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "dependency_missing",
+      "expected_categories": [
+        "dependency_missing"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 16.23,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "undefined_variable",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "dependency_missing",
+      "expected_categories": [
+        "dependency_missing"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 20.26,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "zero_division_objective",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "numerical",
+      "expected_categories": [
+        "numerical"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 16.06,
+      "fix_stderr_excerpt": ""
+    }
+  ]
+}

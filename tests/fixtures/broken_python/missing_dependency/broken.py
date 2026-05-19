@@ -1,0 +1,4 @@
+import optiprofiler_missing_package
+
+
+print(optiprofiler_missing_package.__name__)

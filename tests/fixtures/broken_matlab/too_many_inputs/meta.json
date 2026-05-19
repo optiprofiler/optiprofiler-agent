@@ -1,0 +1,6 @@
+{
+  "id": "too_many_inputs",
+  "title": "Solver accepts too few input arguments",
+  "expected_categories": ["interface_mismatch"],
+  "expected_error_substr": ["Too many input arguments"]
+}

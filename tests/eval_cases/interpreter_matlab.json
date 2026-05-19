@@ -1,0 +1,61 @@
+[
+  {
+    "id": "int_matlab_fixture_load",
+    "agent": "interpreter",
+    "task": "load_results",
+    "fixture": "tests/fixtures/matlab_results/experiment_matlab",
+    "expect": {
+      "language": "matlab",
+      "min_run_results": 2,
+      "min_solver_scores": 2
+    }
+  },
+  {
+    "id": "int_matlab_log_snippet",
+    "agent": "interpreter",
+    "task": "parse_log_snippet",
+    "expect": {
+      "min_run_results": 2,
+      "min_scores": 2
+    }
+  },
+  {
+    "id": "int_matlab_build_summary",
+    "agent": "interpreter",
+    "task": "build_summary",
+    "fixture": "tests/fixtures/matlab_results/experiment_matlab",
+    "expect": {
+      "language": "matlab",
+      "min_solvers": 2,
+      "has_rankings": true
+    }
+  },
+  {
+    "id": "int_matlab_summary_json_roundtrip",
+    "agent": "interpreter",
+    "task": "summary_json_roundtrip",
+    "fixture": "tests/fixtures/matlab_results/experiment_matlab",
+    "expect": {
+      "language": "matlab",
+      "must_have_keys": ["solver_names", "solver_scores", "rankings", "language"]
+    }
+  },
+  {
+    "id": "int_matlab_no_pdfs_flag_true",
+    "agent": "interpreter",
+    "task": "profile_curves_flag",
+    "fixture": "tests/fixtures/matlab_results/experiment_matlab",
+    "expect": {
+      "profile_curves_available": true
+    }
+  },
+  {
+    "id": "int_matlab_dual_run_counter",
+    "agent": "interpreter",
+    "task": "parse_log_snippet_padded",
+    "log": "INFO: Finish solving CLIFF with fminsearch (run  1/ 1) in 2.87 seconds.\nINFO: Output result for CLIFF with fminsearch (run  1/ 1): f = 2.0069e-01.\nINFO: Best result for CLIFF with fminsearch (run  1/ 1): f = 2.0069e-01.\n",
+    "expect": {
+      "min_run_results": 1
+    }
+  }
+]

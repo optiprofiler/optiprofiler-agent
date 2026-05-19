@@ -8,10 +8,12 @@ from unittest.mock import MagicMock, patch
 from optiprofiler_agent.debugger.debugger import (
     DebugResult,
     _extract_code_from_reply,
+    _handle_interface_mismatch,
     _validate_code,
     debug_script,
     run_and_debug,
 )
+from optiprofiler_agent.common.interface_adapter import analyze_solver
 from optiprofiler_agent.config import AgentConfig, LLMConfig
 
 
@@ -74,6 +76,16 @@ class TestExtractCode:
         reply = "```python\nfirst()\n```\n```python\nsecond()\n```"
         assert _extract_code_from_reply(reply) == "first()"
 
+    def test_extracts_matlab_fenced_block(self):
+        reply = "Fix:\n```matlab\nfunction x = s(fun, x0)\nend\n```"
+        code = _extract_code_from_reply(reply, language="matlab")
+        assert code is not None
+        assert "function x = s" in code
+
+    def test_extracts_m_tagged_block(self):
+        reply = "```m\nx = 1;\n```"
+        assert _extract_code_from_reply(reply, language="matlab") == "x = 1;"
+
 
 # ---------------------------------------------------------------------------
 # _validate_code
@@ -88,6 +100,44 @@ class TestValidateCode:
     def test_syntax_error_detected(self):
         errors = _validate_code("def f(\n")
         assert any("Syntax" in e or "syntax" in e.lower() for e in errors)
+
+    def test_matlab_dangerous_call_detected(self):
+        code = "function x = s(fun, x0)\n    system('ls');\nend\n"
+        errors = _validate_code(code, language="matlab")
+        assert len(errors) >= 1
+
+    def test_matlab_valid_code_passes(self):
+        code = "function x = s(fun, x0)\n    x = fminsearch(fun, x0);\nend\n"
+        errors = _validate_code(code, language="matlab")
+        assert errors == []
+
+
+# ---------------------------------------------------------------------------
+# interface mismatch (pre-flight bug #1)
+# ---------------------------------------------------------------------------
+
+class TestInterfaceMismatch:
+
+    def test_wrapper_generated_for_reordered_params(self):
+        code = "def my_solver(x0, fun):\n    return fun(x0)\n"
+        analysis = analyze_solver(code)
+        assert analysis.needs_wrapper
+        fixed, report = _handle_interface_mismatch(code, "TypeError", language="python")
+        assert fixed is not None
+        assert "my_solver_wrapper" in fixed
+        assert "Interface Mismatch" in report
+
+    def test_matlab_wrapper_generated(self):
+        code = "function x = my_solver(x0, fun)\n    x = fun(x0);\nend\n"
+        analysis = analyze_solver(code, language="matlab")
+        assert analysis.needs_wrapper
+        fixed, report = _handle_interface_mismatch(
+            code,
+            "Error using my_solver\nToo many input arguments.",
+            language="matlab",
+        )
+        assert fixed is not None
+        assert "my_solver_wrapper" in fixed
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +181,25 @@ class TestDebugScript:
             config=_make_config(),
         )
         assert result.classification.error_type == "numerical"
+
+    def test_matlab_dependency_missing(self):
+        result = debug_script(
+            code="x = foo(1);",
+            error="Undefined function or variable 'foo'.",
+            config=_make_config(),
+            language="matlab",
+        )
+        assert result.classification.error_type == "dependency_missing"
+        assert "addpath" in result.diagnostic_report.lower()
+
+    def test_matlab_interface_mismatch(self):
+        result = debug_script(
+            code="function x = s(a, b, c)\nend\n",
+            error="Error using s\nToo many input arguments.",
+            config=_make_config(),
+            language="matlab",
+        )
+        assert result.classification.error_type == "interface_mismatch"
 
     @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
     def test_runtime_error_calls_llm_handler(self, mock_llm):
@@ -227,4 +296,124 @@ class TestRunAndDebug:
             progress_callback=lambda msg: messages.append(msg),
         )
         assert len(messages) >= 1
+        assert any("Round" in m for m in messages)
+
+
+# ---------------------------------------------------------------------------
+# MATLAB run_and_debug control flow (mirrors TestRunAndDebug above).
+# The local runner today is Python-only (B-10 sandbox is a platform task);
+# these mocked tests just validate that the language parameter is threaded
+# correctly through the round loop, save_fixed, and progress reporting.
+# ---------------------------------------------------------------------------
+
+MATLAB_GOOD = (
+    "function x = solver(fun, x0)\n"
+    "    x = fminsearch(fun, x0);\n"
+    "    x = x(:);\n"
+    "end\n"
+)
+
+MATLAB_RUNTIME_ERROR = (
+    "Error using solver\n"
+    "Index exceeds the number of array elements (2)."
+)
+
+
+class TestRunAndDebugMatlab:
+    """End-to-end MATLAB control-flow with the runner patched at the dispatch layer.
+
+    We patch ``debugger._run_code_for_language`` so the test works whether
+    or not a real MATLAB binary is installed and so it parallels the
+    Python mocks above (which patch ``local_runner.run_script``).
+    """
+
+    @patch("optiprofiler_agent.debugger.debugger._run_code_for_language")
+    def test_matlab_success_on_first_run(self, mock_run):
+        mock_run.return_value = MagicMock(
+            success=True, stdout="OK", stderr="", traceback=None, timed_out=False,
+        )
+        result = run_and_debug(
+            code=MATLAB_GOOD,
+            config=_make_config(),
+            language="matlab",
+        )
+        assert result.classification.error_type == "none"
+        assert result.attempts == 1
+        assert result.validation_passed is True
+        # Confirm the dispatcher saw ``language="matlab"``.
+        assert mock_run.call_args.kwargs.get("language") == "matlab"
+
+    @patch("optiprofiler_agent.debugger.debugger.debug_script")
+    @patch("optiprofiler_agent.debugger.debugger._run_code_for_language")
+    def test_matlab_fix_and_rerun_success(self, mock_run, mock_debug):
+        fail_result = MagicMock(
+            success=False, stdout="", stderr=MATLAB_RUNTIME_ERROR,
+            traceback=MATLAB_RUNTIME_ERROR, timed_out=False,
+        )
+        success_result = MagicMock(
+            success=True, stdout="OK", stderr="", traceback=None, timed_out=False,
+        )
+        mock_run.side_effect = [fail_result, success_result]
+
+        mock_debug.return_value = DebugResult(
+            classification=MagicMock(error_type="runtime_error"),
+            fixed_code=MATLAB_GOOD,
+            diagnostic_report="Fixed index error",
+            attempts=1,
+            validation_passed=True,
+        )
+
+        result = run_and_debug(
+            code="x = a(3);",
+            config=_make_config(),
+            language="matlab",
+        )
+        assert result.classification.error_type == "none"
+        assert result.attempts == 2
+        # The debug_script call must be told it's MATLAB.
+        kwargs = mock_debug.call_args.kwargs
+        assert kwargs.get("language") == "matlab"
+
+    @patch("optiprofiler_agent.debugger.debugger.debug_script")
+    @patch("optiprofiler_agent.debugger.debugger._run_code_for_language")
+    def test_matlab_save_fixed_writes_file(self, mock_run, mock_debug, tmp_path):
+        fail_result = MagicMock(
+            success=False, stdout="", stderr=MATLAB_RUNTIME_ERROR,
+            traceback=MATLAB_RUNTIME_ERROR, timed_out=False,
+        )
+        success_result = MagicMock(
+            success=True, stdout="OK", stderr="", traceback=None, timed_out=False,
+        )
+        mock_run.side_effect = [fail_result, success_result]
+
+        mock_debug.return_value = DebugResult(
+            classification=MagicMock(error_type="runtime_error"),
+            fixed_code=MATLAB_GOOD,
+            diagnostic_report="Fixed",
+            attempts=1,
+            validation_passed=True,
+        )
+
+        out = tmp_path / "fixed_solver.m"
+        run_and_debug(
+            code="x = a(3);",
+            config=_make_config(),
+            language="matlab",
+            save_fixed=str(out),
+        )
+        assert out.exists()
+        assert "function x = solver" in out.read_text(encoding="utf-8")
+
+    @patch("optiprofiler_agent.debugger.debugger._run_code_for_language")
+    def test_matlab_progress_callback_reports_rounds(self, mock_run):
+        mock_run.return_value = MagicMock(
+            success=True, stdout="OK", stderr="", traceback=None, timed_out=False,
+        )
+        messages: list[str] = []
+        run_and_debug(
+            code=MATLAB_GOOD,
+            config=_make_config(),
+            language="matlab",
+            progress_callback=lambda m: messages.append(m),
+        )
         assert any("Round" in m for m in messages)

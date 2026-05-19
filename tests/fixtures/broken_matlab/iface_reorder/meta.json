@@ -1,0 +1,7 @@
+{
+  "id": "iface_reorder",
+  "title": "Solver signature parameter reorder",
+  "expected_categories": ["interface_mismatch", "runtime_error"],
+  "expected_error_substr": ["function_handle", "index"],
+  "notes": "The regex classifier sees a generic runtime_error ('Unable to use a value of type function_handle as an index'); only the LLM path (or interface_adapter.analyze_solver) can infer that the underlying cause is a parameter reorder."
+}

@@ -5,10 +5,10 @@ to LLM classification for ambiguous cases.
 
 Error types:
 - ``interface_mismatch``: solver signature doesn't match OptiProfiler's expected API
-- ``dependency_missing``: required Python package not installed
+- ``dependency_missing``: required package / function not available
 - ``timeout``: benchmark exceeded wall-clock time limit
 - ``numerical``: NaN/Inf/overflow in solver output
-- ``runtime_error``: general Python exception during execution
+- ``runtime_error``: general exception during execution
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ class ErrorClassification:
 # ---------------------------------------------------------------------------
 
 _PATTERNS: list[tuple[str, re.Pattern, str, float]] = [
-    # Interface mismatch
+    # Interface mismatch (Python)
     (
         "interface_mismatch",
         re.compile(
@@ -53,7 +53,32 @@ _PATTERNS: list[tuple[str, re.Pattern, str, float]] = [
         "Solver does not accept the expected problem interface arguments.",
         0.90,
     ),
-    # Dependency missing
+    # Interface mismatch (MATLAB)
+    (
+        "interface_mismatch",
+        re.compile(
+            r"Error using\s+\S+\s*\n.*Too many input arguments",
+            re.MULTILINE,
+        ),
+        "MATLAB function received too many input arguments.",
+        0.95,
+    ),
+    (
+        "interface_mismatch",
+        re.compile(
+            r"Error using\s+\S+\s*\n.*Not enough input arguments",
+            re.MULTILINE,
+        ),
+        "MATLAB function needs more input arguments.",
+        0.95,
+    ),
+    (
+        "interface_mismatch",
+        re.compile(r"^Not enough input arguments\.", re.MULTILINE),
+        "MATLAB function needs more input arguments.",
+        0.95,
+    ),
+    # Dependency missing (Python)
     (
         "dependency_missing",
         re.compile(r"ModuleNotFoundError: No module named ['\"](\S+)['\"]"),
@@ -66,6 +91,26 @@ _PATTERNS: list[tuple[str, re.Pattern, str, float]] = [
         "Cannot import a specific name from a module.",
         0.85,
     ),
+    # Dependency missing (MATLAB)
+    (
+        "dependency_missing",
+        re.compile(r"Undefined function or variable '(\S+)'"),
+        "MATLAB function or variable is not defined (may need addpath or missing toolbox).",
+        0.90,
+    ),
+    (
+        "dependency_missing",
+        re.compile(r"Unrecognized function or variable '(\S+)'"),
+        "MATLAB unrecognized function (check spelling or required toolbox).",
+        0.90,
+    ),
+    # Newer MATLAB (R2018a+) — "Undefined function 'X' for input arguments of type 'Y'".
+    (
+        "dependency_missing",
+        re.compile(r"Undefined function '(\S+?)' for input arguments"),
+        "MATLAB function not defined for the given argument types (may need a toolbox or correct call).",
+        0.90,
+    ),
     # Timeout
     (
         "timeout",
@@ -76,7 +121,10 @@ _PATTERNS: list[tuple[str, re.Pattern, str, float]] = [
     # Numerical issues
     (
         "numerical",
-        re.compile(r"(?:nan|inf|overflow|underflow|divide by zero|invalid value)", re.IGNORECASE),
+        re.compile(
+            r"(?:\bnan\b|\binf\b|overflow|underflow|divide by zero|invalid value)",
+            re.IGNORECASE,
+        ),
         "Numerical issue detected in solver output or computation.",
         0.85,
     ),
@@ -86,7 +134,7 @@ _PATTERNS: list[tuple[str, re.Pattern, str, float]] = [
         "Runtime numerical warning.",
         0.80,
     ),
-    # Common runtime errors
+    # Common runtime errors (Python)
     (
         "runtime_error",
         re.compile(r"NameError: name '(\S+)' is not defined"),
@@ -123,22 +171,30 @@ _PATTERNS: list[tuple[str, re.Pattern, str, float]] = [
         "Syntax error in the script.",
         0.90,
     ),
+    # Runtime errors (MATLAB)
+    (
+        "runtime_error",
+        re.compile(r"Error using\s+(\S+)"),
+        "MATLAB runtime error in function call.",
+        0.70,
+    ),
+    (
+        "runtime_error",
+        re.compile(r"Index exceeds the number of array elements"),
+        "MATLAB index out of bounds.",
+        0.80,
+    ),
+    (
+        "runtime_error",
+        re.compile(r"Dimensions of arrays being concatenated are not consistent"),
+        "MATLAB dimension mismatch in array operation.",
+        0.80,
+    ),
 ]
 
 
-def classify_error(traceback_text: str) -> ErrorClassification:
-    """Classify an error from its traceback text using regex rules.
-
-    Parameters
-    ----------
-    traceback_text : str
-        The full traceback or error message.
-
-    Returns
-    -------
-    ErrorClassification
-        The classified error type with confidence and details.
-    """
+def classify_error(traceback_text: str, language: str = "python") -> ErrorClassification:
+    """Classify an error from its traceback text using regex rules."""
     best_match: ErrorClassification | None = None
     best_confidence = 0.0
 
@@ -171,19 +227,25 @@ def classify_error_with_llm(
     traceback_text: str,
     code: str = "",
     config=None,
+    language: str = "python",
 ) -> ErrorClassification:
-    """Classify an error using LLM when regex rules are insufficient.
-
-    Falls back to regex classification if LLM is unavailable.
-    """
-    # Try regex first
-    regex_result = classify_error(traceback_text)
+    """Classify an error using LLM when regex rules are insufficient."""
+    regex_result = classify_error(traceback_text, language=language)
     if regex_result.confidence >= 0.85:
         return regex_result
 
-    # LLM fallback
     if config is None:
         return regex_result
+
+    lang = (language or "python").strip().lower()
+    if lang in ("matlab", "m"):
+        dep_desc = "a MATLAB function or toolbox is not available"
+        runtime_desc = "other MATLAB error"
+        code_tag = "matlab"
+    else:
+        dep_desc = "a Python module is not installed"
+        runtime_desc = "other Python exception"
+        code_tag = "python"
 
     try:
         from optiprofiler_agent.common.llm_client import create_llm
@@ -193,18 +255,19 @@ def classify_error_with_llm(
 
         system = (
             "You are an error classifier for OptiProfiler benchmark scripts. "
+            f"The code is written in {'MATLAB' if code_tag == 'matlab' else 'Python'}. "
             "Classify the error into exactly one of these types:\n"
             "- interface_mismatch: solver function signature doesn't match expected API\n"
-            "- dependency_missing: a Python module is not installed\n"
+            f"- dependency_missing: {dep_desc}\n"
             "- timeout: execution exceeded time limit\n"
             "- numerical: NaN/Inf/overflow in computation\n"
-            "- runtime_error: other Python exception\n\n"
+            f"- runtime_error: {runtime_desc}\n\n"
             "Respond with ONLY the error type name, nothing else."
         )
 
         user_msg = f"Traceback:\n```\n{traceback_text[-2000:]}\n```"
         if code:
-            user_msg += f"\n\nCode:\n```python\n{code[-1000:]}\n```"
+            user_msg += f"\n\nCode:\n```{code_tag}\n{code[-1000:]}\n```"
 
         response = llm.invoke([
             SystemMessage(content=system),
@@ -212,7 +275,10 @@ def classify_error_with_llm(
         ])
 
         classified_type = response.content.strip().lower().replace(" ", "_")
-        valid_types = {"interface_mismatch", "dependency_missing", "timeout", "numerical", "runtime_error"}
+        valid_types = {
+            "interface_mismatch", "dependency_missing", "timeout",
+            "numerical", "runtime_error",
+        }
         if classified_type in valid_types:
             return ErrorClassification(
                 error_type=classified_type,

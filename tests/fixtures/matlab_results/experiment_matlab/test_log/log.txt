@@ -1,0 +1,15 @@
+INFO: Profiling solvers: fminunc, nelder_mead
+INFO: - Solvers: fminunc, nelder_mead
+INFO: - Problem libraries: custom
+INFO: - Problem types: u
+INFO: - Problem dimension range: [2, 10]
+INFO: - Feature stamp: plain
+INFO: Finish solving ROSENBR with fminunc (run 1/1) (in 0.42 seconds)
+INFO: Output result for ROSENBR with fminunc (run 1/1): f = 0.123
+INFO: Best result for ROSENBR with fminunc (run 1/1): f = 0.123
+INFO: Finish solving ROSENBR with nelder_mead (run 1/1) (in 0.55 seconds)
+INFO: Output result for ROSENBR with nelder_mead (run 1/1): f = 0.089
+INFO: Best result for ROSENBR with nelder_mead (run 1/1): f = 0.089
+INFO: Scores of the solvers
+INFO: fminunc   :    0.7200
+INFO: nelder_mead:    0.9100

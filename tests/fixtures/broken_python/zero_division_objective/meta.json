@@ -1,0 +1,6 @@
+{
+  "id": "zero_division_objective",
+  "title": "Objective divides by zero at the starting point",
+  "expected_categories": ["runtime_error", "numerical"],
+  "expected_error_substr": ["ZeroDivisionError", "division by zero"]
+}

@@ -1,0 +1,6 @@
+{
+  "id": "key_error",
+  "title": "Missing option key",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["KeyError", "ptype"]
+}

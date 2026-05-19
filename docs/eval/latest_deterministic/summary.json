@@ -1,0 +1,162 @@
+{
+  "timestamp_utc": "2026-05-19T01:14:55+00:00",
+  "provider": "minimax",
+  "judge_provider": null,
+  "output_dir": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic",
+  "passed": true,
+  "thresholds": {
+    "min_pass_rate": {
+      "required": ">= 90.0%",
+      "actual": "100.0%"
+    },
+    "min_avg_score": {
+      "required": ">= 0.750",
+      "actual": "1.000"
+    },
+    "min_judge_coverage": {
+      "required": ">= 80.0%",
+      "actual": "n/a"
+    },
+    "min_hallucination": {
+      "required": ">= 0.900",
+      "actual": "n/a"
+    }
+  },
+  "suites": [
+    {
+      "name": "debugger_python_golden",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_python_golden.json",
+      "summary": {
+        "kind": "debugger",
+        "language": "python",
+        "strategy": "golden",
+        "n_cases": 15,
+        "pass_count": 15,
+        "pass_rate": 1.0,
+        "failures": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "debugger_python_golden",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_debugger_eval.py",
+          "--language",
+          "python",
+          "--strategy",
+          "golden",
+          "--timeout",
+          "45",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_python_golden.json",
+          "--markdown-output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_python_golden.md"
+        ],
+        "returncode": 0,
+        "elapsed_s": 45.999,
+        "timed_out": false,
+        "stdout_tail": "[run_debugger_eval] language=python strategy=golden n_cases=15 timeout=45s\n  • attribute_error_result    … PASS\n  • bad_bounds_shape          … PASS\n  • bad_x0_type               … PASS\n  • iface_missing_x0          … PASS\n  • iface_unexpected_keyword  … PASS\n  • index_oob                 … PASS\n  • inf_objective             … PASS\n  • key_error                 … PASS\n  • missing_dependency        … PASS\n  • name_error                … PASS\n  • nan_objective             … PASS\n  • pickle_lambda             … PASS\n  • syntax_error              … PASS\n  • timeout_loop              … PASS\n  • zero_division_objective   … PASS\n\nPass@1 (golden): 15/15 = 100%\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_python_golden.json\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_python_golden.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "debugger_matlab_golden",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_matlab_golden.json",
+      "summary": {
+        "kind": "debugger",
+        "language": "matlab",
+        "strategy": "golden",
+        "n_cases": 15,
+        "pass_count": 15,
+        "pass_rate": 1.0,
+        "failures": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "debugger_matlab_golden",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_debugger_eval.py",
+          "--language",
+          "matlab",
+          "--strategy",
+          "golden",
+          "--timeout",
+          "45",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_matlab_golden.json",
+          "--markdown-output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_matlab_golden.md"
+        ],
+        "returncode": 0,
+        "elapsed_s": 303.009,
+        "timed_out": false,
+        "stdout_tail": "[run_debugger_eval] language=matlab strategy=golden n_cases=15 timeout=45s\n  • bad_bounds_shape          … PASS\n  • bad_field_access          … PASS\n  • dimension_mismatch        … PASS\n  • iface_reorder             … PASS\n  • index_oob                 … PASS\n  • key_missing_struct        … PASS\n  • nan_objective             … PASS\n  • negative_sqrt_objective   … PASS\n  • not_enough_inputs         … PASS\n  • timeout_pause             … PASS\n  • too_many_inputs           … PASS\n  • unbalanced_parens         … PASS\n  • undefined_function        … PASS\n  • undefined_variable        … PASS\n  • zero_division_objective   … PASS\n\nPass@1 (golden): 15/15 = 100%\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_matlab_golden.json\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/debugger_matlab_golden.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "interpreter_report_factcheck",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/interpreter_report.json",
+      "summary": {
+        "kind": "interpreter",
+        "n_cases": 1,
+        "pass_count": 1,
+        "pass_rate": 1.0,
+        "avg_score": 1.0,
+        "judge_coverage": null,
+        "judge_avg": null,
+        "judge_hallucination_avg": null,
+        "failures": [],
+        "judge_na_cases": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "interpreter_report_factcheck",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_interpreter_eval.py",
+          "--strategy",
+          "deterministic",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/interpreter_report.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/interpreter_report.md"
+        ],
+        "returncode": 0,
+        "elapsed_s": 0.144,
+        "timed_out": false,
+        "stdout_tail": "[run_interpreter_eval] matlab_fixture_report ...\n  PASS fact_score=1.000\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/interpreter_report.json\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/interpreter_report.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "multinode_deterministic",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/multinode.json",
+      "summary": {
+        "kind": "multinode",
+        "n_cases": 21,
+        "pass_count": 21,
+        "pass_rate": 1.0,
+        "failures": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "multinode_deterministic",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_multinode_eval.py",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/multinode.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/multinode.md"
+        ],
+        "returncode": 0,
+        "elapsed_s": 0.142,
+        "timed_out": false,
+        "stdout_tail": "[run_multinode_eval] pass=21/21 (100.0%)\n  PASS dbg_matlab_dep_undefined\n  PASS dbg_matlab_dep_unrecognized\n  PASS dbg_matlab_iface_too_many\n  PASS dbg_matlab_iface_not_enough\n  PASS dbg_matlab_runtime_index\n  PASS dbg_matlab_runtime_dim\n  PASS dbg_matlab_timeout\n  PASS dbg_matlab_numerical_nan\n  PASS dbg_matlab_numerical_inf\n  PASS dbg_matlab_checker_safe\n  PASS dbg_matlab_checker_system\n  PASS dbg_matlab_checker_shell_escape\n  PASS dbg_matlab_checker_unbalanced\n  PASS dbg_matlab_iface_reordered\n  PASS dbg_matlab_iface_canonical\n  PASS int_matlab_fixture_load\n  PASS int_matlab_log_snippet\n  PASS int_matlab_build_summary\n  PASS int_matlab_summary_json_roundtrip\n  PASS int_matlab_no_pdfs_flag_true\n  PASS int_matlab_dual_run_counter\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/multinode.json\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest_deterministic/multinode.md\n",
+        "stderr_tail": ""
+      }
+    }
+  ]
+}

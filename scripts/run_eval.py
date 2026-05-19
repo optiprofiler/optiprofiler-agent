@@ -23,12 +23,16 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import queue
+import re
 import sys
+import threading
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
+from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -39,6 +43,7 @@ from rich.table import Table
 from optiprofiler_agent.config import AgentConfig, LLMConfig
 from optiprofiler_agent.validators.syntax_checker import check_syntax
 from optiprofiler_agent.validators.api_checker import validate_response_code
+from optiprofiler_agent.validators.matlab_checker import check_matlab_code
 
 console = Console()
 
@@ -58,6 +63,29 @@ def load_cases(path: Path | None = None) -> list[dict]:
         with open(f, encoding="utf-8") as fh:
             cases.extend(json.load(fh))
     return cases
+
+
+def filter_cases_for_mode(cases: list[dict], mode: str) -> list[dict]:
+    """Keep only cases compatible with the selected runner mode."""
+    if mode in ("advisor", "unified"):
+        return [case for case in cases if "question" in case]
+    return cases
+
+
+def select_cases(cases: list[dict], ids: str | None = None, limit: int | None = None) -> list[dict]:
+    """Filter cases by comma-separated ids and/or leading limit."""
+    selected = cases
+    if ids:
+        wanted = {item.strip() for item in ids.split(",") if item.strip()}
+        selected = [case for case in selected if case.get("id") in wanted]
+        missing = wanted - {case.get("id") for case in selected}
+        if missing:
+            raise ValueError(f"Unknown case id(s): {', '.join(sorted(missing))}")
+    if limit is not None:
+        if limit <= 0:
+            raise ValueError("--limit must be positive")
+        selected = selected[:limit]
+    return selected
 
 # ---------------------------------------------------------------------------
 # Scoring: keywords
@@ -93,13 +121,57 @@ def score_keyword(response: str, case: dict) -> dict:
 # Scoring: code quality
 # ---------------------------------------------------------------------------
 
-def score_code_quality(response: str, case: dict | None = None) -> dict:
-    syn = check_syntax(response)
-    api = validate_response_code(response)
+def extract_language_code_blocks(text: str, language: str) -> list[str]:
+    """Extract fenced code blocks for the requested language.
 
+    ``syntax_checker.extract_code_blocks`` is intentionally Python-centric.
+    The eval harness needs MATLAB blocks too, otherwise MATLAB code-generation
+    cases are falsely scored as ``NO_CODE``.
+    """
+    lang = (language or "python").lower()
+    if lang == "matlab":
+        tags = r"(?:matlab|m)"
+    else:
+        tags = r"(?:python|py)"
+
+    tagged = re.findall(rf"```{tags}\s*\n(.*?)```", text, flags=re.IGNORECASE | re.DOTALL)
+    if tagged:
+        return [block.strip() for block in tagged if block.strip()]
+
+    if "```" in text:
+        untagged = re.findall(r"```\s*\n(.*?)```", text, flags=re.DOTALL)
+        return [block.strip() for block in untagged if block.strip()]
+
+    return []
+
+def score_code_quality(response: str, case: dict | None = None) -> dict:
     code_score = 1.0
     details: list[str] = []
-    expect_code = (case or {}).get("expect_code", False)
+    case = case or {}
+    expect_code = case.get("expect_code", False)
+    language = (case.get("language") or "python").lower()
+
+    if language == "matlab":
+        blocks = extract_language_code_blocks(response, language)
+        if blocks:
+            n_errors = 0
+            for block in blocks:
+                check = check_matlab_code(block)
+                n_errors += len(check.errors)
+            if n_errors:
+                code_score -= 0.5
+                details.append(f"matlab_errors={n_errors}")
+            else:
+                details.append(f"matlab_ok ({len(blocks)} blocks)")
+        elif expect_code:
+            code_score = 0.0
+            details.append("NO_CODE (expected code)")
+        else:
+            details.append("no_matlab_code")
+        return {"code_score": max(0, code_score), "code_details": details}
+
+    syn = check_syntax(response)
+    api = validate_response_code(response, language=language)
 
     if syn.blocks_found > 0:
         if syn.has_errors:
@@ -186,12 +258,114 @@ Reply with ONLY a JSON object:
 
 _JUDGE_MAX_RETRIES = 3
 _JUDGE_RETRY_BASE_DELAY = 2.0
+_JUDGE_DIMS = ["accuracy", "completeness", "code_quality", "hallucination", "instruction_following"]
 
 
-def score_with_judge(question: str, response: str, judge_llm) -> dict:
+def _balanced_json_candidates(text: str) -> list[str]:
+    """Return balanced top-level JSON-object candidates from model text."""
+    candidates: list[str] = []
+    for start, ch in enumerate(text):
+        if ch != "{":
+            continue
+        depth = 0
+        in_string = False
+        escape = False
+        for idx in range(start, len(text)):
+            c = text[idx]
+            if escape:
+                escape = False
+                continue
+            if c == "\\":
+                escape = True
+                continue
+            if c == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    candidates.append(text[start:idx + 1])
+                    break
+    return candidates
+
+
+def _extract_json_object(text: str) -> dict:
+    """Extract a JSON object from plain text or fenced model output."""
+    text = (text or "").strip()
+    if not text:
+        raise ValueError("empty judge response")
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        candidates = _balanced_json_candidates(text)
+        if not candidates:
+            raise
+        last_err: Exception | None = None
+        for blob in candidates:
+            try:
+                return json.loads(blob)
+            except json.JSONDecodeError as exc:
+                last_err = exc
+                try:
+                    data = ast.literal_eval(blob)
+                except (ValueError, SyntaxError) as lit_exc:
+                    last_err = lit_exc
+                    continue
+                if not isinstance(data, dict):
+                    last_err = ValueError("judge response did not contain a JSON object")
+                    continue
+                return data
+        if last_err:
+            raise last_err
+        raise
+
+
+def _normalise_judge_score(value) -> float:
+    """Return a clipped 0..1 judge score from 0..10 or 0..1 inputs."""
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    if score > 1.0:
+        score /= 10.0
+    return max(0.0, min(1.0, score))
+
+
+def _judge_case_context(case: dict | None) -> str:
+    if not case:
+        return ""
+    keys = [
+        "id",
+        "category",
+        "language",
+        "expected_keywords",
+        "must_contain",
+        "must_not_contain",
+        "reference_answer",
+        "expected_answer",
+        "expect_code",
+        "expect_tool",
+    ]
+    compact = {key: case[key] for key in keys if key in case and case[key] not in (None, [], "")}
+    if not compact:
+        return ""
+    return "\n\nEvaluation case contract:\n" + json.dumps(compact, ensure_ascii=False, indent=2)
+
+
+def score_with_judge(question: str, response: str, judge_llm, case: dict | None = None) -> dict:
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    prompt = f"Question: {question}\n\nAssistant's response:\n{response}"
+    prompt = (
+        f"Question: {question}"
+        f"{_judge_case_context(case)}"
+        f"\n\nAssistant's response:\n{response}"
+    )
     last_err = None
 
     for attempt in range(_JUDGE_MAX_RETRIES):
@@ -204,13 +378,8 @@ def score_with_judge(question: str, response: str, judge_llm) -> dict:
                 SystemMessage(content=_JUDGE_SYSTEM),
                 HumanMessage(content=prompt),
             ])
-            text = result.content.strip()
-            if text.startswith("```"):
-                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-            data = json.loads(text)
-
-            dims = ["accuracy", "completeness", "code_quality", "hallucination", "instruction_following"]
-            scores = {d: data.get(d, 0) / 10.0 for d in dims}
+            data = _extract_json_object(result.content)
+            scores = {d: _normalise_judge_score(data.get(d, 0)) for d in _JUDGE_DIMS}
             avg = sum(scores.values()) / len(scores)
             return {
                 "judge_scores": scores,
@@ -277,7 +446,34 @@ def run_unified(question: str, agent) -> tuple[str, list[str]]:
 # Main evaluation loop
 # ---------------------------------------------------------------------------
 
-_SHORT_RESPONSE_THRESHOLD = 250
+_VERY_SHORT_RESPONSE_THRESHOLD = 80
+
+
+def _run_with_soft_timeout(runner, question: str, agent, timeout_s: int) -> tuple[str, list[str]]:
+    """Run one case in a daemon thread and return promptly on timeout.
+
+    This is intentionally a soft timeout. Some provider SDK calls cannot be
+    interrupted inside Python; the thread is daemonized so the eval process can
+    still exit. The release suite adds a subprocess-level hard timeout around
+    this runner to kill truly wedged provider calls.
+    """
+    result_q: queue.Queue[tuple[str, object]] = queue.Queue(maxsize=1)
+
+    def _target() -> None:
+        try:
+            result_q.put(("ok", runner(question, agent)))
+        except Exception as exc:  # noqa: BLE001 - surfaced as eval data.
+            result_q.put(("err", exc))
+
+    thread = threading.Thread(target=_target, daemon=True)
+    thread.start()
+    try:
+        status, payload = result_q.get(timeout=timeout_s)
+    except queue.Empty:
+        return f"ERROR: case timed out after {timeout_s}s", []
+    if status == "err":
+        raise payload  # type: ignore[misc]
+    return payload  # type: ignore[return-value]
 
 
 def run_eval(
@@ -287,6 +483,7 @@ def run_eval(
     judge_llm=None,
     verbose: bool = False,
     mode: str = "advisor",
+    case_timeout: int | None = None,
 ) -> list[dict]:
     results: list[dict] = []
     is_unified = mode == "unified"
@@ -300,12 +497,23 @@ def run_eval(
 
         t0 = time.time()
         try:
-            response, tools_called = runner(question, agent)
+            if case_timeout:
+                response, tools_called = _run_with_soft_timeout(
+                    runner,
+                    question,
+                    agent,
+                    case_timeout,
+                )
+            else:
+                response, tools_called = runner(question, agent)
         except Exception as e:
             response, tools_called = f"ERROR: {e}", []
         elapsed = time.time() - t0
 
-        short_response = len(response) < _SHORT_RESPONSE_THRESHOLD
+        short_response = (
+            len(response.strip()) < _VERY_SHORT_RESPONSE_THRESHOLD
+            or response.startswith("ERROR:")
+        )
 
         kw = score_keyword(response, case)
         code = score_code_quality(response, case)
@@ -340,7 +548,7 @@ def run_eval(
         }
 
         if judge_llm:
-            judge = score_with_judge(question, response, judge_llm)
+            judge = score_with_judge(question, response, judge_llm, case=case)
             entry.update(judge)
             if judge["judge_avg"] is not None:
                 entry["combined_score"] = round(combined * 0.5 + judge["judge_avg"] * 0.5, 3)
@@ -356,6 +564,33 @@ def run_eval(
         results.append(entry)
 
     return results
+
+
+def summarize_results(results: list[dict]) -> dict:
+    """Compute aggregate metrics for JSON/Markdown reports."""
+    scores = [r["combined_score"] for r in results]
+    avg = sum(scores) / len(scores) if scores else 0.0
+    pass_count = sum(1 for s in scores if s >= 0.5)
+    summary = {
+        "n_cases": len(results),
+        "avg_score": round(avg, 3),
+        "pass_count": pass_count,
+        "pass_rate": round(pass_count / len(results), 3) if results else 0.0,
+    }
+    judged = [r for r in results if r.get("judge_avg") is not None]
+    if judged:
+        summary["judge_avg"] = round(
+            sum(r["judge_avg"] for r in judged) / len(judged), 3
+        )
+        for dim in _JUDGE_DIMS:
+            values = [
+                r["judge_scores"][dim]
+                for r in judged
+                if r.get("judge_scores") and dim in r["judge_scores"]
+            ]
+            if values:
+                summary[f"judge_{dim}_avg"] = round(sum(values) / len(values), 3)
+    return summary
 
 # ---------------------------------------------------------------------------
 # Visual reporting
@@ -379,6 +614,7 @@ def print_summary(results: list[dict], mode: str):
     has_judge = any(r.get("judge_avg") is not None for r in results)
     if has_judge:
         table.add_column("Judge", justify="right", min_width=5)
+        table.add_column("Halluc.", justify="right", min_width=7)
 
     for r in results:
         style = "green" if r["combined_score"] >= 0.7 else (
@@ -400,6 +636,8 @@ def print_summary(results: list[dict], mode: str):
         if has_judge:
             ja = r.get("judge_avg")
             row.append(f"{ja:.2f}" if ja is not None else "N/A")
+            halluc = (r.get("judge_scores") or {}).get("hallucination")
+            row.append(f"{halluc:.2f}" if halluc is not None else "N/A")
 
         table.add_row(*row, style=style)
 
@@ -444,8 +682,8 @@ def print_summary(results: list[dict], mode: str):
     short_count = sum(1 for r in results if r.get("short_response"))
     if short_count:
         console.print(Panel(
-            f"[bold red]{short_count}/{len(results)}[/] responses were under "
-            f"{_SHORT_RESPONSE_THRESHOLD} chars — likely API errors or empty replies",
+            f"[bold red]{short_count}/{len(results)}[/] responses were empty, "
+            "very short, or error-shaped — inspect for API errors",
             title="Short Response Warning", border_style="red",
         ))
 
@@ -476,14 +714,25 @@ def generate_report(results: list[dict], mode: str, config: AgentConfig) -> str:
     lines.append(f"- **Model**: {config.llm.model}")
     lines.append(f"- **Cases**: {len(results)}")
 
-    all_scores = [r["combined_score"] for r in results]
-    avg = sum(all_scores) / len(all_scores) if all_scores else 0
-    passes = sum(1 for s in all_scores if s >= 0.5)
+    summary = summarize_results(results)
     lines.append("\n## Summary\n")
     lines.append("| Metric | Value |")
     lines.append("|--------|-------|")
-    lines.append(f"| Average Score | **{avg:.3f}** |")
-    lines.append(f"| Pass Rate (>=0.5) | **{passes}/{len(results)}** ({passes/len(results)*100:.0f}%) |")
+    lines.append(f"| Average Score | **{summary['avg_score']:.3f}** |")
+    lines.append(
+        f"| Pass Rate (>=0.5) | **{summary['pass_count']}/{len(results)}** "
+        f"({summary['pass_rate']*100:.0f}%) |"
+    )
+    if "judge_avg" in summary:
+        lines.append(f"| Judge Average | **{summary['judge_avg']:.3f}** |")
+        lines.append(f"| Judge Accuracy | **{summary.get('judge_accuracy_avg', 0):.3f}** |")
+        lines.append(f"| Judge Completeness | **{summary.get('judge_completeness_avg', 0):.3f}** |")
+        lines.append(f"| Judge Code Quality | **{summary.get('judge_code_quality_avg', 0):.3f}** |")
+        lines.append(f"| Judge Hallucination | **{summary.get('judge_hallucination_avg', 0):.3f}** |")
+        lines.append(
+            f"| Judge Instruction Following | "
+            f"**{summary.get('judge_instruction_following_avg', 0):.3f}** |"
+        )
 
     tool_cases = [r for r in results if r.get("tool_routing_score") is not None]
     if tool_cases:
@@ -505,20 +754,49 @@ def generate_report(results: list[dict], mode: str, config: AgentConfig) -> str:
 
     # Detail table
     lines.append("\n## Detailed Results\n")
-    lines.append("| ID | Category | KW | Code | Tool | Combined | Time |")
-    lines.append("|----|----------|----|------|------|----------|------|")
+    has_judge = any(r.get("judge_avg") is not None for r in results)
+    if has_judge:
+        lines.append("| ID | Category | KW | Code | Tool | Judge | Combined | Time |")
+        lines.append("|----|----------|----|------|------|-------|----------|------|")
+    else:
+        lines.append("| ID | Category | KW | Code | Tool | Combined | Time |")
+        lines.append("|----|----------|----|------|------|----------|------|")
     for r in results:
         tool_str = "—"
         if r.get("tool_routing_score") is not None:
             tool_str = "PASS" if r["tool_routing_score"] == 1.0 else "MISS"
         emoji = "+" if r["combined_score"] >= 0.7 else ("~" if r["combined_score"] >= 0.4 else "-")
-        lines.append(
-            f"| {emoji} {r['id']} | {r.get('category','')} "
-            f"| {r['keyword_score']:.2f} | {r['code_score']:.2f} "
-            f"| {tool_str} | **{r['combined_score']:.2f}** | {r['elapsed_s']:.1f}s |"
-        )
+        if has_judge:
+            judge = r.get("judge_avg")
+            judge_str = f"{judge:.2f}" if judge is not None else "N/A"
+            lines.append(
+                f"| {emoji} {r['id']} | {r.get('category','')} "
+                f"| {r['keyword_score']:.2f} | {r['code_score']:.2f} "
+                f"| {tool_str} | {judge_str} | **{r['combined_score']:.2f}** "
+                f"| {r['elapsed_s']:.1f}s |"
+            )
+        else:
+            lines.append(
+                f"| {emoji} {r['id']} | {r.get('category','')} "
+                f"| {r['keyword_score']:.2f} | {r['code_score']:.2f} "
+                f"| {tool_str} | **{r['combined_score']:.2f}** | {r['elapsed_s']:.1f}s |"
+            )
 
     return "\n".join(lines) + "\n"
+
+
+def _write_json_file(path: str | Path, payload) -> None:
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+
+
+def _write_text_file(path: str | Path, text: str) -> None:
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -532,6 +810,10 @@ def main():
     parser.add_argument("--provider", default="minimax", help="LLM provider")
     parser.add_argument("--model", default=None, help="Model name (overrides provider default)")
     parser.add_argument("--cases", default=None, help="Path to test cases JSON or directory")
+    parser.add_argument("--case-ids", default=None, help="Comma-separated case ids to run")
+    parser.add_argument("--limit", type=int, default=None, help="Run only the first N selected cases")
+    parser.add_argument("--case-timeout", type=int, default=None,
+                        help="Per-case timeout in seconds for the agent response")
     parser.add_argument("--judge", action="store_true", help="Enable multi-dimensional LLM-as-Judge")
     parser.add_argument("--judge-provider", default=None,
                         help="Provider for judge LLM (defaults to same as agent)")
@@ -542,7 +824,12 @@ def main():
     args = parser.parse_args()
 
     cases_path = Path(args.cases) if args.cases else None
-    cases = load_cases(cases_path)
+    cases = filter_cases_for_mode(load_cases(cases_path), args.mode)
+    try:
+        cases = select_cases(cases, ids=args.case_ids, limit=args.limit)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        sys.exit(2)
     if not cases:
         console.print("[red]No test cases found![/]")
         sys.exit(1)
@@ -578,21 +865,26 @@ def main():
         console.print(f"  Judge: {judge_cfg.provider} / {judge_cfg.model}")
 
     console.print()
-    results = run_eval(cases, agent, runner, judge_llm=judge_llm,
-                       verbose=args.verbose, mode=args.mode)
+    results = run_eval(
+        cases,
+        agent,
+        runner,
+        judge_llm=judge_llm,
+        verbose=args.verbose,
+        mode=args.mode,
+        case_timeout=args.case_timeout,
+    )
 
     console.print()
     print_summary(results, args.mode)
 
     if args.output:
-        with open(args.output, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
+        _write_json_file(args.output, results)
         console.print(f"\n[green]Results saved to {args.output}[/]")
 
     if args.report:
         md = generate_report(results, args.mode, config)
-        with open(args.report, "w", encoding="utf-8") as f:
-            f.write(md)
+        _write_text_file(args.report, md)
         console.print(f"[green]Markdown report saved to {args.report}[/]")
 
 

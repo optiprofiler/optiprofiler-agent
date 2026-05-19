@@ -1,0 +1,6 @@
+{
+  "id": "undefined_function",
+  "title": "Missing MATLAB function (toolbox not installed)",
+  "expected_categories": ["dependency_missing"],
+  "expected_error_substr": ["Undefined function", "cobyqa_mex"]
+}

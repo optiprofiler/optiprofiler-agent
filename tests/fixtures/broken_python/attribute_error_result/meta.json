@@ -1,0 +1,6 @@
+{
+  "id": "attribute_error_result",
+  "title": "Dictionary result accessed as an object",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["AttributeError", "object has no attribute"]
+}

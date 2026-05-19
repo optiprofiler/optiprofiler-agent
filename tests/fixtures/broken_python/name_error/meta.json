@@ -1,0 +1,6 @@
+{
+  "id": "name_error",
+  "title": "Variable referenced before definition",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["NameError", "solver_result"]
+}

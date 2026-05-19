@@ -21,6 +21,7 @@ Usage::
 from __future__ import annotations
 
 import ast
+import re
 import textwrap
 from dataclasses import dataclass, field
 
@@ -84,19 +85,117 @@ def _extract_function_def(source: str) -> ast.FunctionDef | None:
     return None
 
 
+def _normalize_language(language: str) -> str:
+    lang = (language or "python").strip().lower()
+    return "matlab" if lang in ("matlab", "m") else "python"
+
+
+def _extract_matlab_function_def(source: str) -> tuple[str, list[str], list[str]] | None:
+    """Extract MATLAB function name, output args, and input args."""
+    pattern = re.compile(
+        r"^\s*function\s+"
+        r"(?:(\[?\w+(?:\s*,\s*\w+)*\]?)\s*=\s*)?"
+        r"(\w+)"
+        r"\s*\(([^)]*)\)",
+        re.MULTILINE,
+    )
+    m = pattern.search(source)
+    if not m:
+        return None
+    func_name = m.group(2)
+    input_args = [a.strip() for a in m.group(3).split(",") if a.strip()]
+    output_str = m.group(1) or ""
+    output_args = [
+        a.strip() for a in output_str.strip("[]").split(",") if a.strip()
+    ]
+    return func_name, output_args, input_args
+
+
+def _analyze_matlab_solver(
+    source: str,
+    problem_type: str = "unconstrained",
+) -> SolverAnalysis:
+    """Analyze a MATLAB solver function signature."""
+    parsed = _extract_matlab_function_def(source)
+    if parsed is None:
+        return SolverAnalysis(
+            func_name="<parse_error>",
+            params=[],
+            needs_wrapper=True,
+            problem_type=problem_type,
+            notes=["Could not parse MATLAB function definition. Check syntax."],
+        )
+
+    func_name, _output_args, user_params = parsed
+    expected = EXPECTED_SIGNATURES.get(problem_type, EXPECTED_SIGNATURES["unconstrained"])
+
+    matched: dict[str, str] = {}
+    used_user_params: set[int] = set()
+
+    for exp_name in expected:
+        for i, up in enumerate(user_params):
+            if i in used_user_params:
+                continue
+            canonical = _resolve_alias(up)
+            if canonical == exp_name:
+                matched[exp_name] = up
+                used_user_params.add(i)
+                break
+
+    missing = [e for e in expected if e not in matched]
+    extra = [user_params[i] for i in range(len(user_params)) if i not in used_user_params]
+
+    reorder = False
+    if not missing and not extra:
+        matched_order = [matched[e] for e in expected]
+        if matched_order != user_params:
+            reorder = True
+
+    needs_wrapper = bool(missing) or bool(extra) or reorder
+
+    notes: list[str] = []
+    if missing:
+        notes.append(f"Missing required parameters: {', '.join(missing)}")
+    if extra:
+        notes.append(f"Extra parameters not in benchmark spec: {', '.join(extra)}")
+    if reorder and not missing and not extra:
+        notes.append("Parameters are in wrong order; a thin wrapper can fix this.")
+
+    for exp_name, user_name in matched.items():
+        if user_name != exp_name:
+            notes.append(f"'{user_name}' maps to '{exp_name}' (alias)")
+
+    return SolverAnalysis(
+        func_name=func_name,
+        params=user_params,
+        matched_params=matched,
+        missing_params=missing,
+        extra_params=extra,
+        reorder_needed=reorder,
+        needs_wrapper=needs_wrapper,
+        problem_type=problem_type,
+        notes=notes,
+    )
+
+
 def analyze_solver(
     source: str,
     problem_type: str = "unconstrained",
+    language: str = "python",
 ) -> SolverAnalysis:
     """Analyze a solver function's signature against benchmark requirements.
 
     Args:
-        source: Python source code containing the solver function definition.
+        source: Source code containing the solver function definition.
         problem_type: One of the keys in EXPECTED_SIGNATURES.
+        language: ``"python"`` or ``"matlab"``.
 
     Returns:
         SolverAnalysis with detailed mismatch information.
     """
+    if _normalize_language(language) == "matlab":
+        return _analyze_matlab_solver(source, problem_type)
+
     func_def = _extract_function_def(source)
     if func_def is None:
         return SolverAnalysis(
@@ -162,27 +261,52 @@ def analyze_solver(
     )
 
 
-def generate_wrapper(
+def _generate_matlab_wrapper(
     analysis: SolverAnalysis,
     problem_type: str | None = None,
 ) -> str:
-    """Generate a Python wrapper function that adapts the user's solver.
-
-    Returns a string of valid Python code defining a wrapper function.
-    """
+    """Generate a MATLAB wrapper function."""
     ptype = problem_type or analysis.problem_type or "unconstrained"
     expected = EXPECTED_SIGNATURES.get(ptype, EXPECTED_SIGNATURES["unconstrained"])
 
     wrapper_name = f"{analysis.func_name}_wrapper"
     sig_params = ", ".join(expected)
+    has_missing = any(exp not in analysis.matched_params for exp in expected)
 
-    call_args = []
-    for exp in expected:
-        if exp in analysis.matched_params:
-            user_name = analysis.matched_params[exp]
-            call_args.append(f"{user_name}={exp}")
-        else:
-            call_args.append(f"# {exp} not used by {analysis.func_name}")
+    lines = [
+        f"function x = {wrapper_name}({sig_params})",
+        f"    % Wrapper adapting {analysis.func_name} to OptiProfiler benchmark interface.",
+    ]
+
+    if has_missing:
+        lines.append(f"    % NOTE: {analysis.func_name} does not accept all parameters.")
+        lines.append(
+            f"    % Unused parameters from benchmark: {', '.join(analysis.missing_params)}"
+        )
+
+    inner_args = [exp for exp in expected if exp in analysis.matched_params]
+    lines.append(f"    x = {analysis.func_name}({', '.join(inner_args)});")
+    lines.append("    x = x(:);  % ensure column vector")
+    lines.append("end")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def generate_wrapper(
+    analysis: SolverAnalysis,
+    problem_type: str | None = None,
+    language: str = "python",
+) -> str:
+    """Generate a wrapper function that adapts the user's solver."""
+    if _normalize_language(language) == "matlab":
+        return _generate_matlab_wrapper(analysis, problem_type)
+
+    ptype = problem_type or analysis.problem_type or "unconstrained"
+    expected = EXPECTED_SIGNATURES.get(ptype, EXPECTED_SIGNATURES["unconstrained"])
+
+    wrapper_name = f"{analysis.func_name}_wrapper"
+    sig_params = ", ".join(expected)
 
     has_missing = any(exp not in analysis.matched_params for exp in expected)
 
@@ -193,13 +317,11 @@ def generate_wrapper(
 
     if has_missing:
         lines.append(f"    # NOTE: {analysis.func_name} does not accept all parameters.")
-        lines.append(f"    # Unused parameters from benchmark: {', '.join(analysis.missing_params)}")
+        lines.append(
+            f"    # Unused parameters from benchmark: {', '.join(analysis.missing_params)}"
+        )
 
-    inner_args = []
-    for exp in expected:
-        if exp in analysis.matched_params:
-            inner_args.append(exp)
-
+    inner_args = [exp for exp in expected if exp in analysis.matched_params]
     lines.append(f"    return {analysis.func_name}({', '.join(inner_args)})")
     lines.append("")
 
@@ -209,10 +331,11 @@ def generate_wrapper(
 def generate_wrapper_with_context(
     source: str,
     problem_type: str = "unconstrained",
+    language: str = "python",
 ) -> tuple[SolverAnalysis, str]:
     """Convenience: analyze + generate wrapper in one call."""
-    analysis = analyze_solver(source, problem_type)
+    analysis = analyze_solver(source, problem_type, language=language)
     if not analysis.needs_wrapper:
         return analysis, ""
-    wrapper = generate_wrapper(analysis, problem_type)
+    wrapper = generate_wrapper(analysis, problem_type, language=language)
     return analysis, wrapper

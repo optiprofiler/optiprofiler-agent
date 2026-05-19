@@ -131,15 +131,6 @@ I'd recommend using derivative-free solvers instead, such as `COBYLA`, `Nelder-M
 **Assistant**: Here's how to set it up in MATLAB. Note that options are passed as a **struct**, not as name-value pairs:
 
 ```matlab
-% Create solver wrappers
-function x = fminsearch_wrapper(fun, x0)
-    x = fminsearch(fun, x0);
-end
-
-function x = patternsearch_wrapper(fun, x0)
-    x = patternsearch(fun, x0, [], [], [], [], [], [], [], optimoptions('patternsearch', 'Display', 'off'));
-end
-
 % Configure options as a struct
 options.ptype = 'u';
 options.mindim = 2;
@@ -149,6 +140,15 @@ options.solver_names = {'fminsearch', 'patternsearch'};
 
 % Run benchmark
 scores = benchmark({@fminsearch_wrapper, @patternsearch_wrapper}, options);
+
+% Local solver functions must appear at the end of a MATLAB script.
+function x = fminsearch_wrapper(fun, x0)
+    x = fminsearch(fun, x0);
+end
+
+function x = patternsearch_wrapper(fun, x0)
+    x = patternsearch(fun, x0, [], [], [], [], [], [], [], optimoptions('patternsearch', 'Display', 'off'));
+end
 ```
 
 Both `fminsearch` (Nelder-Mead) and `patternsearch` are derivative-free methods, making them suitable for OptiProfiler benchmarking.

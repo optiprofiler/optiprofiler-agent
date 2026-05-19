@@ -1,0 +1,15 @@
+## Experiment Summary
+
+Solver names: fminunc, nelder_mead
+Problem types: u
+Problem mindim: 2
+Problem maxdim: 10
+Feature stamp: plain
+
+## Report for the problem library "custom"
+
+Number of problems selected: 1
+Wall-clock time spent by all the solvers: 0.97 secs
+
+Name     Type  Dim  mb  mlcon  mnlcon  mcon  Time(s)
+ROSENBR  u     2    0   0      0       0     0.970

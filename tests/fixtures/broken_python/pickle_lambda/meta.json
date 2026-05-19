@@ -1,0 +1,6 @@
+{
+  "id": "pickle_lambda",
+  "title": "Lambda solver is not pickle-safe for parallel runs",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["PicklingError", "pickle"]
+}

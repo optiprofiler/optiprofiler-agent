@@ -425,15 +425,41 @@ def index(force: bool, no_persist: bool):
     console.print(f"[green]Done![/] Indexed {n} chunks.")
 
 
+def _detect_script_language(filepath: str, language: str | None) -> str:
+    """Resolve script language from explicit flag or file extension."""
+    if language and language != "auto":
+        return language
+    if filepath.lower().endswith(".m"):
+        return "matlab"
+    return "python"
+
+
 @main.command()
 @click.argument("filepath", type=click.Path(exists=True))
-@click.option("--language", default="python", type=click.Choice(["python", "matlab"]))
+@click.option(
+    "-l", "--language",
+    default="auto",
+    type=click.Choice(["auto", "python", "matlab"]),
+    help="Script language (default: auto-detect from .m extension).",
+)
 def check(filepath: str, language: str):
-    """Validate benchmark() calls in a Python script."""
+    """Validate a benchmark script (Python or MATLAB)."""
     from optiprofiler_agent.validators.syntax_checker import check_code_string
     from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+    from optiprofiler_agent.validators.matlab_checker import check_matlab_code
 
+    lang = _detect_script_language(filepath, language)
     code = open(filepath, encoding="utf-8").read()
+
+    if lang == "matlab":
+        result = check_matlab_code(code)
+        if result.has_errors:
+            console.print(f"[bold red]Issues in {filepath}:[/]")
+            for err in result.errors:
+                console.print(f"  [red]{err}[/]")
+            sys.exit(1)
+        console.print(f"[green]✓ {filepath} looks good![/] (MATLAB checks passed)")
+        return
 
     syn = check_code_string(code)
     if syn.has_errors:
@@ -443,7 +469,7 @@ def check(filepath: str, language: str):
             console.print(f"    {err.code_snippet}")
         sys.exit(1)
 
-    api = validate_benchmark_call(code, language=language)
+    api = validate_benchmark_call(code, language="python")
     if api.has_errors:
         console.print(f"[bold red]API errors in {filepath}:[/]")
         for issue in api.issues:
@@ -458,8 +484,10 @@ def check(filepath: str, language: str):
                 console.print(f"  [yellow]{issue.message}[/]")
 
     if api.is_clean:
-        console.print(f"[green]✓ {filepath} looks good![/] "
-                       f"({api.benchmark_calls_found} benchmark() call(s) validated)")
+        console.print(
+            f"[green]✓ {filepath} looks good![/] "
+            f"({api.benchmark_calls_found} benchmark() call(s) validated)"
+        )
 
 
 @main.command()
@@ -541,11 +569,19 @@ def interpret(results_dir: str, provider: str, model: str | None,
 @click.option("--max-retries", default=3, type=int, help="Maximum fix attempts.")
 @click.option("--code-limit", default=0, type=int,
               help="Max code chars sent to LLM (0 = no limit, send full code).")
+@click.option(
+    "-l", "--language",
+    default="auto",
+    type=click.Choice(["auto", "python", "matlab"]),
+    help="Script language (default: auto-detect from .m extension).",
+)
 def debug(filepath: str, traceback_file: str | None, error_text: str | None,
           run: bool, timeout: int, save_fixed: str | None,
           provider: str, model: str | None, max_retries: int,
-          code_limit: int):
+          code_limit: int, language: str):
     """Diagnose and suggest fixes for benchmark script errors."""
+    lang = _detect_script_language(filepath, language)
+    code_tag = "matlab" if lang == "matlab" else "python"
     code = open(filepath, encoding="utf-8").read()
 
     config = AgentConfig(
@@ -568,6 +604,7 @@ def debug(filepath: str, traceback_file: str | None, error_text: str | None,
             cwd=str(Path(filepath).parent),
             save_fixed=save_fixed,
             progress_callback=_on_progress,
+            language=lang,
         )
     else:
         from optiprofiler_agent.debugger.debugger import debug_script
@@ -585,13 +622,14 @@ def debug(filepath: str, traceback_file: str | None, error_text: str | None,
                 code=code,
                 error=error,
                 config=config,
+                language=lang,
             )
 
     console.print(Markdown(result.diagnostic_report))
 
     if result.fixed_code:
         console.print("\n[bold green]Suggested fix:[/]\n")
-        console.print(Markdown(f"```python\n{result.fixed_code}\n```"))
+        console.print(Markdown(f"```{code_tag}\n{result.fixed_code}\n```"))
         if save_fixed and not run:
             Path(save_fixed).write_text(result.fixed_code, encoding="utf-8")
             console.print(f"[green]Fixed code saved to {save_fixed}[/]")

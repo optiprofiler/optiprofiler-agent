@@ -1,0 +1,6 @@
+{
+  "id": "iface_unexpected_keyword",
+  "title": "Solver rejects an optional keyword",
+  "expected_categories": ["interface_mismatch"],
+  "expected_error_substr": ["unexpected keyword argument", "max_eval"]
+}

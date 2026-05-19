@@ -4,6 +4,7 @@ Tests the no-LLM path (rule engine) to avoid needing API keys.
 """
 
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,6 +12,8 @@ import pytest
 from optiprofiler_agent.interpreter.result_loader import ProfilePaths
 from optiprofiler_agent.interpreter.summary import BenchmarkSummary, build_summary
 from optiprofiler_agent.config import AgentConfig
+
+_PROMPTS_DIR = Path(__file__).resolve().parents[1] / "optiprofiler_agent" / "interpreter" / "prompts"
 
 
 # ---------------------------------------------------------------------------
@@ -66,6 +69,59 @@ def fake_experiment(tmp_path):
     (test_log / "report.txt").write_text(_REPORT_TXT, encoding="utf-8")
     (test_log / "_scratch.py").write_text("# python experiment", encoding="utf-8")
 
+    return exp_dir
+
+
+# Mirror the Python fixture for MATLAB so build_summary / interpret no-LLM
+# is exercised on a MATLAB-flavoured directory too.
+_LOG_TXT_MATLAB = """\
+INFO: Profiling solvers: fminsearch, fminunc
+INFO: - Solvers: fminsearch, fminunc
+INFO: - Problem libraries: s2mpj
+INFO: - Problem types: u
+INFO: - Problem dimension range: [1, 2]
+INFO: - Feature stamp: plain
+INFO: Finish solving    CLIFF      with fminsearch (run  1/ 1) in 2.87 seconds.
+INFO: Output result for CLIFF      with fminsearch (run  1/ 1): f = 2.0069e-01.
+INFO: Best result for CLIFF      with fminsearch (run  1/ 1): f = 2.0069e-01.
+INFO: Finish solving    CLIFF      with fminunc    (run  1/ 1) in 0.64 seconds.
+INFO: Output result for CLIFF      with fminunc    (run  1/ 1): f = 1.2345e-05.
+INFO: Best result for CLIFF      with fminunc    (run  1/ 1): f = 1.2345e-05.
+INFO: Scores of the solvers
+INFO: fminsearch:    0.9806
+INFO: fminunc   :    0.9483
+"""
+
+_REPORT_TXT_MATLAB = """\
+## Experiment Summary
+
+Solver names: fminsearch, fminunc
+Problem types: u
+Problem mindim: 1
+Problem maxdim: 2
+Feature stamp: plain
+
+## Report for the problem library "s2mpj"
+
+Number of problems selected: 1
+Wall-clock time spent by all the solvers: 3.51 secs
+
+Name    Type  Dim  mb  mlcon  mnlcon  mcon  Time(s)
+CLIFF   u     2    0   0      0       0     3.510
+"""
+
+
+@pytest.fixture
+def fake_matlab_experiment(tmp_path):
+    """A MATLAB-flavoured experiment dir mirroring ``fake_experiment``."""
+    exp_dir = tmp_path / "experiment_matlab_20260517_221211"
+    exp_dir.mkdir()
+    test_log = exp_dir / "test_log"
+    test_log.mkdir()
+    (test_log / "log.txt").write_text(_LOG_TXT_MATLAB, encoding="utf-8")
+    (test_log / "report.txt").write_text(_REPORT_TXT_MATLAB, encoding="utf-8")
+    # ``_detect_language`` looks under ``test_log/`` for scratch.m / *.mat.
+    (test_log / "scratch.m").write_text("% matlab experiment\n", encoding="utf-8")
     return exp_dir
 
 
@@ -137,6 +193,56 @@ class TestBuildSummary:
         summary = build_summary(fake_experiment, read_profiles=False)
         d = summary.to_dict()
         assert isinstance(d["dimension_range"], list)
+
+
+class TestBuildSummaryMatlab:
+    """Mirror TestBuildSummary on a MATLAB-flavoured experiment dir."""
+
+    def test_build_summary_basic_matlab(self, fake_matlab_experiment):
+        summary = build_summary(fake_matlab_experiment, read_profiles=False)
+        assert isinstance(summary, BenchmarkSummary)
+        assert summary.language == "matlab"
+        assert set(summary.solver_names) == {"fminsearch", "fminunc"}
+        assert summary.solver_scores["fminsearch"] > summary.solver_scores["fminunc"]
+        assert summary.problem_types == "u"
+        assert summary.dimension_range == (1, 2)
+
+    def test_build_summary_matlab_no_pdfs_keeps_flag_true(
+        self, fake_matlab_experiment
+    ):
+        # No PDFs at all → flag stays True (graceful default). It only flips
+        # to False when PDFs exist but no curves could be extracted.
+        summary = build_summary(fake_matlab_experiment, read_profiles=True)
+        assert summary.profile_curves_available is True
+
+    def test_build_summary_matlab_unparseable_pdfs_flag_false(
+        self, fake_matlab_experiment
+    ):
+        # Drop a stub file at the standard ``perf_hist.pdf`` path that the
+        # loader's _discover_profiles looks for. profile_reader can't parse
+        # it → no curves → flag flips to False.
+        (fake_matlab_experiment / "perf_hist.pdf").write_bytes(
+            b"%PDF-1.4 not really\n"
+        )
+        summary = build_summary(fake_matlab_experiment, read_profiles=True)
+        assert summary.profile_curves_available is False
+
+    def test_summary_to_json_matlab(self, fake_matlab_experiment):
+        summary = build_summary(fake_matlab_experiment, read_profiles=False)
+        data = json.loads(summary.to_json())
+        assert data["language"] == "matlab"
+        assert "fminsearch" in data["solver_scores"]
+
+    def test_interpret_no_llm_matlab(self, fake_matlab_experiment):
+        from optiprofiler_agent.interpreter.interpreter import interpret
+        result = interpret(
+            results_dir=fake_matlab_experiment,
+            llm_enabled=False,
+            read_profiles=False,
+        )
+        data = json.loads(result)
+        assert data["language"] == "matlab"
+        assert "rankings" in data
 
 
 # ---------------------------------------------------------------------------
@@ -341,3 +447,18 @@ class TestProfileReader:
         paths = ProfilePaths(perf_hist=tmp_path / "nonexistent.pdf")
         result = read_all_profiles(paths)
         assert "perf_hist" not in result
+
+
+# ---------------------------------------------------------------------------
+# Language-aware interpreter prompt
+# ---------------------------------------------------------------------------
+
+class TestInterpreterPrompt:
+
+    def test_system_prompt_mentions_matlab_and_python(self):
+        text = (_PROMPTS_DIR / "system_prompt.md").read_text(encoding="utf-8")
+        assert "language-aware" in text.lower() or "Language-aware" in text
+        assert "matlab" in text.lower()
+        assert "pip install" in text.lower()
+        assert "addpath" in text.lower()
+        assert "profile_curves_available" in text

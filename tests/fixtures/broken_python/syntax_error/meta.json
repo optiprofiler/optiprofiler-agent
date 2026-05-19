@@ -1,0 +1,6 @@
+{
+  "id": "syntax_error",
+  "title": "Unclosed parenthesis in solver script",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["SyntaxError", "parenthesis"]
+}

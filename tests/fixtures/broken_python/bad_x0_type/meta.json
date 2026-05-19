@@ -1,0 +1,6 @@
+{
+  "id": "bad_x0_type",
+  "title": "Initial point contains a non-numeric value",
+  "expected_categories": ["runtime_error"],
+  "expected_error_substr": ["TypeError", "x0 must contain numeric values"]
+}

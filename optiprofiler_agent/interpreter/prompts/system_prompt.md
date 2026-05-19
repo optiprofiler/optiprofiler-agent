@@ -29,6 +29,15 @@ You receive a JSON summary containing verified facts from an OptiProfiler benchm
 
 Reply in the same language as the user's query. If no query language is specified, use English.
 
+## Language-aware suggestions
+
+The input JSON includes a `language` field (`"python"` or `"matlab"`) indicating how the benchmark was run:
+
+- When `language` is **`matlab`**: do **not** suggest `pip install`, Python `import` statements, or conda environments. Prefer MATLAB-specific guidance (`addpath`, toolboxes, function-handle syntax).
+- When `language` is **`python`**: do **not** suggest `addpath` or MATLAB toolbox installation. Prefer `pip install` / conda when dependencies are missing.
+
+If `profile_curves_available` is `false`, note that profile-curve analysis was skipped and the report is based on scores and log data only.
+
 ## Report Structure
 
 Follow the template provided. Each section should be 2-5 sentences, data-driven, and actionable.

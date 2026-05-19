@@ -1,0 +1,209 @@
+{
+  "agent": "debugger",
+  "strategy": "golden",
+  "language": "python",
+  "provider": null,
+  "model": null,
+  "timestamp_utc": "2026-05-19T01:11:33+00:00",
+  "n_total": 15,
+  "n_pass": 15,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "attribute_error_result",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "bad_bounds_shape",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "bad_x0_type",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "iface_missing_x0",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "interface_mismatch",
+      "expected_categories": [
+        "interface_mismatch"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "iface_unexpected_keyword",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "interface_mismatch",
+      "expected_categories": [
+        "interface_mismatch"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "index_oob",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "inf_objective",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "numerical",
+      "expected_categories": [
+        "numerical"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "key_error",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "missing_dependency",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "dependency_missing",
+      "expected_categories": [
+        "dependency_missing"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "name_error",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.05,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "nan_objective",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "numerical",
+      "expected_categories": [
+        "numerical"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "pickle_lambda",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "syntax_error",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "timeout_loop",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "timeout",
+      "expected_categories": [
+        "timeout"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 30.37,
+      "fix_stderr_excerpt": ""
+    },
+    {
+      "id": "zero_division_objective",
+      "broken_failed": true,
+      "fix_ran": true,
+      "regex_category": "runtime_error",
+      "expected_categories": [
+        "runtime_error",
+        "numerical"
+      ],
+      "category_match": true,
+      "error_substr_match": true,
+      "elapsed_s": 0.04,
+      "fix_stderr_excerpt": ""
+    }
+  ]
+}

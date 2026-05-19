@@ -49,6 +49,9 @@ class BenchmarkSummary:
     anomalies: list[dict[str, Any]]
     anomaly_counts: dict[str, int] = field(default_factory=dict)
 
+    # Profile PDF curve extraction (False when PDFs exist but curves could not be parsed)
+    profile_curves_available: bool = True
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to a plain dict suitable for JSON serialization."""
         d = asdict(self)
@@ -58,6 +61,21 @@ class BenchmarkSummary:
     def to_json(self, indent: int = 2) -> str:
         """Serialize to JSON string."""
         return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
+
+
+def _has_profile_pdfs(paths) -> bool:
+    """Return True if any standard profile PDF path is present."""
+    return any([
+        paths.summary_pdf,
+        paths.perf_hist,
+        paths.perf_out,
+        paths.data_hist,
+        paths.data_out,
+        paths.log_ratio_hist,
+        paths.log_ratio_out,
+        bool(paths.detailed_profiles),
+        bool(paths.history_plots),
+    ])
 
 
 def build_summary(
@@ -91,6 +109,11 @@ def build_summary(
     analysis = analyze(results, profiles)
     anomalies = detect_anomalies(results, profiles)
 
+    profile_curves_available = True
+    if read_profiles and _has_profile_pdfs(results.profile_paths):
+        if not analysis.curve_crossovers:
+            profile_curves_available = False
+
     # Count anomalies by severity
     anomaly_counts: dict[str, int] = {}
     for a in anomalies:
@@ -119,6 +142,7 @@ def build_summary(
         per_tolerance_scores=analysis.per_tolerance_scores,
         anomalies=[asdict(a) for a in filtered_anomalies],
         anomaly_counts=anomaly_counts,
+        profile_curves_available=profile_curves_available,
     )
 
 

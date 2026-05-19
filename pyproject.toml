@@ -91,3 +91,7 @@ target-version = "py310"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "requires_matlab: needs a local MATLAB install (resolved via MATOP_MATLAB_BIN or PATH)",
+    "integration: end-to-end / slow tests that may touch real files or binaries",
+]

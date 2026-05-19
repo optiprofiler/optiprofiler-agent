@@ -169,14 +169,20 @@ def _parse_log_txt(log_path: Path) -> tuple[
                 scores[m.group(1)] = float(m.group(2))
 
     # --- Extract per-run results ---
+    # MATLAB logs often pad run counters: "(run  1/ 1)" vs Python "(run 1/1)".
+    _run_counter = r"run\s+(\d+)\s*/\s*(\d+)"
+    # Python: "... (run 1/1) (in 0.42 seconds)"; MATLAB: "... (run  1/ 1) in 2.87 seconds."
+    _finish_timing = r"(?:\(in|in)\s+([\d.]+)\s+seconds?\.?\)?"
     finish_re = re.compile(
-        r"Finish solving\s+(\S+)\s+with\s+(\S+)\s+\(run\s+(\d+)/(\d+)\)\s+\(in\s+([\d.]+)\s+seconds?\)"
+        rf"Finish solving\s+(\S+)\s+with\s+(\S+)\s+\({_run_counter}\)\s+{_finish_timing}"
     )
+    # Do not put '.' inside a char class — it would swallow MATLAB's trailing period.
+    _f_value = r"([\d]+(?:\.[\d]*)?(?:[eE][+-]?\d+)?)\.?"
     output_re = re.compile(
-        r"Output result for\s+(\S+)\s+with\s+(\S+)\s+\(run\s+(\d+)/(\d+)\):\s+f\s*=\s*([^\s]+)"
+        rf"Output result for\s+(\S+)\s+with\s+(\S+)\s+\({_run_counter}\):\s+f\s*=\s*{_f_value}"
     )
     best_re = re.compile(
-        r"Best\s+result for\s+(\S+)\s+with\s+(\S+)\s+\(run\s+(\d+)/(\d+)\):\s+f\s*=\s*([^\s]+)"
+        rf"Best\s+result for\s+(\S+)\s+with\s+(\S+)\s+\({_run_counter}\):\s+f\s*=\s*{_f_value}"
     )
 
     pending: dict[tuple[str, str, int], dict] = {}
