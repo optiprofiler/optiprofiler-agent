@@ -11,9 +11,6 @@ the equivalent of ``tests/test_local_runner.py`` on the MATLAB side.
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
 import pytest
 
 from optiprofiler_agent.debugger.matlab_runner import (

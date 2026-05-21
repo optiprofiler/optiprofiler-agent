@@ -596,7 +596,12 @@ def run_and_debug(
             return result
 
     _log("[Final] Running verification...")
-    final_run = run_script(current_code, timeout=timeout, cwd=cwd)
+    final_run = _run_code_for_language(
+        current_code,
+        language=language,
+        timeout=timeout,
+        cwd=cwd,
+    )
     if final_run.success:
         _log("[Final] Verification passed!")
         all_reports.append(

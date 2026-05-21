@@ -378,7 +378,7 @@ filesystem access).**
     parameter? Data-file driven? Upstream-package-backed (e.g.
     a thin wrapper around `pycutest`)?
   - **Native selector?** Does the upstream expose anything like
-    `secup` / `find_problems` that we can re-use, or do we have to
+    `secup` / `find_problems` that we can reuse, or do we have to
     build `probinfo_<lib>.csv` ourselves?
   - **Field naming + sentinels**: what does the upstream use for
     objective callable, initial point, bound infinity (`±inf`,
