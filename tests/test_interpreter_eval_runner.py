@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from run_interpreter_eval import (  # noqa: E402
     _deterministic_report,
+    _validate_judge_payload,
     fact_check_report,
     render_markdown_report,
     summarize,
@@ -63,6 +64,13 @@ def test_summarize_reports_judge_coverage():
     assert summary["pass_rate"] == 1.0
     assert summary["judge_coverage"] == 0.5
     assert summary["judge_na_cases"] == ["judge_failed"]
+
+
+def test_validate_judge_payload_rejects_missing_dimensions():
+    import pytest
+
+    with pytest.raises(ValueError, match="missing score fields"):
+        _validate_judge_payload({"accuracy": 10, "reason": "wrong schema"})
 
 
 def test_render_markdown_report_lists_failure_checks():

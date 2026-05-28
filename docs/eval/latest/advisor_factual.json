@@ -1,0 +1,134 @@
+[
+  {
+    "id": "f01",
+    "question": "What is the default value of n_runs in benchmark()?",
+    "response": "The default value of `n_runs` depends on the feature type:\n\n- **Stochastic features** (e.g., `perturbed_x0`, `noisy`): defaults to **5**\n- **Deterministic features** (e.g., `plain`, `truncated`): defaults to **1**\n\nThis is controlled via the `feature_name` parameter when calling `benchmark()`. Stochastic features require multiple runs to account for variability, while deterministic features only need one run.",
+    "language": "python",
+    "category": "factual_query",
+    "response_length": 412,
+    "short_response": false,
+    "elapsed_s": 10.19,
+    "keyword_score": 1.0,
+    "keyword_hits": 2,
+    "keyword_total": 2,
+    "keyword_details": [
+      {
+        "keyword": "n_runs",
+        "found": true
+      },
+      {
+        "keyword": "default",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "no_benchmark_call"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.98,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 1.0,
+      "code_quality": 0.8,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 0.96,
+    "judge_reason": "Response accurately states that n_runs defaults to 5 for stochastic features and 1 for deterministic features, matching the reference answer exactly."
+  },
+  {
+    "id": "f02",
+    "question": "What is the default value of ptype?",
+    "response": "The default value of `ptype` is `'u'`, which selects **unconstrained** problems.\n\nIt can be any combination of:\n- `'u'` — unconstrained\n- `'b'` — bound constrained\n- `'l'` — linearly constrained\n- `'n'` — nonlinearly constrained\n\nFor example, `ptype='ub'` would select both unconstrained and bound-constrained problems.",
+    "language": "python",
+    "category": "factual_query",
+    "response_length": 319,
+    "short_response": false,
+    "elapsed_s": 3.33,
+    "keyword_score": 1.0,
+    "keyword_hits": 3,
+    "keyword_total": 3,
+    "keyword_details": [
+      {
+        "keyword": "ptype",
+        "found": true
+      },
+      {
+        "keyword": "default",
+        "found": true
+      },
+      {
+        "keyword": "unconstrained",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "no_benchmark_call"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.98,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 1.0,
+      "code_quality": 0.8,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 0.96,
+    "judge_reason": "Accurately states default ptype='u' (unconstrained), correctly lists all valid values ('u', 'b', 'l', 'n'), and explains combination syntax. No fabrication detected."
+  },
+  {
+    "id": "f03",
+    "question": "What problem types does ptype support?",
+    "response": "The `ptype` parameter accepts a string consisting of any combination of these four problem type codes:\n\n| Code | Problem Type | Description |\n|------|--------------|-------------|\n| `'u'` | Unconstrained | No constraints |\n| `'b'` | Bound-constrained | Box constraints on variables (`xl`, `xu`) |\n| `'l'` | Linearly constrained | Linear inequality (`aub`, `bub`) and equality (`aeq`, `beq`) constraints |\n| `'n'` | Nonlinearly constrained | Nonlinear inequality (`cub`) and equality (`ceq`) constraints |\n\n**Examples:**\n- `'u'` — only unconstrained problems\n- `'ub'` — unconstrained + bound-constrained problems\n- `'uln'` — unconstrained + linearly constrained + nonlinearly constrained problems\n- `'ubln'` or `'all'` — all problem types\n\nThe default value is `'u'` (unconstrained only). You can combine codes to select multiple problem types for your benchmark.",
+    "language": null,
+    "category": "factual_query",
+    "response_length": 862,
+    "short_response": false,
+    "elapsed_s": 19.97,
+    "keyword_score": 1.0,
+    "keyword_hits": 4,
+    "keyword_total": 4,
+    "keyword_details": [
+      {
+        "keyword": "unconstrained",
+        "found": true
+      },
+      {
+        "keyword": "bound",
+        "found": true
+      },
+      {
+        "keyword": "linear",
+        "found": true
+      },
+      {
+        "keyword": "nonlinear",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "no_benchmark_call"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.96,
+    "judge_scores": {
+      "accuracy": 0.9,
+      "completeness": 0.9,
+      "code_quality": 0.8,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 0.92,
+    "judge_reason": "All four expected keywords (unconstrained, bound, linear, nonlinear) are correctly mapped to their ptype codes ('u', 'b', 'l', 'n'). Information is accurate, includes default behavior, and provides clear examples of code combinations."
+  }
+]

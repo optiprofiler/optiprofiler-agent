@@ -209,6 +209,24 @@ If a provider stalls, rerun only the failed suite/case with a different
 provider. Do not rerun a full 40-case judge sweep as one unbounded
 process.
 
+### Interpreter Constrained Decoding Smoke
+
+`BenchmarkReport` supports an opt-in decode-time JSON Schema path for a
+self-hosted vLLM OpenAI-compatible endpoint. API-only providers keep the
+existing provider-structured-output and manual-JSON fallbacks.
+
+```bash
+opagent interpret /path/to/results \
+  --provider custom \
+  --constrained-decoding \
+  --format json
+```
+
+The `custom` provider should point at the vLLM OpenAI-compatible base URL.
+The constrained path sends vLLM's `structured_outputs.json` schema hint;
+if that endpoint rejects the hint, Interpreter falls back to the normal
+structured-output chain and the same report validators still run.
+
 ### Provider Sweep
 
 Run the same judge and task-success samples across configured providers:

@@ -5,11 +5,13 @@ Pipeline:
 1. **Rule engine** (``summary.py``): scores + curves + logs ->
    ``BenchmarkSummary`` (verified facts, no LLM).
 2. **Structured LLM** with thinking-model-aware JSON extraction:
-   summary -> typed ``BenchmarkReport`` Pydantic object. Tries
-   ``llm.with_structured_output`` first; on parse failure (common with
-   ``<think>...</think>`` reasoning models such as MiniMax-M2,
-   DeepSeek-R1, Kimi-thinking) falls back to a manual extract-then-parse
-   path that strips reasoning tags and unwraps fenced JSON blocks.
+   summary -> typed ``BenchmarkReport`` Pydantic object. Self-hosted vLLM
+   endpoints can opt into decode-time JSON Schema constraints. Otherwise
+   the interpreter tries ``llm.with_structured_output`` first; on parse
+   failure (common with ``<think>...</think>`` reasoning models such as
+   MiniMax-M2, DeepSeek-R1, Kimi-thinking) it falls back to a manual
+   extract-then-parse path that strips reasoning tags and unwraps fenced
+   JSON blocks.
 3. **Validator** (``report_validator.validate_report``) checks
    cross-field invariants; errors trigger one retry with feedback.
 4. **Renderer** (``renderer.render_markdown``): typed report ->
@@ -30,6 +32,11 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from optiprofiler_agent.config import AgentConfig
+from optiprofiler_agent.interpreter.constraint_backend import (
+    ReportConstraintBackend,
+    VLLMJSONSchemaBackend,
+)
 from optiprofiler_agent.interpreter.renderer import render_html, render_markdown
 from optiprofiler_agent.interpreter.report_schema import BenchmarkReport
 from optiprofiler_agent.interpreter.report_validator import (
@@ -37,7 +44,6 @@ from optiprofiler_agent.interpreter.report_validator import (
     validate_report,
 )
 from optiprofiler_agent.interpreter.summary import BenchmarkSummary, build_summary
-from optiprofiler_agent.config import AgentConfig
 
 
 _LOG = logging.getLogger(__name__)
@@ -246,10 +252,12 @@ def _generate_structured_report(
 
     Strategy:
 
-    1. Try ``llm.with_structured_output(...)`` (provider-side schema).
-    2. On parse error (common with ``<think>...</think>`` thinking
+    1. On opted-in self-hosted vLLM endpoints, request JSON Schema
+       constrained decoding for the raw report JSON.
+    2. Try ``llm.with_structured_output(...)`` (provider-side schema).
+    3. On parse error (common with ``<think>...</think>`` thinking
        models), fall back to a manual extract-and-parse path.
-    3. Validate; on business-invariant errors, retry once with
+    4. Validate; on business-invariant errors, retry once with
        feedback.
 
     Returns ``None`` only when *both* the structured and manual paths
@@ -260,7 +268,10 @@ def _generate_structured_report(
     llm = create_llm(config.llm)
     messages, full_system = _build_messages(summary, language)
 
-    report = _try_structured_output(llm, messages)
+    backend = _constraint_backend_for(config)
+    report = _try_constrained_output(llm, messages, backend)
+    if report is None:
+        report = _try_structured_output(llm, messages)
     if report is None:
         report = _try_manual_json(llm, messages, full_system)
     if report is None:
@@ -272,7 +283,13 @@ def _generate_structured_report(
 
     feedback = format_feedback_for_llm(validation)
     for _ in range(MAX_REPORT_RETRIES):
-        retry = _retry_with_feedback(llm, messages, feedback, full_system)
+        retry = _retry_with_feedback(
+            llm,
+            messages,
+            feedback,
+            full_system,
+            constraint_backend=backend,
+        )
         if retry is None:
             return report  # keep the best-so-far rather than nothing
         report = retry
@@ -281,6 +298,41 @@ def _generate_structured_report(
             return report
 
     return report
+
+
+def _constraint_backend_for(config: AgentConfig) -> ReportConstraintBackend | None:
+    """Return the opted-in decode-time constraint backend, if any."""
+    if not getattr(config.llm, "constrained_decoding", False):
+        return None
+    return VLLMJSONSchemaBackend()
+
+
+def _try_constrained_output(
+    llm,
+    messages,
+    backend: ReportConstraintBackend | None,
+) -> BenchmarkReport | None:
+    """Opt-in path for self-hosted decode-time JSON Schema constraints.
+
+    vLLM returns raw JSON content through its OpenAI-compatible endpoint,
+    so we still parse the reply into the local Pydantic schema. If the
+    endpoint does not support the hint, the normal provider/manual paths
+    handle the same request.
+    """
+    if backend is None:
+        return None
+    try:
+        constrained_llm = backend.bind(llm, BenchmarkReport)
+        response = constrained_llm.invoke(messages)
+    except Exception as exc:
+        _LOG.info(
+            "%s constrained report generation failed (%s); "
+            "switching to provider structured output",
+            backend.name,
+            exc,
+        )
+        return None
+    return _parse_report_json(_response_text(response))
 
 
 def _try_structured_output(llm, messages) -> BenchmarkReport | None:
@@ -336,14 +388,18 @@ def _retry_with_feedback(
     messages,
     feedback: str,
     full_system: str,
+    constraint_backend: ReportConstraintBackend | None = None,
 ) -> BenchmarkReport | None:
-    """Single retry that mirrors the two-path strategy of the initial
-    attempt: prefer with_structured_output, fall back to manual JSON."""
+    """Single retry that mirrors the constrained/provider/manual strategy."""
     from langchain_core.messages import HumanMessage
 
-    structured_llm = _bind_structured_output(llm)
     retry_messages = list(messages) + [HumanMessage(content=feedback)]
 
+    constrained = _try_constrained_output(llm, retry_messages, constraint_backend)
+    if constrained is not None:
+        return constrained
+
+    structured_llm = _bind_structured_output(llm)
     if structured_llm is not None:
         try:
             return structured_llm.invoke(retry_messages)

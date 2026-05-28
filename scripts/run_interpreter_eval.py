@@ -38,6 +38,8 @@ from optiprofiler_agent.interpreter.summary import BenchmarkSummary, build_summa
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_FIXTURE = REPO_ROOT / "tests" / "fixtures" / "matlab_results" / "experiment_matlab"
 _JUDGE_DIMS = ["correctness", "completeness", "grounding", "hallucination"]
+_JUDGE_MAX_RETRIES = 3
+_JUDGE_RETRY_BASE_DELAY = 2.0
 
 
 _JUDGE_SYSTEM = """\
@@ -73,6 +75,12 @@ def _score(value: Any) -> float:
     if raw > 1.0:
         raw /= 10.0
     return max(0.0, min(1.0, raw))
+
+
+def _validate_judge_payload(data: dict) -> None:
+    missing = [dim for dim in _JUDGE_DIMS if dim not in data]
+    if missing:
+        raise ValueError(f"judge response missing score fields: {', '.join(missing)}")
 
 
 def _top_solvers(summary: BenchmarkSummary) -> tuple[str | None, str | None]:
@@ -214,7 +222,9 @@ def score_with_judge(report: str, summary: BenchmarkSummary, provider: str | Non
         "solver_scores": summary.solver_scores,
         "rankings": summary.rankings[:5],
         "problem_libraries": summary.problem_libraries,
+        "problem_types": summary.problem_types,
         "dimension_range": list(summary.dimension_range),
+        "feature_stamp": summary.feature_stamp,
         "profile_curves_available": summary.profile_curves_available,
     }
     prompt = (
@@ -223,25 +233,36 @@ def score_with_judge(report: str, summary: BenchmarkSummary, provider: str | Non
         "Report to grade:\n"
         f"{report}"
     )
-    try:
-        result = llm.invoke([
-            SystemMessage(content=_JUDGE_SYSTEM),
-            HumanMessage(content=prompt),
-        ])
-        data = _extract_json_object(result.content)
-        scores = {dim: _score(data.get(dim)) for dim in _JUDGE_DIMS}
-        avg = sum(scores.values()) / len(scores)
-        return {
-            "judge_scores": scores,
-            "judge_avg": round(avg, 3),
-            "judge_reason": data.get("reason", ""),
-        }
-    except Exception as exc:  # noqa: BLE001 - eval captures provider/parser errors.
-        return {
-            "judge_scores": None,
-            "judge_avg": None,
-            "judge_reason": f"Judge error: {type(exc).__name__}: {exc}",
-        }
+    last_exc: Exception | None = None
+    for attempt in range(_JUDGE_MAX_RETRIES):
+        try:
+            if attempt > 0:
+                time.sleep(_JUDGE_RETRY_BASE_DELAY * (2 ** (attempt - 1)))
+            result = llm.invoke([
+                SystemMessage(content=_JUDGE_SYSTEM),
+                HumanMessage(content=prompt),
+            ])
+            data = _extract_json_object(result.content)
+            _validate_judge_payload(data)
+            scores = {dim: _score(data[dim]) for dim in _JUDGE_DIMS}
+            avg = sum(scores.values()) / len(scores)
+            return {
+                "judge_scores": scores,
+                "judge_avg": round(avg, 3),
+                "judge_reason": data.get("reason", ""),
+            }
+        except Exception as exc:  # noqa: BLE001 - eval captures provider/parser errors.
+            last_exc = exc
+            text = str(exc).lower()
+            if "overloaded" in text or "529" in text or "missing score fields" in text:
+                continue
+            break
+
+    return {
+        "judge_scores": None,
+        "judge_avg": None,
+        "judge_reason": f"Judge error: {type(last_exc).__name__}: {last_exc}",
+    }
 
 
 def run_case(

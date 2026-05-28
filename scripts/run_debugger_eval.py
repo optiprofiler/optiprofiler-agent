@@ -108,11 +108,17 @@ def _run(code: str, language: str, timeout: int):
     return run_python_script(code, timeout=timeout)
 
 
-def _strategy_golden(case: dict, language: str, timeout: int) -> dict:
+def _strategy_golden(
+    case: dict,
+    language: str,
+    timeout: int,
+    fix_timeout: int | None = None,
+) -> dict:
     """Use the human-curated fix.<ext> as the proposed fix."""
     meta = case["meta"]
     broken_code = case["broken_path"].read_text()
     fix_code = case["fix_path"].read_text()
+    fix_timeout = fix_timeout or timeout
 
     t0 = time.perf_counter()
     broken_result = _run(broken_code, language, timeout)
@@ -138,7 +144,7 @@ def _strategy_golden(case: dict, language: str, timeout: int) -> dict:
     err_substr_match = any(s in (err or "") for s in meta.get("expected_error_substr", []))
 
     t0 = time.perf_counter()
-    fix_result = _run(fix_code, language, timeout)
+    fix_result = _run(fix_code, language, fix_timeout)
     elapsed_fix = time.perf_counter() - t0
 
     return {

@@ -1,0 +1,281 @@
+{
+  "timestamp_utc": "2026-05-21T04:20:19+00:00",
+  "provider": "minimax",
+  "judge_provider": "minimax",
+  "output_dir": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest",
+  "passed": true,
+  "thresholds": {
+    "min_pass_rate": {
+      "required": ">= 90.0%",
+      "actual": "100.0%"
+    },
+    "min_avg_score": {
+      "required": ">= 0.750",
+      "actual": "0.798"
+    },
+    "min_judge_coverage": {
+      "required": ">= 80.0%",
+      "actual": "100.0%"
+    },
+    "min_hallucination": {
+      "required": ">= 0.900",
+      "actual": "0.967"
+    }
+  },
+  "suites": [
+    {
+      "name": "advisor_factual",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_factual.json",
+      "summary": {
+        "kind": "advisor_or_unified",
+        "n_cases": 3,
+        "pass_count": 3,
+        "pass_rate": 1.0,
+        "avg_score": 0.9733333333333333,
+        "judge_coverage": 1.0,
+        "judge_avg": 0.9466666666666667,
+        "judge_hallucination_avg": 1.0,
+        "low_score_cases": [],
+        "judge_na_cases": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "advisor_factual",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_eval.py",
+          "--mode",
+          "advisor",
+          "--provider",
+          "minimax",
+          "--cases",
+          "tests/eval_cases/factual.json",
+          "--case-timeout",
+          "90",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_factual.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_factual.md",
+          "--judge",
+          "--judge-provider",
+          "minimax",
+          "--limit",
+          "3"
+        ],
+        "returncode": 0,
+        "elapsed_s": 59.058,
+        "timed_out": false,
+        "stdout_tail": "╭─────────────────────── OptiProfiler Agent Evaluation ────────────────────────╮\n│ Mode: advisor  |  Cases: 3  |  Judge: ON                                     │\n╰──────────────────────────────────────────────────────────────────────────────╯\n  Provider: minimax | Model: MiniMax-M2.7\n  Judge: minimax / MiniMax-M2.7\n\n[1/3] f01: What is the default value of n_runs in benchmark()?\n[2/3] f02: What is the default value of ptype?\n[3/3] f03: What problem types does ptype support?\n\n                   Evaluation Results (advisor mode, 3 cases)                   \n┏━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━━┓\n┃ ID    ┃ Category   ┃   KW ┃ Code ┃ Tool ┃ Combined ┃  Time ┃ Judge ┃ Halluc. ┃\n┡━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━━┩\n│ f01   │ factual_q… │ 1.00 │ 1.00 │    — │     0.98 │ 10.2s │  0.96 │    1.00 │\n│ f02   │ factual_q… │ 1.00 │ 1.00 │    — │     0.98 │  3.3s │  0.96 │    1.00 │\n│ f03   │ factual_q… │ 1.00 │ 1.00 │    — │     0.96 │ 20.0s │  0.92 │    1.00 │\n└───────┴────────────┴──────┴──────┴──────┴──────────┴───────┴───────┴─────────┘\n                          Per-Category Breakdown                           \n┏━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Category      ┃ Cases ┃ Avg Score ┃  Pass Rate ┃                        ┃\n┡━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩\n│ factual_query │     3 │      0.97 │ 3/3 (100%) │ ███████████████████░   │\n└───────────────┴───────┴───────────┴────────────┴────────────────────────┘\n╭────────────────────────────────── Overall ───────────────────────────────────╮\n│ Average Score: 0.973  |  Pass Rate (>=0.5): 3/3 (100%)                       │\n╰──────────────────────────────────────────────────────────────────────────────╯\n\nResults saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_\nfactual.json\nMarkdown report saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_\nfactual.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "advisor_adversarial",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_adversarial.json",
+      "summary": {
+        "kind": "advisor_or_unified",
+        "n_cases": 3,
+        "pass_count": 3,
+        "pass_rate": 1.0,
+        "avg_score": 0.9233333333333333,
+        "judge_coverage": 1.0,
+        "judge_avg": 0.98,
+        "judge_hallucination_avg": 1.0,
+        "low_score_cases": [],
+        "judge_na_cases": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "advisor_adversarial",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_eval.py",
+          "--mode",
+          "advisor",
+          "--provider",
+          "minimax",
+          "--cases",
+          "tests/eval_cases/adversarial.json",
+          "--case-timeout",
+          "90",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_adversarial.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_adversarial.md",
+          "--judge",
+          "--judge-provider",
+          "minimax",
+          "--limit",
+          "3"
+        ],
+        "returncode": 0,
+        "elapsed_s": 39.504,
+        "timed_out": false,
+        "stdout_tail": "╭─────────────────────── OptiProfiler Agent Evaluation ────────────────────────╮\n│ Mode: advisor  |  Cases: 3  |  Judge: ON                                     │\n╰──────────────────────────────────────────────────────────────────────────────╯\n  Provider: minimax | Model: MiniMax-M2.7\n  Judge: minimax / MiniMax-M2.7\n\n[1/3] a01: Can I use benchmark() with just one solver?\n[2/3] a02: Show me how to use scipy.optimize.minimize with benchmark()\n[3/3] a03: I want to use BFGS with OptiProfiler benchmark\n\n                   Evaluation Results (advisor mode, 3 cases)                   \n┏━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━━┓\n┃ ID    ┃ Category   ┃   KW ┃ Code ┃ Tool ┃ Combined ┃  Time ┃ Judge ┃ Halluc. ┃\n┡━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━━┩\n│ a01   │ adversari… │ 0.50 │ 1.00 │    — │     0.83 │  7.0s │  0.96 │    1.00 │\n│ a02   │ adversari… │ 1.00 │ 1.00 │    — │     0.99 │  3.0s │  0.98 │    1.00 │\n│ a03   │ adversari… │ 0.83 │ 1.00 │    — │     0.95 │ 15.5s │  1.00 │    1.00 │\n└───────┴────────────┴──────┴──────┴──────┴──────────┴───────┴───────┴─────────┘\n                         Per-Category Breakdown                          \n┏━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Category    ┃ Cases ┃ Avg Score ┃  Pass Rate ┃                        ┃\n┡━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩\n│ adversarial │     3 │      0.92 │ 3/3 (100%) │ ██████████████████░░   │\n└─────────────┴───────┴───────────┴────────────┴────────────────────────┘\n╭────────────────────────────────── Overall ───────────────────────────────────╮\n│ Average Score: 0.923  |  Pass Rate (>=0.5): 3/3 (100%)                       │\n╰──────────────────────────────────────────────────────────────────────────────╯\n\nResults saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_\nadversarial.json\nMarkdown report saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_\nadversarial.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "advisor_code_generation",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_code_generation.json",
+      "summary": {
+        "kind": "advisor_or_unified",
+        "n_cases": 3,
+        "pass_count": 3,
+        "pass_rate": 1.0,
+        "avg_score": 0.9866666666666667,
+        "judge_coverage": 1.0,
+        "judge_avg": 0.9733333333333333,
+        "judge_hallucination_avg": 0.9666666666666667,
+        "low_score_cases": [],
+        "judge_na_cases": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "advisor_code_generation",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_eval.py",
+          "--mode",
+          "advisor",
+          "--provider",
+          "minimax",
+          "--cases",
+          "tests/eval_cases/code_generation.json",
+          "--case-timeout",
+          "90",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_code_generation.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_code_generation.md",
+          "--judge",
+          "--judge-provider",
+          "minimax",
+          "--limit",
+          "3"
+        ],
+        "returncode": 0,
+        "elapsed_s": 60.425,
+        "timed_out": false,
+        "stdout_tail": "╭─────────────────────── OptiProfiler Agent Evaluation ────────────────────────╮\n│ Mode: advisor  |  Cases: 3  |  Judge: ON                                     │\n╰──────────────────────────────────────────────────────────────────────────────╯\n  Provider: minimax | Model: MiniMax-M2.7\n  Judge: minimax / MiniMax-M2.7\n\n[1/3] cg01: Write a minimal Python benchmark script comparing COBYLA and \nNelder-Me...\n[2/3] cg02: Write a MATLAB script to benchmark two solvers with options mindim=2\na...\n[3/3] cg03: Generate a Python benchmark script that uses the noisy feature with \nno...\n\n                   Evaluation Results (advisor mode, 3 cases)                   \n┏━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━━━━┓\n┃ ID    ┃ Category   ┃   KW ┃ Code ┃ Tool ┃ Combined ┃  Time ┃ Judge ┃ Halluc. ┃\n┡━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━━━━┩\n│ cg01  │ code_gene… │ 1.00 │ 1.00 │    — │     1.00 │  2.8s │  1.00 │    1.00 │\n│ cg02  │ code_gene… │ 1.00 │ 1.00 │    — │     0.96 │ 15.4s │  0.92 │    0.90 │\n│ cg03  │ code_gene… │ 1.00 │ 1.00 │    — │     1.00 │  8.0s │  1.00 │    1.00 │\n└───────┴────────────┴──────┴──────┴──────┴──────────┴───────┴───────┴─────────┘\n                           Per-Category Breakdown                            \n┏━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Category        ┃ Cases ┃ Avg Score ┃  Pass Rate ┃                        ┃\n┡━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩\n│ code_generation │     3 │      0.99 │ 3/3 (100%) │ ███████████████████░   │\n└─────────────────┴───────┴───────────┴────────────┴────────────────────────┘\n╭────────────────────────────────── Overall ───────────────────────────────────╮\n│ Average Score: 0.987  |  Pass Rate (>=0.5): 3/3 (100%)                       │\n╰──────────────────────────────────────────────────────────────────────────────╯\n\nResults saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_\ncode_generation.json\nMarkdown report saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/advisor_\ncode_generation.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "unified_tool_routing",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/unified_tool_routing.json",
+      "summary": {
+        "kind": "advisor_or_unified",
+        "n_cases": 3,
+        "pass_count": 3,
+        "pass_rate": 1.0,
+        "avg_score": 0.7976666666666666,
+        "judge_coverage": null,
+        "judge_avg": null,
+        "judge_hallucination_avg": null,
+        "low_score_cases": [
+          {
+            "id": "tr03",
+            "score": 0.56,
+            "judge_avg": null,
+            "reason": null
+          }
+        ],
+        "judge_na_cases": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "unified_tool_routing",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_eval.py",
+          "--mode",
+          "unified",
+          "--provider",
+          "minimax",
+          "--cases",
+          "tests/eval_cases/tool_routing.json",
+          "--case-timeout",
+          "90",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/unified_tool_routing.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/unified_tool_routing.md",
+          "--limit",
+          "3"
+        ],
+        "returncode": 0,
+        "elapsed_s": 40.259,
+        "timed_out": false,
+        "stdout_tail": "╭─────────────────────── OptiProfiler Agent Evaluation ────────────────────────╮\n│ Mode: unified  |  Cases: 3  |  Judge: OFF                                    │\n╰──────────────────────────────────────────────────────────────────────────────╯\n  Provider: minimax | Model: MiniMax-M2.7\n\n[1/3] tr01: What is the default value of max_tol_order?\n[2/3] tr02: Check if this code is correct:\n```python\nfrom optiprofiler import benc...\n[3/3] tr03: I got this error running my benchmark:\n```\nTypeError: solver() takes 2...\n\n           Evaluation Results (unified mode, 3 cases)           \n┏━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━━━━┳━━━━━━━┓\n┃ ID    ┃ Category     ┃   KW ┃ Code ┃ Tool ┃ Combined ┃  Time ┃\n┡━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━━━━╇━━━━━━━┩\n│ tr01  │ tool_routing │ 1.00 │ 1.00 │    ✓ │     1.00 │ 13.6s │\n│ tr02  │ tool_routing │ 0.67 │ 1.00 │    ✓ │     0.83 │ 15.8s │\n│ tr03  │ tool_routing │ 1.00 │ 0.20 │    ✗ │     0.56 │  9.0s │\n└───────┴──────────────┴──────┴──────┴──────┴──────────┴───────┘\n                          Per-Category Breakdown                          \n┏━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃ Category     ┃ Cases ┃ Avg Score ┃  Pass Rate ┃                        ┃\n┡━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩\n│ tool_routing │     3 │      0.80 │ 3/3 (100%) │ ███████████████░░░░░   │\n└──────────────┴───────┴───────────┴────────────┴────────────────────────┘\n╭──────────────────────────────── Tool Routing ────────────────────────────────╮\n│ Tool Routing Accuracy: 2/3 (67%)                                             │\n╰──────────────────────────────────────────────────────────────────────────────╯\n╭────────────────────────────────── Overall ───────────────────────────────────╮\n│ Average Score: 0.798  |  Pass Rate (>=0.5): 3/3 (100%)                       │\n╰──────────────────────────────────────────────────────────────────────────────╯\n\nResults saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/unified_\ntool_routing.json\nMarkdown report saved to \n/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/unified_\ntool_routing.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "interpreter_report_factcheck",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/interpreter_report.json",
+      "summary": {
+        "kind": "interpreter",
+        "n_cases": 1,
+        "pass_count": 1,
+        "pass_rate": 1.0,
+        "avg_score": 1.0,
+        "judge_coverage": 1.0,
+        "judge_avg": 1.0,
+        "judge_hallucination_avg": 1.0,
+        "failures": [],
+        "judge_na_cases": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "interpreter_report_factcheck",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_interpreter_eval.py",
+          "--strategy",
+          "deterministic",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/interpreter_report.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/interpreter_report.md",
+          "--judge",
+          "--judge-provider",
+          "minimax"
+        ],
+        "returncode": 0,
+        "elapsed_s": 18.732,
+        "timed_out": false,
+        "stdout_tail": "[run_interpreter_eval] matlab_fixture_report ...\n  PASS fact_score=1.000\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/interpreter_report.json\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/interpreter_report.md\n",
+        "stderr_tail": ""
+      }
+    },
+    {
+      "name": "multinode_deterministic",
+      "output": "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/multinode.json",
+      "summary": {
+        "kind": "multinode",
+        "n_cases": 21,
+        "pass_count": 21,
+        "pass_rate": 1.0,
+        "failures": []
+      },
+      "passed": true,
+      "command_result": {
+        "name": "multinode_deterministic",
+        "command": [
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/.venv/bin/python",
+          "scripts/run_multinode_eval.py",
+          "--output",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/multinode.json",
+          "--report",
+          "/Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/multinode.md"
+        ],
+        "returncode": 0,
+        "elapsed_s": 0.141,
+        "timed_out": false,
+        "stdout_tail": "[run_multinode_eval] pass=21/21 (100.0%)\n  PASS dbg_matlab_dep_undefined\n  PASS dbg_matlab_dep_unrecognized\n  PASS dbg_matlab_iface_too_many\n  PASS dbg_matlab_iface_not_enough\n  PASS dbg_matlab_runtime_index\n  PASS dbg_matlab_runtime_dim\n  PASS dbg_matlab_timeout\n  PASS dbg_matlab_numerical_nan\n  PASS dbg_matlab_numerical_inf\n  PASS dbg_matlab_checker_safe\n  PASS dbg_matlab_checker_system\n  PASS dbg_matlab_checker_shell_escape\n  PASS dbg_matlab_checker_unbalanced\n  PASS dbg_matlab_iface_reordered\n  PASS dbg_matlab_iface_canonical\n  PASS int_matlab_fixture_load\n  PASS int_matlab_log_snippet\n  PASS int_matlab_build_summary\n  PASS int_matlab_summary_json_roundtrip\n  PASS int_matlab_no_pdfs_flag_true\n  PASS int_matlab_dual_run_counter\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/multinode.json\nWrote /Users/huangcunxin/Work/Research/OP/optiprofiler-agent/docs/eval/latest/multinode.md\n",
+        "stderr_tail": ""
+      }
+    }
+  ]
+}

@@ -163,6 +163,7 @@ class LLMConfig:
     base_url: Optional[str] = None
     temperature: float = 0.3
     max_tokens: int = 4096
+    constrained_decoding: bool = False
 
     def __post_init__(self):
         # ``provider=None`` is the CLI's way of saying "no --provider flag

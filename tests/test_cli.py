@@ -78,6 +78,11 @@ class TestInterpretCommand:
         result = runner.invoke(main, ["interpret", str(tmp_path / "nonexistent")])
         assert result.exit_code != 0
 
+    def test_interpret_help_lists_constrained_decoding(self, runner):
+        result = runner.invoke(main, ["interpret", "--help"])
+        assert result.exit_code == 0
+        assert "--constrained-decoding" in result.output
+
     def test_interpret_no_llm_with_fake_experiment(self, runner, tmp_path):
         exp_dir = tmp_path / "exp_001"
         exp_dir.mkdir()

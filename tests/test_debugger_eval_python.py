@@ -104,3 +104,16 @@ def test_markdown_report_includes_summary_table():
     })
     assert "# Debugger Eval Last Run" in md
     assert "| `name_error` | PASS | `runtime_error` | yes | - | 0.1 |" in md
+
+
+def test_golden_strategy_can_use_separate_fix_timeout():
+    cases = _load_cases("python")
+    timeout_case = next(c for c in cases if c["meta"]["id"] == "timeout_loop")
+    result = _strategy_golden(
+        timeout_case,
+        language="python",
+        timeout=1,
+        fix_timeout=2,
+    )
+    assert result["broken_failed"]
+    assert result["fix_ran"]

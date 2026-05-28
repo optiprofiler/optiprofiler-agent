@@ -497,6 +497,12 @@ def check(filepath: str, language: str):
               help="LLM provider for report generation (default: from OPAGENT_DEFAULT_PROVIDER).")
 @click.option("--model", default=None, help="Model name (overrides provider default).")
 @click.option("--language", default="English", help="Report language.")
+@click.option(
+    "--constrained-decoding",
+    is_flag=True,
+    default=False,
+    help="Use vLLM JSON Schema constrained decoding for BenchmarkReport output.",
+)
 @click.option("--no-llm", is_flag=True, default=False,
               help="Output raw JSON summary instead of LLM-generated report.")
 @click.option("--no-profiles", is_flag=True, default=False,
@@ -511,7 +517,7 @@ def check(filepath: str, language: str):
               help="Output format. Ignored when --no-llm is set "
                    "(that mode always emits the raw summary JSON).")
 def interpret(results_dir: str, provider: str, model: str | None,
-              language: str, no_llm: bool, no_profiles: bool,
+              language: str, constrained_decoding: bool, no_llm: bool, no_profiles: bool,
               output: str | None, latest: bool, output_format: str):
     """Analyze benchmark results and generate a report."""
     from optiprofiler_agent.interpreter.interpreter import interpret as do_interpret
@@ -526,7 +532,11 @@ def interpret(results_dir: str, provider: str, model: str | None,
             sys.exit(1)
 
     config = AgentConfig(
-        llm=LLMConfig(provider=provider, model=model),
+        llm=LLMConfig(
+            provider=provider,
+            model=model,
+            constrained_decoding=constrained_decoding,
+        ),
     )
 
     with console.status("Analyzing benchmark results...", spinner="opa", spinner_style=_LOGO_OPA_COLOR):

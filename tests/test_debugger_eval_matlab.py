@@ -23,6 +23,7 @@ from run_debugger_eval import _load_cases, _strategy_golden  # noqa: E402
 pytestmark = [pytest.mark.requires_matlab, pytest.mark.integration]
 DEFAULT_TIMEOUT = 90
 TIMEOUT_CASE_TIMEOUT = 8
+FIX_TIMEOUT = 90
 
 
 def _cases():
@@ -50,7 +51,12 @@ def _timeout_for(case):
 
 
 def test_broken_fails_and_fix_runs(case):
-    r = _strategy_golden(case, language="matlab", timeout=_timeout_for(case))
+    r = _strategy_golden(
+        case,
+        language="matlab",
+        timeout=_timeout_for(case),
+        fix_timeout=FIX_TIMEOUT,
+    )
     assert r["broken_failed"], (
         f"{r['id']}: broken.m must fail. notes={r.get('notes', '')}"
     )
@@ -69,7 +75,12 @@ def test_pass_rate_threshold_meets_l3(tmp_path):
     cases = _cases()
     assert cases, "no broken_matlab fixtures discovered"
     results = [
-        _strategy_golden(c, language="matlab", timeout=_timeout_for(c))
+        _strategy_golden(
+            c,
+            language="matlab",
+            timeout=_timeout_for(c),
+            fix_timeout=FIX_TIMEOUT,
+        )
         for c in cases
     ]
     n_pass = sum(1 for r in results if r.get("broken_failed") and r.get("fix_ran"))

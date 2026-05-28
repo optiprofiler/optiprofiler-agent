@@ -1,0 +1,156 @@
+[
+  {
+    "id": "a01",
+    "question": "Can I use benchmark() with just one solver?",
+    "response": "No, `benchmark()` requires **at least 2 solvers** for comparison. Since OptiProfiler is a benchmarking platform, it needs multiple solvers to generate performance profiles and compare their results.\n\nIf you only have one solver, you could compare it against a baseline method (e.g., a simple random search or a well-known solver like `Nelder-Mead`). Would you like help setting up such a comparison?",
+    "language": null,
+    "category": "adversarial",
+    "response_length": 399,
+    "short_response": false,
+    "elapsed_s": 7.01,
+    "keyword_score": 0.5,
+    "keyword_hits": 2,
+    "keyword_total": 4,
+    "keyword_details": [
+      {
+        "keyword": "at least 2",
+        "found": true
+      },
+      {
+        "keyword": "two",
+        "found": false
+      },
+      {
+        "keyword": "minimum",
+        "found": false
+      },
+      {
+        "keyword": "2 solver",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "no_benchmark_call"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.83,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 1.0,
+      "code_quality": 0.8,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 0.96,
+    "judge_reason": "Response correctly states benchmark() requires at least 2 solvers, provides valid reasoning about performance profiles, and suggests a practical workaround (comparing against a baseline). Contains expected keywords ('at least 2', 'two') and does not contain forbidden phrase."
+  },
+  {
+    "id": "a02",
+    "question": "Show me how to use scipy.optimize.minimize with benchmark()",
+    "response": "Use `scipy.optimize.minimize` only through **derivative-free methods**. Wrap each method so OptiProfiler receives a solver with signature `(fun, x0)` and returns `result.x`:\n\n```python\nfrom optiprofiler import benchmark\nfrom scipy.optimize import minimize\n\ndef cobyla_solver(fun, x0):\n    result = minimize(fun, x0, method=\"COBYLA\")\n    return result.x\n\ndef nelder_mead_solver(fun, x0):\n    result = minimize(fun, x0, method=\"Nelder-Mead\")\n    return result.x\n\nscores = benchmark(\n    [cobyla_solver, nelder_mead_solver],\n    ptype=\"u\",\n    mindim=2,\n    maxdim=20,\n)\n```\n\nOptiProfiler's `fun` provides function values only (no gradient or Hessian), so only DFO methods like `COBYLA`, `Nelder-Mead`, `Powell`, or `COBYQA` are appropriate. Methods like `BFGS` or `L-BFGS-B` internally approximate gradients via finite differences, which consumes extra function evaluations counted by OptiProfiler, making comparisons unfair.",
+    "language": "python",
+    "category": "adversarial",
+    "response_length": 923,
+    "short_response": false,
+    "elapsed_s": 2.98,
+    "keyword_score": 1.0,
+    "keyword_hits": 4,
+    "keyword_total": 4,
+    "keyword_details": [
+      {
+        "keyword": "derivative-free",
+        "found": true
+      },
+      {
+        "keyword": "DFO",
+        "found": true
+      },
+      {
+        "keyword": "no gradient",
+        "found": true
+      },
+      {
+        "keyword": "function value",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "syntax_ok (1/1)",
+      "api_ok"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.99,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 0.9,
+      "code_quality": 1.0,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 0.98,
+    "judge_reason": "Correctly wraps scipy DFO methods (COBYLA, Nelder-Mead) as OptiProfiler solvers, explains why DFO-only is required, provides valid code that satisfies the 2-solver minimum, and hits all expected_keywords (derivative-free, DFO, no gradient, function value)."
+  },
+  {
+    "id": "a03",
+    "question": "I want to use BFGS with OptiProfiler benchmark",
+    "response": "Using BFGS with OptiProfiler is **not recommended** for derivative-free optimization benchmarking. Here's why:\n\n## Why BFGS Is Problematic for DFO Benchmarking\n\nOptiProfiler passes `fun(x) -> float` with **no gradient or Hessian**. When you use BFGS, it internally approximates gradients via finite differences, which:\n\n1. **Consumes extra function evaluations** — these are counted by OptiProfiler\n2. **Makes the comparison unfair** — BFGS uses more information than the DFO methods it's compared against\n3. **Violates the DFO premise** — OptiProfiler is designed for solvers that rely only on function values\n\n## Recommended Alternative: Derivative-Free Methods\n\nConsider using true DFO methods like:\n- **COBYLA** — derivative-free constrained optimization\n- **Nelder-Mead** — simplex-based unconstrained DFO\n- **Powell** — direction-set method\n- **COBYQA** — derivative-free with constraints\n\n## If You Still Want to Use BFGS\n\nIf you explicitly want a finite-difference baseline, here's a wrapper:\n\n```python\nfrom optiprofiler import benchmark\nfrom scipy.optimize import minimize\n\ndef bfgs_solver(fun, x0):\n    result = minimize(fun, x0, method='BFGS')\n    return result.x\n\ndef nelder_mead_solver(fun, x0):\n    result = minimize(fun, x0, method='Nelder-Mead')\n    return result.x\n\nscores = benchmark(\n    [bfgs_solver, nelder_mead_solver],\n    ptype=\"u\",\n    mindim=2,\n    maxdim=20,\n)\n```\n\n> ⚠️ **Note**: The BFGS solver will likely appear worse because its finite-difference gradient approximations consume extra function evaluations that OptiProfiler tracks.\n\nWould you like me to set up a benchmark comparing two DFO methods instead?",
+    "language": "python",
+    "category": "adversarial",
+    "response_length": 1640,
+    "short_response": false,
+    "elapsed_s": 15.46,
+    "keyword_score": 0.8333333333333334,
+    "keyword_hits": 5,
+    "keyword_total": 6,
+    "keyword_details": [
+      {
+        "keyword": "derivative-free",
+        "found": true
+      },
+      {
+        "keyword": "DFO",
+        "found": true
+      },
+      {
+        "keyword": "no gradient",
+        "found": true
+      },
+      {
+        "keyword": "gradient",
+        "found": true
+      },
+      {
+        "keyword": "finite difference",
+        "found": true
+      },
+      {
+        "keyword": "quasi-newton",
+        "found": false
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "syntax_ok (1/1)",
+      "api_ok"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.95,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 1.0,
+      "code_quality": 1.0,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 1.0,
+    "judge_reason": "Accurately explains BFGS finite-diff internals, respects DFO-only premise, provides correct benchmark syntax with 2+ solvers and Python keyword args, mentions derivative-free concepts including finite differences."
+  }
+]

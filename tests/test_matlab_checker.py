@@ -32,9 +32,6 @@ class TestMatlabCheckerValid:
         assert not result.has_errors
 
     def test_comments_with_dangerous_words_pass(self):
-        # NOTE: this is a deliberate negative test for the current checker.
-        # It does not strip comments yet (cheap regex). If we add comment
-        # stripping later, this test will catch a desired tightening.
         code = (
             "% This solver does NOT call system or eval\n"
             "function x = s(fun, x0)\n"
@@ -42,10 +39,7 @@ class TestMatlabCheckerValid:
             "end\n"
         )
         result = check_matlab_code(code)
-        # Today: word-boundary regex matches inside comments too — document
-        # that and assert the current (over-cautious) behaviour. When we
-        # strip comments, flip this to `not result.has_errors`.
-        assert result.has_errors
+        assert not result.has_errors
 
 
 class TestMatlabCheckerDangerous:

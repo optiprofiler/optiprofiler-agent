@@ -245,7 +245,7 @@ unambiguously. CI gates pass at L0; release gates publish at L1+L2; the
 | Agent | Python | MATLAB |
 |-------|--------|--------|
 | A — Advisor | L0 ✅ · L2 ✅ (factual/adversarial/tool_routing eval) · L3/L4 not gated | L0 ✅ · L2 partial (`language: matlab` cases) · L3/L4 not gated |
-| B — Debugger | L0 ✅ · L1 ✅ (mocked local_runner) · L2 ✅ (deterministic) · **L3 ✅ Pass@1 15/15 (golden strategy) — see `tests/test_debugger_eval_python.py`** | L0 ✅ · L1 ✅ (real `matlab -batch` sandbox via `MATOP_MATLAB_BIN`) · L2 ✅ (15 deterministic cases) · **L3 ✅ Pass@1 15/15 (golden strategy) — see `tests/test_debugger_eval_matlab.py`** |
+| B — Debugger | L0 ✅ · L1 ✅ (mocked local_runner) · L2 ✅ (deterministic) · **L3 ✅ Pass@1 15/15 (golden + MiniMax LLM strategy) — see `tests/test_debugger_eval_python.py` and `docs/eval/debugger_python_minimax_llm.md`** | L0 ✅ · L1 ✅ (real `matlab -batch` sandbox via `MATOP_MATLAB_BIN`) · L2 ✅ (15 deterministic cases) · **L3 ✅ Pass@1 15/15 (golden + MiniMax LLM strategy) — see `tests/test_debugger_eval_matlab.py` and `docs/eval/debugger_matlab_minimax_llm.md`** |
 | C — Interpreter | L0 ✅ · L1 ✅ (synthetic + thinking-model JSON path) · L2 ✅ · **L3 ✅ report fact-check runner (`scripts/run_interpreter_eval.py`)** · L4 wired, release sample pending | L0 ✅ · L1 ✅ (synthetic + **real** experiment via `MATOP_REAL_RESULTS_DIR`) · L2 ✅ · **L3 ✅ fact-check on real output — see `tests/test_interpreter_eval_matlab.py` and `scripts/run_interpreter_eval.py`** · L4 wired, release sample pending |
 
 ### How to run the L3 gates locally
@@ -271,5 +271,9 @@ python scripts/run_eval_suite.py --skip-advisor --output-dir docs/eval/latest_de
 - [x] Add multi-node deterministic eval runner for Debugger/Interpreter internal workflow nodes.
 - [x] Add release-suite orchestrator with subprocess hard timeouts and aggregate reports.
 - [x] Wire Agent C report fact-checking and report-specific LLM-as-Judge rubric.
+- [x] Add the N1 opt-in vLLM JSON Schema constrained-decoding path for `BenchmarkReport`; measure the fallback-rate target on a self-hosted thinking-model sample.
+- [x] Run Python Debugger LLM Pass@1 on MiniMax; latest accepted provider artifact is `docs/eval/debugger_python_minimax_llm.md` (`15/15`, 2026-05-22).
+- [x] Run MATLAB Debugger LLM Pass@1 on MiniMax; latest accepted provider artifact is `docs/eval/debugger_matlab_minimax_llm.md` (`15/15`, 2026-05-22).
+- [x] Run provider/Judge release sample on MiniMax and record the accepted artifact in `docs/eval/latest/summary.md` (`PASS`, 2026-05-21).
 - [ ] Run `scripts/run_debugger_eval.py --strategy llm` end-to-end on each provider; record Pass@1 per provider in `docs/eval/last_run.md`.
-- [ ] Run provider/Judge release sample via `scripts/run_eval_suite.py --judge` and record the latest accepted artifact in `docs/eval/latest/summary.md`.
+- [ ] Extend the Debugger LLM provider sweep beyond MiniMax (Kimi / DeepSeek / MiMo) and append provider-specific Pass@1 artifacts.

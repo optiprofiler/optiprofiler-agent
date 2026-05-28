@@ -25,6 +25,13 @@ creep.
 
 ### N1. L4 constrained decoding for `BenchmarkReport`
 
+**Status:** First opt-in vLLM JSON Schema path implemented (2026-05).
+`opagent interpret --constrained-decoding` routes a self-hosted
+OpenAI-compatible vLLM endpoint through decode-time
+`structured_outputs.json` constraints before the provider/manual JSON
+fallback chain. The remaining success metric still needs measurement on
+thinking models served by vLLM.
+
 **Problem.** Thinking models (MiniMax-M2, DeepSeek-R1, Kimi-thinking)
 emit `<think>...</think>` reasoning blocks that LangChain's
 `with_structured_output` cannot parse, forcing the interpreter into a
@@ -33,14 +40,14 @@ manual JSON-extraction fallback (see
 `_try_manual_json`). When the model's JSON itself is malformed, we
 silently degrade to a free-form Markdown report.
 
-**Approach.** Replace `_try_structured_output` with a constrained-decoding
-backend that masks the model's logits during sampling, so only tokens
-extending a valid `BenchmarkReport` JSON path can be emitted. Concretely:
+**Approach.** Put a constrained-decoding backend before
+`_try_structured_output` that masks the model's logits during sampling,
+so only tokens extending a valid `BenchmarkReport` JSON path can be
+emitted. Concretely:
 
-- Wrap [`outlines`](https://github.com/dottxt-ai/outlines) or
-  [`xgrammar`](https://github.com/mlc-ai/xgrammar) behind the existing
-  `CodeConstraintBackend` Protocol (already declared in
-  [`HERMES_INSPIRED.md`](HERMES_INSPIRED.md) §7.6).
+- Use vLLM's OpenAI-compatible JSON-schema structured-output request
+  surface (backed by its guided decoding stack) through the interpreter's
+  report constraint backend.
 - Convert `BenchmarkReport` Pydantic schema to a JSON-schema string
   (`BenchmarkReport.model_json_schema()`) and pass it to the backend.
 - Gate behind a runtime flag (`config.llm.constrained_decoding=True`) so
@@ -178,16 +185,15 @@ and interpret integration were blocked without language-aware plumbing.
 
 - `debugger/matlab_runner.py` — real `matlab -batch` sandbox runner with timeout, kill-tree on timeout, and `getReport`-style traceback extraction. `run_and_debug` dispatches by language via `_run_code_for_language` (returns a synthetic `RunResult` when MATLAB isn't installed, so the loop still produces a static diagnostic).
 - `pytest` marker `requires_matlab` auto-skips MATLAB-only suites when `MATOP_MATLAB_BIN` / `matlab` is missing.
-- Five curated broken `.m` fixtures (`tests/fixtures/broken_matlab/`) with golden fixes; `scripts/run_debugger_eval.py` computes Pass@1 (golden strategy: 5/5 today) and a pytest gate (`tests/test_debugger_eval_matlab.py`) enforces ≥70%.
+- Fifteen curated broken `.m` fixtures (`tests/fixtures/broken_matlab/`) with golden fixes; `scripts/run_debugger_eval.py` computes Pass@1 (golden and LLM strategies). Latest MiniMax LLM artifact is 15/15 in `docs/eval/debugger_matlab_minimax_llm.md`, and the pytest gate (`tests/test_debugger_eval_matlab.py`) enforces ≥70%.
 - `tests/test_interpreter_eval_matlab.py` checks that Agent C's no-LLM and mocked-LLM paths still mention the ground-truth winner / runner-up on a real MATLAB experiment.
 
 **Deferred (tracked in [`TASKS.md`](TASKS.md)):**
 
 - B-10 multi-file debug (`auxiliary_files`) — waits for platform ZIP upload
 - Medium-term MATLAB PDF vector-path parser (full curve extraction)
-- Grow `broken_matlab` fixture set from 5 → ≥15; mirror under `broken_python/`
-- Run `--strategy llm` end-to-end across providers; persist per-provider Pass@1 in `docs/eval/last_run.md`
-- L4 — wire LLM-as-Judge on Agent C reports
+- Run `--strategy llm` end-to-end across providers beyond MiniMax; persist per-provider Pass@1 artifacts.
+- L4 — expand provider/Judge release samples beyond the current MiniMax accepted artifact.
 
 ---
 

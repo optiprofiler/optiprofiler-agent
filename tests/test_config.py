@@ -138,6 +138,10 @@ class TestAgentConfig:
         assert cfg.code_char_limit == 0
         assert cfg.verbose is False
 
+    def test_llm_constrained_decoding_default_is_opt_in(self):
+        cfg = LLMConfig(provider="custom", api_key="test")
+        assert cfg.constrained_decoding is False
+
     def test_knowledge_dir_exists(self):
         cfg = AgentConfig()
         assert cfg.knowledge_dir.exists()

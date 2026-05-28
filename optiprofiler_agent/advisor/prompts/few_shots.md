@@ -28,7 +28,7 @@ def nelder_mead_solver(fun, x0):
 
 benchmark(
     [cobyla_solver, nelder_mead_solver],
-    ptype="unconstrained",
+    ptype="u",
     mindim=2,
     maxdim=50,
 )
@@ -121,6 +121,36 @@ Since the extra parameters have default value `None`, the same wrapper works for
 **Assistant**: I should point out that OptiProfiler is primarily designed for **derivative-free optimization (DFO)** benchmarking. The `fun` passed to solvers provides only function values — no gradient or Hessian information. Methods like BFGS and L-BFGS internally approximate gradients via finite differences, which consumes extra function evaluations counted by OptiProfiler, making the comparison unfair against true DFO methods.
 
 I'd recommend using derivative-free solvers instead, such as `COBYLA`, `Nelder-Mead`, `Powell`, or `COBYQA`. Would you like me to set up a benchmark comparing two of these DFO methods?
+
+---
+
+## Example 6b: SciPy minimize Wrapper
+
+**User**: Show me how to use scipy.optimize.minimize with benchmark()
+
+**Assistant**: Use `minimize` only through derivative-free methods, and wrap each method so OptiProfiler receives a solver with signature `(fun, x0)` and gets back `result.x`:
+
+```python
+from optiprofiler import benchmark
+from scipy.optimize import minimize
+
+def cobyla_solver(fun, x0):
+    result = minimize(fun, x0, method="COBYLA")
+    return result.x
+
+def nelder_mead_solver(fun, x0):
+    result = minimize(fun, x0, method="Nelder-Mead")
+    return result.x
+
+scores = benchmark(
+    [cobyla_solver, nelder_mead_solver],
+    ptype="u",
+    mindim=2,
+    maxdim=20,
+)
+```
+
+Avoid passing `jac=`, `hess=`, or gradient-based methods unless you explicitly want a finite-difference baseline; OptiProfiler's `fun` provides function values only.
 
 ---
 

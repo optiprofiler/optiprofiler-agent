@@ -5,9 +5,8 @@ Flow:
 2. Classify error type (via error_classifier)
 3. Route to specialized handler:
    - interface_mismatch → interface_adapter.generate_wrapper()
-   - dependency_missing → pip install suggestion
-   - runtime_error → LLM analysis + code fix
-   - timeout / numerical → diagnostic advice (no auto-fix)
+   - dependency_missing / timeout / numerical → specialized diagnostic fallback
+   - runtime or fallback-worthy specialized errors → LLM analysis + code fix
 4. Validate fix with syntax_checker + api_checker
 5. Retry up to N times if validation fails
 6. Output: DebugResult with fixed code and diagnostic report
@@ -50,6 +49,640 @@ def _load_prompt(name: str) -> str:
 def _normalize_language(language: str) -> str:
     lang = (language or "python").strip().lower()
     return "matlab" if lang in ("matlab", "m") else "python"
+
+
+def _is_matlab_comment_or_blank(line: str) -> bool:
+    stripped = line.strip()
+    return not stripped or stripped.startswith("%")
+
+
+def _matlab_function_defs(source: str) -> list[dict]:
+    """Return simple line-based MATLAB function definitions."""
+    import re
+
+    pattern = re.compile(
+        r"^(?P<indent>\s*)function\s+"
+        r"(?:(?:\[[^\]]+\]|\w+)\s*=\s*)?"
+        r"(?P<name>\w+)\s*\((?P<args>[^)]*)\)",
+        re.IGNORECASE,
+    )
+    defs: list[dict] = []
+    for line_index, line in enumerate(source.splitlines()):
+        match = pattern.match(line)
+        if not match:
+            continue
+        args = [arg.strip() for arg in match.group("args").split(",") if arg.strip()]
+        defs.append({
+            "line_index": line_index,
+            "indent": match.group("indent"),
+            "name": match.group("name"),
+            "args": args,
+        })
+    return defs
+
+
+def _matlab_has_top_level_script(source: str) -> bool:
+    """Detect MATLAB script statements before local function definitions."""
+    lines = source.splitlines()
+    function_defs = _matlab_function_defs(source)
+    first_func_line = (
+        min(item["line_index"] for item in function_defs)
+        if function_defs else len(lines)
+    )
+    return any(
+        not _is_matlab_comment_or_blank(line)
+        for line in lines[:first_func_line]
+    )
+
+
+def _matlab_top_level_lines(source: str) -> list[str]:
+    lines = source.splitlines()
+    function_defs = _matlab_function_defs(source)
+    first_func_line = (
+        min(item["line_index"] for item in function_defs)
+        if function_defs else len(lines)
+    )
+    return lines[:first_func_line]
+
+
+def _strip_matlab_comments(source: str) -> str:
+    lines = []
+    for line in source.splitlines():
+        code_part = line.split("%", 1)[0].strip()
+        if code_part:
+            lines.append(code_part)
+    return "\n".join(lines)
+
+
+def _matlab_semantic_equal(left: str, right: str) -> bool:
+    """Compare MATLAB snippets while ignoring comments and whitespace."""
+    return _strip_matlab_comments(left) == _strip_matlab_comments(right)
+
+
+def _split_matlab_args(args: str) -> list[str]:
+    """Split a MATLAB argument list without being confused by nested calls."""
+    parts: list[str] = []
+    current: list[str] = []
+    depth = 0
+    quote: str | None = None
+    i = 0
+    while i < len(args):
+        char = args[i]
+        if quote:
+            current.append(char)
+            if char == quote:
+                quote = None
+            i += 1
+            continue
+        if char in ("'", '"'):
+            quote = char
+            current.append(char)
+        elif char in "([{":
+            depth += 1
+            current.append(char)
+        elif char in ")]}":
+            depth = max(0, depth - 1)
+            current.append(char)
+        elif char == "," and depth == 0:
+            part = "".join(current).strip()
+            if part:
+                parts.append(part)
+            current = []
+        else:
+            current.append(char)
+        i += 1
+    part = "".join(current).strip()
+    if part:
+        parts.append(part)
+    return parts
+
+
+def _extract_matlab_call_args(line: str, func_name: str) -> list[str] | None:
+    """Extract arguments from the first simple call to ``func_name`` in ``line``."""
+    import re
+
+    match = re.search(rf"\b{re.escape(func_name)}\s*\(", line)
+    if not match:
+        return None
+    start = match.end()
+    depth = 1
+    quote: str | None = None
+    chars: list[str] = []
+    for char in line[start:]:
+        if quote:
+            chars.append(char)
+            if char == quote:
+                quote = None
+            continue
+        if char in ("'", '"'):
+            quote = char
+            chars.append(char)
+        elif char == "(":
+            depth += 1
+            chars.append(char)
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return _split_matlab_args("".join(chars))
+            chars.append(char)
+        else:
+            chars.append(char)
+    return None
+
+
+def _matlab_default_for_field(field_name: str) -> str:
+    lower = field_name.lower()
+    if lower in {"ptype", "problem_type"}:
+        return "'u'"
+    if lower in {"scale", "factor", "weight", "stepsize", "step_size"}:
+        return "1"
+    if lower in {"verbose", "display", "debug"}:
+        return "false"
+    if "tol" in lower:
+        return "1e-6"
+    if lower.startswith("max") or lower in {"max_eval", "maxfev", "maxiter"}:
+        return "100"
+    return "[]"
+
+
+def _matlab_insert_struct_field_guard(
+    code: str,
+    var_name: str,
+    field_name: str,
+) -> str | None:
+    """Insert ``isfield`` guard before the first read of a missing field."""
+    import re
+
+    access = re.compile(rf"\b{re.escape(var_name)}\.{re.escape(field_name)}\b")
+    assignment = re.compile(
+        rf"\b{re.escape(var_name)}\.{re.escape(field_name)}\s*="
+    )
+    lines = code.splitlines()
+    for idx, line in enumerate(lines):
+        if not access.search(line) or assignment.search(line):
+            continue
+        indent = line[: len(line) - len(line.lstrip())]
+        value = _matlab_default_for_field(field_name)
+        guard = [
+            f"{indent}if ~isfield({var_name}, '{field_name}')",
+            f"{indent}    {var_name}.{field_name} = {value};",
+            f"{indent}end",
+        ]
+        return "\n".join(lines[:idx] + guard + lines[idx:]) + (
+            "\n" if code.endswith("\n") else ""
+        )
+    return None
+
+
+def _try_matlab_struct_field_fix(code: str, error: str) -> str | None:
+    """Fix common ``Unrecognized field name`` MATLAB errors."""
+    import re
+
+    match = re.search(r"Unrecognized field name [\"'](?P<field>\w+)[\"']", error)
+    if not match:
+        return None
+    field = match.group("field")
+
+    access_pattern = re.compile(rf"\b(?P<var>\w+)\.{re.escape(field)}\b")
+    var_names = []
+    for item in access_pattern.finditer(code):
+        var_name = item.group("var")
+        if var_name not in var_names:
+            var_names.append(var_name)
+
+    for var_name in var_names:
+        assigned_fields = re.findall(
+            rf"\b{re.escape(var_name)}\.(\w+)\s*=", code
+        )
+        if var_name.lower() == "options":
+            guarded = _matlab_insert_struct_field_guard(code, var_name, field)
+            if guarded:
+                return guarded
+
+        existing = [name for name in assigned_fields if name != field]
+        if existing:
+            replacement = "x" if "x" in existing else existing[0]
+            return access_pattern.sub(f"{var_name}.{replacement}", code)
+
+        guarded = _matlab_insert_struct_field_guard(code, var_name, field)
+        if guarded:
+            return guarded
+
+    return None
+
+
+def _try_matlab_interface_fix(code: str, error: str) -> str | None:
+    """Patch local MATLAB function signatures for simple argument-count errors."""
+    if (
+        "Too many input arguments" not in error
+        and "Not enough input arguments" not in error
+    ):
+        return None
+
+    import re
+
+    function_defs = _matlab_function_defs(code)
+    if not function_defs:
+        return None
+
+    lines = code.splitlines()
+    top_level_lines = _matlab_top_level_lines(code)
+    edited = False
+
+    for func_def in function_defs:
+        name = func_def["name"]
+        call_args: list[str] | None = None
+        for line in top_level_lines:
+            call_args = _extract_matlab_call_args(line, name)
+            if call_args is not None:
+                break
+        if call_args is None:
+            continue
+
+        def_args = list(func_def["args"])
+        if "Too many input arguments" in error and len(call_args) > len(def_args):
+            added_args = []
+            for idx, call_arg in enumerate(call_args[len(def_args):], start=len(def_args) + 1):
+                if re.match(r"^[A-Za-z]\w*$", call_arg):
+                    added_args.append(call_arg)
+                else:
+                    added_args.append(f"arg{idx}")
+            new_args = def_args + added_args
+            line_index = func_def["line_index"]
+            lines[line_index] = re.sub(
+                rf"(\b{re.escape(name)}\s*\()([^)]*)(\))",
+                rf"\1{', '.join(new_args)}\3",
+                lines[line_index],
+                count=1,
+            )
+            edited = True
+            continue
+
+        if "Not enough input arguments" in error and len(call_args) < len(def_args):
+            missing_args = def_args[len(call_args):]
+            line_index = func_def["line_index"]
+            indent = func_def["indent"] + "    "
+            guard_lines: list[str] = []
+            for offset, arg_name in enumerate(missing_args, start=len(call_args) + 1):
+                guard_lines.extend([
+                    f"{indent}if nargin < {offset}",
+                    f"{indent}    {arg_name} = struct();",
+                    f"{indent}end",
+                ])
+                field_names = sorted(set(
+                    re.findall(rf"\b{re.escape(arg_name)}\.(\w+)\b", code)
+                ))
+                for field_name in field_names:
+                    guard_lines.extend([
+                        f"{indent}if ~isfield({arg_name}, '{field_name}')",
+                        (
+                            f"{indent}    {arg_name}.{field_name} = "
+                            f"{_matlab_default_for_field(field_name)};"
+                        ),
+                        f"{indent}end",
+                    ])
+            lines[line_index + 1:line_index + 1] = guard_lines
+            edited = True
+            break
+
+    if not edited:
+        return None
+    return "\n".join(lines) + ("\n" if code.endswith("\n") else "")
+
+
+def _try_matlab_concat_dimension_fix(code: str, error: str) -> str | None:
+    """Normalize simple vector orientations before vertical concatenation."""
+    if "Dimensions of arrays" not in error or "concatenat" not in error:
+        return None
+
+    import re
+
+    lines = code.splitlines()
+    assign_pattern = re.compile(
+        r"^(?P<indent>\s*)(?P<lhs>\w+)\s*=\s*"
+        r"\[(?P<first>\w+)\s*;\s*(?P<second>\w+)\]\s*;?"
+    )
+    vector_literal_pattern = re.compile(
+        r"^\s*(?P<name>\w+)\s*=\s*\[[^\[\]]+\]\s*;?\s*(?:%.*)?$"
+    )
+    vector_vars = {
+        match.group("name")
+        for line in lines
+        if (match := vector_literal_pattern.match(line))
+    }
+
+    for idx, line in enumerate(lines):
+        match = assign_pattern.match(line)
+        if not match:
+            continue
+        first = match.group("first")
+        second = match.group("second")
+        if first not in vector_vars or second not in vector_vars:
+            continue
+        indent = match.group("indent")
+        guards = [
+            f"{indent}{first} = {first}(:).';",
+            f"{indent}{second} = {second}(:).';",
+        ]
+        return "\n".join(lines[:idx] + guards + lines[idx:]) + (
+            "\n" if code.endswith("\n") else ""
+        )
+    return None
+
+
+def _try_matlab_timeout_fix(code: str, error: str) -> str | None:
+    """Bound obvious sleep-based MATLAB repro scripts after a timeout."""
+    if "timed out" not in error.lower() and "timeout" not in error.lower():
+        return None
+
+    import re
+
+    changed = False
+
+    def _replace_pause(match: re.Match) -> str:
+        nonlocal changed
+        try:
+            duration = float(match.group("duration"))
+        except ValueError:
+            return match.group(0)
+        if duration <= 5:
+            return match.group(0)
+        changed = True
+        indent = match.group("indent")
+        return f"{indent}pause(0.1);"
+
+    fixed = re.sub(
+        r"^(?P<indent>\s*)pause\((?P<duration>\d+(?:\.\d+)?)\)\s*;?",
+        _replace_pause,
+        code,
+        flags=re.MULTILINE,
+    )
+
+    if not changed:
+        return None
+    return fixed
+
+
+def _try_matlab_unbalanced_delimiter_fix(code: str, error: str) -> str | None:
+    """Repair a single MATLAB line with one missing closing delimiter."""
+    lowered = error.lower()
+    if (
+        "invalid expression" not in lowered
+        and "unbalanced" not in lowered
+        and "mismatched delimiters" not in lowered
+        and "parentheses" not in lowered
+    ):
+        return None
+
+    pairs = [("(", ")"), ("[", "]"), ("{", "}")]
+    lines = code.splitlines()
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("%"):
+            continue
+        for opener, closer in pairs:
+            if line.count(opener) != line.count(closer) + 1:
+                continue
+            semicolon_pos = line.rfind(";")
+            if semicolon_pos >= 0:
+                lines[idx] = line[:semicolon_pos] + closer + line[semicolon_pos:]
+            else:
+                lines[idx] = line + closer
+            return "\n".join(lines) + ("\n" if code.endswith("\n") else "")
+    return None
+
+
+def _try_matlab_bounds_shape_fix(code: str, error: str) -> str | None:
+    """Expand scalar bounds to match the length of ``x0`` when checks say so."""
+    if "Bounds shape mismatch" not in error:
+        return None
+
+    import re
+
+    vector_assignments: dict[str, int] = {}
+    scalar_assignments: set[str] = set()
+    x0_len: int | None = None
+    lines = code.splitlines()
+
+    vector_pattern = re.compile(r"^\s*(?P<name>\w+)\s*=\s*\[(?P<body>[^\]]+)\]\s*;?")
+    scalar_pattern = re.compile(
+        r"^\s*(?P<name>\w+)\s*=\s*(?P<value>[-+]?\d+(?:\.\d+)?)\s*;?"
+    )
+    for line in lines:
+        vector_match = vector_pattern.match(line)
+        if vector_match:
+            name = vector_match.group("name")
+            body = vector_match.group("body")
+            length = len([part for part in re.split(r"[;,]\s*", body) if part.strip()])
+            vector_assignments[name] = length
+            if name == "x0":
+                x0_len = length
+            continue
+        scalar_match = scalar_pattern.match(line)
+        if scalar_match:
+            scalar_assignments.add(scalar_match.group("name"))
+
+    if not x0_len:
+        return None
+
+    fixed_lines = list(lines)
+    edited = False
+    for idx, line in enumerate(fixed_lines):
+        scalar_match = scalar_pattern.match(line)
+        if not scalar_match:
+            continue
+        name = scalar_match.group("name")
+        if name not in {"lb", "ub", "xl", "xu"}:
+            continue
+        if name not in scalar_assignments:
+            continue
+        value = scalar_match.group("value")
+        replacement = "[" + "; ".join([value] * x0_len) + "]"
+        fixed_lines[idx] = re.sub(
+            r"=\s*[-+]?\d+(?:\.\d+)?",
+            f"= {replacement}",
+            line,
+            count=1,
+        )
+        edited = True
+
+    if not edited:
+        return None
+    return "\n".join(fixed_lines) + ("\n" if code.endswith("\n") else "")
+
+
+def _try_matlab_objective_start_fix(code: str, error: str) -> str | None:
+    """Move a scalar ``x0`` away from obvious non-finite objective domains."""
+    lower_error = error.lower()
+    if not any(
+        marker in lower_error
+        for marker in ("nan", "inf", "complex", "division by zero", "non-finite")
+    ):
+        return None
+
+    import re
+
+    risky_objective = any(
+        token in code
+        for token in ("sqrt(", "log(", "1./", "1 ./", "./x(1)", "/x(1)")
+    )
+    if not risky_objective:
+        return None
+
+    x0_pattern = re.compile(
+        r"^(?P<indent>\s*)x0\s*=\s*(?P<value>[-+]?\d+(?:\.\d+)?)\s*;?",
+        re.MULTILINE,
+    )
+    match = x0_pattern.search(code)
+    if not match:
+        return None
+
+    value = float(match.group("value"))
+    if value > 0 and "division by zero" not in lower_error:
+        return None
+
+    replacement = f"{match.group('indent')}x0 = 1;"
+    return code[: match.start()] + replacement + code[match.end():]
+
+
+def _try_matlab_undefined_variable_fix(code: str, error: str) -> str | None:
+    """Repair common MATLAB variable-name aliases such as ``x_start`` → ``x0``."""
+    import re
+
+    match = re.search(
+        r"(?:Undefined function or variable|Unrecognized function or variable)\s+"
+        r"['\"](?P<name>\w+)['\"]",
+        error,
+    )
+    if not match:
+        return None
+    missing = match.group("name")
+    if not re.search(rf"\b{re.escape(missing)}\b", code):
+        return None
+
+    assigned = {
+        item.group("name")
+        for item in re.finditer(r"^\s*(?P<name>\w+)\s*=", code, re.MULTILINE)
+    }
+    aliases = {
+        "x_start": "x0",
+        "xstart": "x0",
+        "x_init": "x0",
+        "xinit": "x0",
+        "start": "x0",
+        "initial_point": "x0",
+    }
+    replacement = aliases.get(missing.lower())
+    if replacement is None or replacement not in assigned:
+        return None
+
+    return re.sub(rf"\b{re.escape(missing)}\b", replacement, code)
+
+
+def _try_matlab_missing_function_fix(code: str, error: str) -> str | None:
+    """Replace unavailable optimizer-like MATLAB calls with built-in fminsearch."""
+    import re
+
+    match = re.search(
+        r"(?:Undefined function|Unrecognized function or variable)\s+['\"](?P<name>\w+)['\"]",
+        error,
+    )
+    if not match:
+        return None
+    missing = match.group("name")
+    if missing in {"fminsearch", "sum", "disp", "zeros", "ones", "numel"}:
+        return None
+
+    call_pattern = re.compile(rf"\b{re.escape(missing)}\s*\(")
+    if not call_pattern.search(code):
+        return None
+    return call_pattern.sub("fminsearch(", code)
+
+
+def _handle_matlab_static_fix(code: str, error: str) -> tuple[str | None, str]:
+    """Try deterministic MATLAB fixes before asking an LLM."""
+    for fixer in (
+        _try_matlab_struct_field_fix,
+        _try_matlab_interface_fix,
+        _try_matlab_concat_dimension_fix,
+        _try_matlab_timeout_fix,
+        _try_matlab_unbalanced_delimiter_fix,
+        _try_matlab_bounds_shape_fix,
+        _try_matlab_objective_start_fix,
+        _try_matlab_undefined_variable_fix,
+        _try_matlab_missing_function_fix,
+    ):
+        fixed = fixer(code, error)
+        if not fixed or fixed.strip() == code.strip():
+            continue
+        validation_errors = _validate_code(fixed, language="matlab")
+        validation_errors.extend(_preservation_errors(code, fixed, language="matlab"))
+        if validation_errors:
+            continue
+        return (
+            fixed,
+            "## MATLAB Error Fixed\n\n"
+            "A deterministic debugger rule repaired a common MATLAB failure "
+            "pattern before invoking the LLM.\n\n"
+            f"**Original error:** {error[:200]}\n",
+        )
+    return None, ""
+
+
+def _preservation_errors(original: str, fixed: str, language: str) -> list[str]:
+    """Catch "fixes" that drop required code structure from the script."""
+    language = _normalize_language(language)
+    if language == "matlab":
+        original_defs = {item["name"] for item in _matlab_function_defs(original)}
+        fixed_defs = {item["name"] for item in _matlab_function_defs(fixed)}
+        missing_defs = sorted(original_defs - fixed_defs)
+        errors = []
+        if missing_defs:
+            errors.append(
+                "Fixed MATLAB code removed local function definitions from the "
+                "original script: " + ", ".join(missing_defs) + ". Return the "
+                "complete corrected .m file and preserve those definitions."
+            )
+        if (
+            _matlab_has_top_level_script(original)
+            and not _matlab_has_top_level_script(fixed)
+        ):
+            errors.append(
+                "Fixed MATLAB code removed top-level script statements from the "
+                "original .m file. Return the complete corrected script, with "
+                "script statements first and local functions at the end."
+            )
+        return errors
+
+    if language != "python":
+        return []
+
+    try:
+        import ast
+
+        original_tree = ast.parse(original)
+        fixed_tree = ast.parse(fixed)
+    except SyntaxError:
+        return []
+
+    original_defs = {
+        node.name
+        for node in original_tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+    }
+    fixed_defs = {
+        node.name
+        for node in fixed_tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+    }
+    missing_defs = sorted(original_defs - fixed_defs)
+    if not missing_defs:
+        return []
+    return [
+        "Fixed code removed top-level definitions from the original script: "
+        + ", ".join(missing_defs)
+        + ". Return complete corrected code and preserve those definitions."
+    ]
 
 
 def _handle_interface_mismatch(
@@ -222,12 +855,23 @@ def _handle_runtime_with_llm(
     full_system = system_prompt
     if fix_templates:
         full_system += f"\n\n## Common Fix Patterns\n\n{fix_templates}"
+    full_system += (
+        "\n\n## Fix Discipline\n\n"
+        "- Make the smallest code change that makes the supplied script run.\n"
+        "- Preserve the script's purpose, top-level calls, literals, and output shape "
+        "unless the traceback points at one of them.\n"
+        "- Do not replace a small repro script with a new benchmark example.\n"
+        "- Do not introduce `benchmark()` unless the supplied code already uses it.\n"
+        "- If a failing import is only a placeholder in the supplied repro, remove or "
+        "replace that exact import so the same script can run locally.\n"
+    )
 
     llm = create_llm(config.llm)
 
     attempts = 0
     last_error = error
     current_code = code
+    original_code = code
 
     def _truncate_code(src: str, limit: int) -> str:
         if limit <= 0 or len(src) <= limit:
@@ -263,8 +907,26 @@ def _handle_runtime_with_llm(
 
             if not fixed:
                 continue
+            if (
+                fixed.strip() in {current_code.strip(), original_code.strip()}
+                or (
+                    language == "matlab"
+                    and (
+                        _matlab_semantic_equal(fixed, current_code)
+                        or _matlab_semantic_equal(fixed, original_code)
+                    )
+                )
+            ):
+                last_error = (
+                    "The previous fix returned the code unchanged. "
+                    "Change the failing code path identified by the traceback."
+                )
+                continue
 
             validation_errors = _validate_code(fixed, language=language)
+            validation_errors.extend(
+                _preservation_errors(current_code, fixed, language=language)
+            )
             if not validation_errors:
                 report = (
                     f"## Runtime Error Fixed (attempt {attempts})\n\n"
@@ -401,34 +1063,99 @@ def debug_script(
     attempts: int = 0
 
     if classification.error_type == "interface_mismatch":
-        fixed_code, report = _handle_interface_mismatch(code, error, language=language)
+        if language == "matlab":
+            fixed_code, report = _handle_matlab_static_fix(code, error)
+        if fixed_code is None:
+            fixed_code, report = _handle_interface_mismatch(code, error, language=language)
         attempts = 1
+        adapter_errors = []
+        if fixed_code is not None:
+            adapter_errors = _validate_code(fixed_code, language=language)
+            adapter_errors.extend(_preservation_errors(code, fixed_code, language=language))
+        if fixed_code is None or adapter_errors:
+            if adapter_errors:
+                fixed_code = None
+                report += (
+                    "\n\nAdapter-generated fix was rejected before rerun: "
+                    + "; ".join(adapter_errors)
+                )
+            llm_fixed, llm_report, llm_attempts = _handle_runtime_with_llm(
+                code,
+                error,
+                config,
+                max_retries=config.max_debug_retries,
+                code_char_limit=config.code_char_limit,
+                language=language,
+            )
+            if llm_fixed:
+                fixed_code, report, attempts = llm_fixed, llm_report, llm_attempts
 
     elif classification.error_type == "dependency_missing":
-        fixed_code, report = _handle_dependency_missing(classification, language=language)
-        attempts = 1
+        if language == "matlab":
+            fixed_code, report = _handle_matlab_static_fix(code, error)
+            attempts = 1 if fixed_code else 0
+        if fixed_code is None:
+            fixed_code, report, attempts = _handle_runtime_with_llm(
+                code,
+                error,
+                config,
+                max_retries=config.max_debug_retries,
+                code_char_limit=config.code_char_limit,
+                language=language,
+            )
+        if fixed_code is None:
+            _, report = _handle_dependency_missing(classification, language=language)
 
     elif classification.error_type == "timeout":
-        fixed_code, report = _handle_timeout(error, language=language)
-        attempts = 1
+        if language == "matlab":
+            fixed_code, report = _handle_matlab_static_fix(code, error)
+            attempts = 1 if fixed_code else 0
+        if fixed_code is None:
+            fixed_code, report, attempts = _handle_runtime_with_llm(
+                code,
+                error,
+                config,
+                max_retries=config.max_debug_retries,
+                code_char_limit=config.code_char_limit,
+                language=language,
+            )
+        if fixed_code is None:
+            _, report = _handle_timeout(error, language=language)
 
     elif classification.error_type == "numerical":
-        fixed_code, report = _handle_numerical(error, language=language)
-        attempts = 1
+        if language == "matlab":
+            fixed_code, report = _handle_matlab_static_fix(code, error)
+            attempts = 1 if fixed_code else 0
+        if fixed_code is None:
+            fixed_code, report, attempts = _handle_runtime_with_llm(
+                code,
+                error,
+                config,
+                max_retries=config.max_debug_retries,
+                code_char_limit=config.code_char_limit,
+                language=language,
+            )
+        if fixed_code is None:
+            _, report = _handle_numerical(error, language=language)
 
     else:
-        fixed_code, report, attempts = _handle_runtime_with_llm(
-            code,
-            error,
-            config,
-            max_retries=config.max_debug_retries,
-            code_char_limit=config.code_char_limit,
-            language=language,
-        )
+        if language == "matlab":
+            fixed_code, report = _handle_matlab_static_fix(code, error)
+            attempts = 1 if fixed_code else 0
+        if fixed_code is None:
+            fixed_code, report, attempts = _handle_runtime_with_llm(
+                code,
+                error,
+                config,
+                max_retries=config.max_debug_retries,
+                code_char_limit=config.code_char_limit,
+                language=language,
+            )
 
     validation_passed = False
     if fixed_code:
         errors = _validate_code(fixed_code, language=language)
+        errors.extend(_preservation_errors(code, fixed_code, language=language))
         validation_passed = len(errors) == 0
         if errors:
             report += (

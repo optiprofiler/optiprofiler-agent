@@ -8,7 +8,10 @@ from unittest.mock import MagicMock, patch
 from optiprofiler_agent.debugger.debugger import (
     DebugResult,
     _extract_code_from_reply,
+    _handle_matlab_static_fix,
     _handle_interface_mismatch,
+    _matlab_semantic_equal,
+    _preservation_errors,
     _validate_code,
     debug_script,
     run_and_debug,
@@ -111,6 +114,65 @@ class TestValidateCode:
         errors = _validate_code(code, language="matlab")
         assert errors == []
 
+    def test_python_fix_must_preserve_top_level_defs(self):
+        errors = _preservation_errors(
+            "def validate_bounds(x0, lb, ub):\n    return True\n\nvalidate_bounds([], [], [])\n",
+            "validate_bounds([], [], [])\n",
+            language="python",
+        )
+        assert any("validate_bounds" in error for error in errors)
+
+    def test_python_fix_may_change_body_while_preserving_def(self):
+        errors = _preservation_errors(
+            "def objective(x):\n    return 1 / x[0]\n",
+            "def objective(x):\n    return 1 / (x[0] or 1e-12)\n",
+            language="python",
+        )
+        assert errors == []
+
+    def test_matlab_fix_must_preserve_local_functions(self):
+        original = """\
+fun = @(z) sum(z.^2);
+x0 = [1; 2];
+result = my_solver(fun, x0);
+disp(result);
+
+function x = my_solver(fun, x0, options)
+    x = options.scale * fminsearch(fun, x0);
+end
+"""
+        fixed = """\
+function x = my_solver_wrapper(fun, x0)
+    x = my_solver(fun, x0);
+end
+"""
+        errors = _preservation_errors(original, fixed, language="matlab")
+        assert any("my_solver" in error for error in errors)
+        assert any("top-level script" in error for error in errors)
+
+    def test_matlab_fix_may_edit_local_function_signature(self):
+        original = """\
+fun = @(z) sum(z.^2);
+x0 = [1; 2];
+result = my_solver(fun, x0);
+disp(result);
+
+function x = my_solver(fun)
+    x = fminsearch(fun, [0; 0]);
+end
+"""
+        fixed = """\
+fun = @(z) sum(z.^2);
+x0 = [1; 2];
+result = my_solver(fun, x0);
+disp(result);
+
+function x = my_solver(fun, x0)
+    x = fminsearch(fun, x0);
+end
+"""
+        assert _preservation_errors(original, fixed, language="matlab") == []
+
 
 # ---------------------------------------------------------------------------
 # interface mismatch (pre-flight bug #1)
@@ -138,6 +200,180 @@ class TestInterfaceMismatch:
         )
         assert fixed is not None
         assert "my_solver_wrapper" in fixed
+
+
+# ---------------------------------------------------------------------------
+# MATLAB static repairs
+# ---------------------------------------------------------------------------
+
+class TestMatlabStaticFixes:
+
+    def test_repairs_options_missing_field_with_default_guard(self):
+        code = "options.max_eval = 100;\ndisp(options.ptype);\n"
+        fixed, report = _handle_matlab_static_fix(
+            code,
+            'Unrecognized field name "ptype".',
+        )
+        assert fixed is not None
+        assert "if ~isfield(options, 'ptype')" in fixed
+        assert "options.ptype = 'u';" in fixed
+        assert "MATLAB Error Fixed" in report
+
+    def test_repairs_result_missing_field_by_using_existing_field(self):
+        code = "result.x = [0; 1];\nresult.f = 1.0;\ndisp(result.y);\n"
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            'Unrecognized field name "y".',
+        )
+        assert fixed is not None
+        assert "disp(result.x);" in fixed
+
+    def test_repairs_too_many_inputs_by_expanding_local_signature(self):
+        code = """\
+fun = @(z) sum(z.^2);
+x0 = [1; 2];
+result = my_solver(fun, x0);
+disp(result);
+
+function x = my_solver(fun)
+    x = fminsearch(fun, [0; 0]);
+end
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Too many input arguments.",
+        )
+        assert fixed is not None
+        assert "function x = my_solver(fun, x0)" in fixed
+        assert "fminsearch(fun, [0; 0])" in fixed
+
+    def test_repairs_not_enough_inputs_by_defaulting_optional_struct(self):
+        code = """\
+fun = @(z) sum(z.^2);
+x0 = [1; 2];
+result = my_solver(fun, x0);
+disp(result);
+
+function x = my_solver(fun, x0, options)
+    x = options.scale * fminsearch(fun, x0);
+end
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Not enough input arguments.",
+        )
+        assert fixed is not None
+        assert "if nargin < 3" in fixed
+        assert "options = struct();" in fixed
+        assert "options.scale = 1;" in fixed
+
+    def test_repairs_vector_concat_dimension_mismatch(self):
+        code = """\
+a = [1, 2, 3];
+b = [4; 5; 6];
+c = [a; b];
+disp(c);
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Dimensions of arrays being concatenated are not consistent.",
+        )
+        assert fixed is not None
+        assert "a = a(:).';" in fixed
+        assert "b = b(:).';" in fixed
+        assert "c = [a; b];" in fixed
+
+    def test_repairs_long_pause_timeout_repro(self):
+        fixed, _report = _handle_matlab_static_fix(
+            "pause(120);\n",
+            "MATLAB script timed out after 45 seconds.",
+        )
+        assert fixed is not None
+        assert "pause(0.1);" in fixed
+
+    def test_repairs_single_missing_closing_parenthesis(self):
+        code = """\
+fun = @(z) sum(z.^2);
+x0 = [1; 2; 3];
+result = fminsearch(fun, x0;
+disp(result);
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Invalid expression. When calling a function or indexing a variable, "
+            "use parentheses. Otherwise, check for mismatched delimiters.",
+        )
+        assert fixed is not None
+        assert "result = fminsearch(fun, x0);" in fixed
+
+    def test_repairs_scalar_bound_shape_mismatch(self):
+        code = """\
+x0 = [0; 1];
+lb = 0;
+ub = [2; 3];
+if numel(lb) ~= numel(x0) || numel(ub) ~= numel(x0)
+    error('Bounds shape mismatch: expected length 2');
+end
+disp([lb(:), ub(:)]);
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Bounds shape mismatch: expected length 2",
+        )
+        assert fixed is not None
+        assert "lb = [0; 0];" in fixed
+        assert "ub = [2; 3];" in fixed
+
+    def test_repairs_missing_optimizer_function_with_builtin_fallback(self):
+        code = """\
+x0 = [1; 2; 3];
+fun = @(z) sum(z.^2);
+result = cobyqa_mex(fun, x0);
+disp(result);
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Undefined function 'cobyqa_mex' for input arguments of type 'function_handle'.",
+        )
+        assert fixed is not None
+        assert "result = fminsearch(fun, x0);" in fixed
+
+    def test_repairs_negative_start_for_complex_objective(self):
+        code = """\
+fun = @(x) sqrt(x(1));
+x0 = -1;
+y0 = fun(x0);
+if ~isreal(y0) || ~isfinite(y0)
+    error('Objective returned NaN/complex value at x0');
+end
+disp(y0);
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Objective returned NaN/complex value at x0",
+        )
+        assert fixed is not None
+        assert "x0 = 1;" in fixed
+
+    def test_repairs_x_start_typo_with_existing_x0(self):
+        code = """\
+x0 = [1; 2; 3];
+fun = @(z) sum(z.^2);
+result = fminsearch(fun, x_start);
+disp(result);
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Unrecognized function or variable 'x_start'.",
+        )
+        assert fixed is not None
+        assert "fminsearch(fun, x0)" in fixed
+        assert "x_start" not in fixed
+
+    def test_matlab_semantic_equal_ignores_comments(self):
+        original = "% comment\nx0 = [1; 2];\nresult = cobyqa_mex(fun, x0);\n"
+        candidate = "x0 = [1; 2];\nresult = cobyqa_mex(fun, x0);\n"
+        assert _matlab_semantic_equal(original, candidate)
 
 
 # ---------------------------------------------------------------------------
@@ -210,6 +446,42 @@ class TestDebugScript:
             config=_make_config(),
         )
         assert result.classification.error_type == "runtime_error"
+
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_specialized_diagnostic_categories_try_llm_fix_first(self, mock_llm):
+        mock_llm.return_value = ("print('fixed')", "Fixed it", 1)
+        result = debug_script(
+            code="import nonexistent_module",
+            error=IMPORT_ERROR_TRACEBACK,
+            config=_make_config(),
+        )
+        assert result.classification.error_type == "dependency_missing"
+        assert result.fixed_code == "print('fixed')"
+        mock_llm.assert_called_once()
+
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_dependency_missing_keeps_diagnostic_when_llm_has_no_fix(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 2)
+        result = debug_script(
+            code="import nonexistent_module",
+            error=IMPORT_ERROR_TRACEBACK,
+            config=_make_config(),
+        )
+        assert result.classification.error_type == "dependency_missing"
+        assert result.fixed_code is None
+        assert "pip install" in result.diagnostic_report
+
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_interface_fallback_tries_llm_when_adapter_has_no_wrapper(self, mock_llm):
+        mock_llm.return_value = ("def solver(fun, x0, **kwargs):\n    return x0", "Fixed it", 1)
+        result = debug_script(
+            code="def solver(fun, x0):\n    return x0\n",
+            error="TypeError: solver() got an unexpected keyword argument 'max_eval'",
+            config=_make_config(),
+        )
+        assert result.classification.error_type == "interface_mismatch"
+        assert result.fixed_code is not None
+        mock_llm.assert_called_once()
 
 
 # ---------------------------------------------------------------------------

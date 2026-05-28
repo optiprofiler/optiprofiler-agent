@@ -381,6 +381,113 @@ class TestInterpretWithLLM:
         # manual-JSON invoke happened.
         assert mock_llm.invoke.call_count == 1
 
+    @patch("optiprofiler_agent.common.llm_client.create_llm")
+    def test_constrained_vllm_path_precedes_provider_binding(
+        self, mock_create, fake_experiment
+    ):
+        """Opted-in vLLM endpoints receive BenchmarkReport JSON Schema hints."""
+        report_json = (
+            '{"schema_version":"1.0",'
+            '"key_findings":["solver_a wins"],'
+            '"overview":{"headline":"solver_a leads.",'
+            '"setup":"Two solvers, dim 1-5."},'
+            '"performance_profile":{"winner_at_tau1":"solver_a",'
+            '"most_robust":"solver_a","ranking_change":"Stable."},'
+            '"data_profile":{"most_efficient":"solver_a",'
+            '"commentary":"solver_a reaches targets faster."},'
+            '"convergence_issues":{"entries":[],'
+            '"common_failure_problems":[]},'
+            '"anomalies":{"entries":[]},'
+            '"recommendations":{"actions":[],"caveats":""}}'
+        )
+        constrained_llm = MagicMock()
+        constrained_llm.invoke.return_value = MagicMock(content=report_json)
+        mock_llm = MagicMock()
+        mock_llm.bind.return_value = constrained_llm
+        mock_create.return_value = mock_llm
+
+        from optiprofiler_agent.config import LLMConfig
+        from optiprofiler_agent.interpreter.interpreter import interpret
+        from optiprofiler_agent.interpreter.report_schema import BenchmarkReport
+
+        result = interpret(
+            results_dir=fake_experiment,
+            config=AgentConfig(
+                llm=LLMConfig(
+                    provider="custom",
+                    api_key="fake",
+                    constrained_decoding=True,
+                ),
+            ),
+            llm_enabled=True,
+            read_profiles=False,
+        )
+
+        assert "## Key Findings" in result
+        assert "solver_a wins" in result
+        mock_llm.with_structured_output.assert_not_called()
+        extra_body = mock_llm.bind.call_args.kwargs["extra_body"]
+        assert extra_body == {
+            "structured_outputs": {
+                "json": BenchmarkReport.model_json_schema(),
+            },
+        }
+
+    @patch("optiprofiler_agent.common.llm_client.create_llm")
+    def test_constrained_vllm_failure_uses_provider_structured_output(
+        self, mock_create, fake_experiment
+    ):
+        mock_llm = MagicMock()
+        mock_llm.bind.side_effect = RuntimeError("server rejected structured_outputs")
+        structured_llm = MagicMock()
+        from optiprofiler_agent.interpreter.report_schema import BenchmarkReport
+
+        structured_llm.invoke.return_value = BenchmarkReport.model_validate(
+            {
+                "key_findings": ["solver_a wins"],
+                "overview": {
+                    "headline": "solver_a leads.",
+                    "setup": "Two solvers, dim 1-5.",
+                },
+                "performance_profile": {
+                    "winner_at_tau1": "solver_a",
+                    "most_robust": "solver_a",
+                    "ranking_change": "Stable.",
+                },
+                "data_profile": {
+                    "most_efficient": "solver_a",
+                    "commentary": "solver_a reaches targets faster.",
+                },
+                "convergence_issues": {
+                    "entries": [],
+                    "common_failure_problems": [],
+                },
+                "anomalies": {"entries": []},
+                "recommendations": {"actions": [], "caveats": ""},
+            },
+        )
+        mock_llm.with_structured_output.return_value = structured_llm
+        mock_create.return_value = mock_llm
+
+        from optiprofiler_agent.config import LLMConfig
+        from optiprofiler_agent.interpreter.interpreter import interpret
+
+        result = interpret(
+            results_dir=fake_experiment,
+            config=AgentConfig(
+                llm=LLMConfig(
+                    provider="custom",
+                    api_key="fake",
+                    constrained_decoding=True,
+                ),
+            ),
+            llm_enabled=True,
+            read_profiles=False,
+        )
+
+        assert "schema v1.0" in result
+        mock_llm.with_structured_output.assert_called()
+
 
 class TestThinkingHelpers:
     """Unit tests for the ``<think>`` / JSON-extraction utilities."""

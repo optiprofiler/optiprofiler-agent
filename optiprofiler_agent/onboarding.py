@@ -279,8 +279,8 @@ def run_init(
             "\nNote: existing keys are kept. Picking a different provider "
             "below adds its key alongside; your old key is not erased."
         )
-        ans = _prompt("Continue and (re)configure? [y/N]", default="n").lower()
-        if ans not in ("y", "yes"):
+        response = _prompt("Continue and (re)configure? [y/N]", default="n").lower()
+        if response not in ("y", "yes"):
             return OnboardResult(
                 written_path=None,
                 provider=active_default,

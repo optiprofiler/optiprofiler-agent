@@ -20,6 +20,22 @@ _SHELL_ESCAPE = re.compile(r"^\s*!", re.MULTILINE)
 _FUNCTION_DEF = re.compile(r"^\s*function\b", re.IGNORECASE)
 
 
+def _strip_comment_text(code: str) -> str:
+    """Remove MATLAB comments while preserving line numbers.
+
+    The checker is intentionally lightweight, but safety regexes should not
+    flag plain prose in ``%`` comments.
+    """
+    stripped_lines = []
+    for line in code.splitlines(keepends=True):
+        if "%" not in line:
+            stripped_lines.append(line)
+            continue
+        comment_pos = line.find("%")
+        stripped_lines.append(line[:comment_pos] + ("\n" if line.endswith("\n") else ""))
+    return "".join(stripped_lines)
+
+
 def _is_comment_or_blank(line: str) -> bool:
     stripped = line.strip()
     return not stripped or stripped.startswith("%")
@@ -46,17 +62,18 @@ class MatlabCheckResult:
 def check_matlab_code(code: str) -> MatlabCheckResult:
     """Validate MATLAB source for sandbox safety and basic structure."""
     result = MatlabCheckResult()
+    code_without_comments = _strip_comment_text(code)
 
-    for m in _DANGEROUS_CALLS.finditer(code):
+    for m in _DANGEROUS_CALLS.finditer(code_without_comments):
         result.has_errors = True
-        line_num = code[: m.start()].count("\n") + 1
+        line_num = code_without_comments[: m.start()].count("\n") + 1
         result.errors.append(
             f"Line {line_num}: potentially dangerous call '{m.group()}'"
         )
 
-    for m in _SHELL_ESCAPE.finditer(code):
+    for m in _SHELL_ESCAPE.finditer(code_without_comments):
         result.has_errors = True
-        line_num = code[: m.start()].count("\n") + 1
+        line_num = code_without_comments[: m.start()].count("\n") + 1
         result.errors.append(
             f"Line {line_num}: shell escape '!' is not allowed"
         )

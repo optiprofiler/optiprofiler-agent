@@ -1,0 +1,168 @@
+[
+  {
+    "id": "cg01",
+    "question": "Write a minimal Python benchmark script comparing COBYLA and Nelder-Mead on unconstrained problems.",
+    "response": "```python\nfrom optiprofiler import benchmark\nfrom scipy.optimize import minimize\n\n\ndef cobyla_solver(fun, x0):\n    result = minimize(fun, x0, method=\"COBYLA\")\n    return result.x\n\n\ndef nelder_mead_solver(fun, x0):\n    result = minimize(fun, x0, method=\"Nelder-Mead\")\n    return result.x\n\n\nscores = benchmark(\n    [cobyla_solver, nelder_mead_solver],\n    ptype=\"u\",\n    mindim=2,\n    maxdim=20,\n)\n```\n\nBoth `COBYLA` and `Nelder-Mead` are derivative-free methods, making them suitable for OptiProfiler benchmarking. The script runs on unconstrained problems from the default `s2mpj` library.",
+    "language": "python",
+    "category": "code_generation",
+    "response_length": 589,
+    "short_response": false,
+    "elapsed_s": 2.79,
+    "keyword_score": 1.0,
+    "keyword_hits": 5,
+    "keyword_total": 5,
+    "keyword_details": [
+      {
+        "keyword": "benchmark",
+        "found": true
+      },
+      {
+        "keyword": "cobyla",
+        "found": true
+      },
+      {
+        "keyword": "nelder",
+        "found": true
+      },
+      {
+        "keyword": "ptype",
+        "found": true
+      },
+      {
+        "keyword": "from optiprofiler",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "syntax_ok (1/1)",
+      "api_ok"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 1.0,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 1.0,
+      "code_quality": 1.0,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 1.0,
+    "judge_reason": "Correct OptiProfiler usage with benchmark(), two DFO solvers, ptype='u', keyword args, and no prohibited terms."
+  },
+  {
+    "id": "cg02",
+    "question": "Write a MATLAB script to benchmark two solvers with options mindim=2 and maxdim=10.",
+    "response": "# MATLAB Benchmarking Script\n\nHere's a complete MATLAB script to benchmark two solvers:\n\n```matlab\n% MATLAB Benchmarking Script\n% Mindim = 2, Maxdim = 10, Unconstrained problems\n\n%% Configure Options\noptions.ptype = 'u';       % Unconstrained problems\noptions.mindim = 2;\noptions.maxdim = 10;\noptions.plibs = {'s2mpj'}; % Default problem library\noptions.solver_names = {'Solver1', 'Solver2'};\noptions.silent = false;\n\n%% Run Benchmark\nscores = benchmark({@solver1_wrapper, @solver2_wrapper}, options);\n\n%% Display Results\nfprintf('\\nSolver Scores (averaged across tolerances):\\n');\nfprintf('  Solver1: %.4f\\n', scores(1));\nfprintf('  Solver2: %.4f\\n', scores(2));\n\n%% Local Solver Wrappers\nfunction x = solver1_wrapper(fun, x0)\n    % Replace with your solver implementation\n    % Example: Nelder-Mead (fminsearch)\n    x = fminsearch(fun, x0, optimoptions('fminsearch', ...\n        'Display', 'off', 'MaxIterations', 1000));\nend\n\nfunction x = solver2_wrapper(fun, x0)\n    % Replace with your solver implementation\n    % Example: Pattern Search\n    x = patternsearch(fun, x0, [], [], [], [], [], [], [], ...\n        optimoptions('patternsearch', 'Display', 'off', ...\n        'MaxIterations', 1000));\nend\n```\n\n## Key Points\n\n| Aspect | Detail |\n|--------|--------|\n| **Options format** | `struct` — use dot notation `options.ptype = 'u'` |\n| **Solvers format** | Cell array of function handles: `{@solver1, @solver2}` |\n| **Minimum solvers** | **2 solvers required** for benchmarking |\n| **Problem library** | `'s2mpj'` is the default (bundled with OptiProfiler) |\n| **Function location** | Local functions must appear at the **end** of the script |\n\n## Customizing the Script\n\nReplace `solver1_wrapper` and `solver2_wrapper` with your own solver implementations. The wrappers must accept `(fun, x0)` for unconstrained problems and return a column vector `x`.\n\nFor bound-constrained solvers, add `xl` and `xu` parameters:\n\n```matlab\nfunction x = bound_solver_wrapper(fun, x0, xl, xu)\n    % Handle bound",
+    "language": "matlab",
+    "category": "code_generation",
+    "response_length": 2074,
+    "short_response": false,
+    "elapsed_s": 15.45,
+    "keyword_score": 1.0,
+    "keyword_hits": 7,
+    "keyword_total": 7,
+    "keyword_details": [
+      {
+        "keyword": "benchmark",
+        "found": true
+      },
+      {
+        "keyword": "options",
+        "found": true
+      },
+      {
+        "keyword": "struct",
+        "found": true
+      },
+      {
+        "keyword": "mindim",
+        "found": true
+      },
+      {
+        "keyword": "maxdim",
+        "found": true
+      },
+      {
+        "keyword": "options.mindim",
+        "found": true
+      },
+      {
+        "keyword": "options.maxdim",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "matlab_ok (2 blocks)"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 0.96,
+    "judge_scores": {
+      "accuracy": 0.9,
+      "completeness": 0.9,
+      "code_quality": 0.9,
+      "hallucination": 0.9,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 0.92,
+    "judge_reason": "Correctly uses MATLAB benchmark API: first arg is solver cell array, second arg is options struct (not function handle f). Options struct uses dot notation (options.mindim, options.maxdim). Includes 2 solvers as required. No prohibited patterns present."
+  },
+  {
+    "id": "cg03",
+    "question": "Generate a Python benchmark script that uses the noisy feature with noise_level=1e-3.",
+    "response": "```python\nfrom optiprofiler import benchmark\nfrom scipy.optimize import minimize\n\n\ndef cobyla_solver(fun, x0):\n    result = minimize(fun, x0, method=\"COBYLA\")\n    return result.x\n\n\ndef nelder_mead_solver(fun, x0):\n    result = minimize(fun, x0, method=\"Nelder-Mead\")\n    return result.x\n\n\nscores = benchmark(\n    [cobyla_solver, nelder_mead_solver],\n    ptype=\"u\",\n    mindim=2,\n    maxdim=20,\n    feature_name=\"noisy\",\n    noise_level=1e-3,\n)\n```\n\n**Key points:**\n\n- `feature_name=\"noisy\"` applies the noisy feature.\n- `noise_level=1e-3` sets the noise magnitude (also the default).\n- Both `cobyla_solver` and `nelder_mead_solver` are derivative-free methods suitable for DFO benchmarking.\n- `n_runs` defaults to `5` for the noisy feature (stochastic), meaning each problem runs 5 times with different noise realizations.",
+    "language": "python",
+    "category": "code_generation",
+    "response_length": 822,
+    "short_response": false,
+    "elapsed_s": 7.98,
+    "keyword_score": 1.0,
+    "keyword_hits": 5,
+    "keyword_total": 5,
+    "keyword_details": [
+      {
+        "keyword": "benchmark",
+        "found": true
+      },
+      {
+        "keyword": "noisy",
+        "found": true
+      },
+      {
+        "keyword": "noise_level",
+        "found": true
+      },
+      {
+        "keyword": "1e-3",
+        "found": true
+      },
+      {
+        "keyword": "feature_name",
+        "found": true
+      }
+    ],
+    "code_score": 1.0,
+    "code_details": [
+      "syntax_ok (1/1)",
+      "api_ok"
+    ],
+    "tool_routing_score": null,
+    "tools_called": [],
+    "expected_tool": null,
+    "combined_score": 1.0,
+    "judge_scores": {
+      "accuracy": 1.0,
+      "completeness": 1.0,
+      "code_quality": 1.0,
+      "hallucination": 1.0,
+      "instruction_following": 1.0
+    },
+    "judge_avg": 1.0,
+    "judge_reason": "Code correctly uses benchmark() with feature_name='noisy' and noise_level=1e-3, includes two DFO solvers (COBYLA, Nelder-Mead), uses Python keyword args, and meets all constraints. No fabrication detected."
+  }
+]
