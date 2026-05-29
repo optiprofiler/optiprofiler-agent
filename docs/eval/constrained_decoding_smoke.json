@@ -1,0 +1,21 @@
+{
+  "timestamp_utc": "2026-05-29T02:16:55+00:00",
+  "agent": "interpreter",
+  "target": "BenchmarkReport constrained decoding",
+  "local": {
+    "status": "pass",
+    "backend": "vllm-json-schema",
+    "schema_bound": true,
+    "parsed_report": true
+  },
+  "real": {
+    "status": "blocked",
+    "reason": "custom vLLM endpoint is not configured",
+    "missing": [
+      "OPAGENT_CUSTOM_BASE_URL",
+      "OPAGENT_CUSTOM_MODEL",
+      "OPAGENT_CUSTOM_API_KEY"
+    ]
+  },
+  "passed": true
+}

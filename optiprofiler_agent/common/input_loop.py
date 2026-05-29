@@ -25,8 +25,23 @@ from pathlib import Path
 from typing import Optional
 
 from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.history import FileHistory, InMemoryHistory
+
+
+_DEFAULT_SLASH_COMMANDS = (
+    "/agent",
+    "/chat",
+    "/debug",
+    "/help",
+    "/interpret",
+    "/model",
+    "/provider",
+    "/prompt",
+    "/quit",
+    "/reset",
+)
 
 
 def _resolve_history_path(label: str) -> Optional[Path]:
@@ -47,7 +62,12 @@ def make_session(label: str = "default") -> PromptSession:
     if ``OPAGENT_HOME`` is reachable, else in-memory)."""
     hist_path = _resolve_history_path(label)
     history = FileHistory(str(hist_path)) if hist_path else InMemoryHistory()
-    return PromptSession(history=history)
+    completer = WordCompleter(
+        _DEFAULT_SLASH_COMMANDS,
+        ignore_case=True,
+        sentence=True,
+    )
+    return PromptSession(history=history, completer=completer)
 
 
 def prompt(message_ansi: str, session: Optional[PromptSession] = None) -> str:

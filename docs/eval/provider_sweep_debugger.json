@@ -1,0 +1,81 @@
+{
+  "timestamp_utc": "2026-05-29T02:16:08+00:00",
+  "agent": "debugger",
+  "strategy": "llm",
+  "results": [
+    {
+      "language": "matlab",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_matlab_deepseek_llm.json"
+    },
+    {
+      "language": "matlab",
+      "provider": "kimi",
+      "model": "kimi-k2.5",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_matlab_kimi_llm.json"
+    },
+    {
+      "language": "matlab",
+      "provider": "mimo",
+      "model": "mimo-v2-flash",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_matlab_mimo_llm.json"
+    },
+    {
+      "language": "matlab",
+      "provider": "minimax",
+      "model": "MiniMax-M2.7",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_matlab_minimax_llm.json"
+    },
+    {
+      "language": "python",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_python_deepseek_llm.json"
+    },
+    {
+      "language": "python",
+      "provider": "kimi",
+      "model": "kimi-k2.5",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_python_kimi_llm.json"
+    },
+    {
+      "language": "python",
+      "provider": "mimo",
+      "model": "mimo-v2-flash",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_python_mimo_llm.json"
+    },
+    {
+      "language": "python",
+      "provider": "minimax",
+      "model": "MiniMax-M2.7",
+      "n_total": 15,
+      "n_pass": 15,
+      "pass_rate": 1.0,
+      "artifact": "docs/eval/debugger_python_minimax_llm.json"
+    }
+  ],
+  "n_runs": 8,
+  "passed": true
+}

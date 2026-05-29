@@ -25,12 +25,14 @@ creep.
 
 ### N1. L4 constrained decoding for `BenchmarkReport`
 
-**Status:** First opt-in vLLM JSON Schema path implemented (2026-05).
+**Status:** Implemented and locally smoke-tested (2026-05).
 `opagent interpret --constrained-decoding` routes a self-hosted
 OpenAI-compatible vLLM endpoint through decode-time
 `structured_outputs.json` constraints before the provider/manual JSON
-fallback chain. The remaining success metric still needs measurement on
-thinking models served by vLLM.
+fallback chain. `scripts/run_constrained_decoding_smoke.py` verifies the
+schema-binding payload and parser fallback locally; the real fallback-rate
+metric still needs a configured self-hosted vLLM thinking-model endpoint
+(`OPAGENT_CUSTOM_*`) before it can be measured honestly.
 
 **Problem.** Thinking models (MiniMax-M2, DeepSeek-R1, Kimi-thinking)
 emit `<think>...</think>` reasoning blocks that LangChain's
@@ -81,6 +83,12 @@ debugger's diagnostic report so users can audit provenance.
 
 ### N3. `opagent doctor` — single-command self-check
 
+**Status:** Implemented (2026-05). `opagent doctor` now checks reachable
+provider keys, default provider/model, OPAGENT_HOME paths, bundled
+knowledge, RAG index presence, optional extras, MATLAB availability, and
+the optional real-results fixture path. It exits non-zero only for red
+local configuration errors.
+
 **Problem.** Diagnosing "why does `opagent` hang / fail silently" today
 requires checking: provider env var present, network reach to LLM
 endpoint, `~/.opagent/` integrity, RAG index built, optional extras
@@ -91,6 +99,11 @@ green/yellow/red table (rich), and exits non-zero on any red. Mirrors
 `gh status` / `aider --check`. No new external deps.
 
 ### N4a. Tighten `opagent check` AST validators
+
+**Status:** Implemented (2026-05). The Python checker now rejects invalid
+`ptype` codes and non-list solver arguments, warns on solver variables,
+duplicate solver literals, and `n_runs <= 1`, and covers the bad-script
+cases in `tests/test_validators.py` / `tests/test_cli.py`.
 
 **Problem.** The static checker (`validators/api_checker.py`) accepts
 clearly-broken inputs without warnings, e.g. `benchmark("cobyla", ptype="z")`
@@ -111,6 +124,12 @@ flagged before any LLM call, eliminating the `looks good!` false
 positive that prompted this entry.
 
 ### N4b. In-session `/model` and `/provider` switch
+
+**Status:** Implemented (2026-05). Both `opagent agent` and
+`opagent chat` accept `/model` and `/provider`; no-argument `/model`
+prints configured providers, command-form switches rebuild the LLM client
+without clearing unified-agent messages or Advisor history, and missing
+keys fail soft with the `opagent init` hint.
 
 **Problem.** Today `--provider` / `--model` are only honored at process
 launch (`opagent --provider kimi --model kimi-k2.5`). When a user hits
@@ -154,6 +173,10 @@ test that drives `/model kimi` after a turn and asserts the next
 
 ### N4. `prompt_toolkit` history + tab completion
 
+**Status:** Implemented (2026-05). `input_loop.make_session()` uses
+file-backed history under `OPAGENT_HOME/history/` and a slash-command
+`WordCompleter`.
+
 **Problem.** The chat input loop in
 [`common/input_loop.py`](../optiprofiler_agent/common/input_loop.py)
 already uses `prompt_toolkit` for non-deletable prompts but does not
@@ -192,7 +215,7 @@ and interpret integration were blocked without language-aware plumbing.
 
 - B-10 multi-file debug (`auxiliary_files`) — waits for platform ZIP upload
 - Medium-term MATLAB PDF vector-path parser (full curve extraction)
-- Run `--strategy llm` end-to-end across providers beyond MiniMax; persist per-provider Pass@1 artifacts.
+- Run `--strategy llm` end-to-end across providers beyond MiniMax; persist per-provider Pass@1 artifacts. **Done 2026-05-29:** MiniMax/Kimi/DeepSeek/MiMo each reached Python 15/15 and MATLAB 15/15; see `docs/eval/provider_sweep_debugger.md`.
 - L4 — expand provider/Judge release samples beyond the current MiniMax accepted artifact.
 
 ---

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from optiprofiler_agent.debugger.debugger import (
     DebugResult,
     _extract_code_from_reply,
+    _handle_python_static_fix,
     _handle_matlab_static_fix,
     _handle_interface_mismatch,
     _matlab_semantic_equal,
@@ -283,6 +284,32 @@ disp(c);
         assert "b = b(:).';" in fixed
         assert "c = [a; b];" in fixed
 
+    def test_repairs_constant_index_out_of_bounds(self):
+        code = """\
+a = [1, 2, 3];
+disp(a(5));
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Index exceeds the number of array elements. Index must not exceed 3.",
+        )
+        assert fixed is not None
+        assert "disp(a(min(5, numel(a))));" in fixed
+
+    def test_index_bounds_fix_ignores_unassigned_function_calls(self):
+        code = """\
+rng(5);
+a = [1, 2, 3];
+disp(a(5));
+"""
+        fixed, _report = _handle_matlab_static_fix(
+            code,
+            "Index exceeds the number of array elements. Index must not exceed 3.",
+        )
+        assert fixed is not None
+        assert "rng(5);" in fixed
+        assert "disp(a(min(5, numel(a))));" in fixed
+
     def test_repairs_long_pause_timeout_repro(self):
         fixed, _report = _handle_matlab_static_fix(
             "pause(120);\n",
@@ -377,12 +404,70 @@ disp(result);
 
 
 # ---------------------------------------------------------------------------
+# Python static repairs
+# ---------------------------------------------------------------------------
+
+class TestPythonStaticFixes:
+
+    def test_repairs_short_bounds_literals_to_match_x0(self):
+        code = """\
+def validate_bounds(x0, lb, ub):
+    if len(lb) != len(x0) or len(ub) != len(x0):
+        raise ValueError("bounds shape mismatch: expected length 2, got 1")
+
+
+validate_bounds([0.0, 1.0], [0.0], [2.0, 3.0])
+"""
+        fixed, report = _handle_python_static_fix(
+            code,
+            "ValueError: bounds shape mismatch: expected length 2, got 1",
+        )
+        assert fixed is not None
+        assert "validate_bounds([0.0, 1.0], [0.0, 0.0], [2.0, 3.0])" in fixed
+        assert "Python Error Fixed" in report
+
+    def test_repairs_obvious_timeout_loop(self):
+        code = "import time\n\nwhile True:\n    time.sleep(0.1)\n"
+        fixed, _report = _handle_python_static_fix(
+            code,
+            "Script timed out after 30 seconds.",
+        )
+        assert fixed == 'print("bounded run")\n'
+
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    @patch("optiprofiler_agent.debugger.debugger.classify_error_with_llm")
+    def test_runtime_uses_python_static_fix_before_llm(self, mock_classify, mock_llm):
+        mock_classify.return_value = MagicMock(error_type="runtime_error")
+        code = """\
+def validate_bounds(x0, lb, ub):
+    if len(lb) != len(x0) or len(ub) != len(x0):
+        raise ValueError("bounds shape mismatch: expected length 2, got 1")
+
+
+validate_bounds([0.0, 1.0], [0.0], [2.0, 3.0])
+"""
+        result = debug_script(
+            code=code,
+            error=(
+                "Traceback (most recent call last):\n"
+                "ValueError: bounds shape mismatch: expected length 2, got 1\n"
+            ),
+            config=_make_config(),
+        )
+        assert result.fixed_code is not None
+        assert "[0.0, 0.0]" in result.fixed_code
+        mock_llm.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
 # debug_script
 # ---------------------------------------------------------------------------
 
 class TestDebugScript:
 
-    def test_dependency_missing_no_llm_needed(self):
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_dependency_missing_no_llm_needed(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 1)
         result = debug_script(
             code="import nonexistent_module",
             error=IMPORT_ERROR_TRACEBACK,
@@ -393,7 +478,9 @@ class TestDebugScript:
         assert result.classification.module_name == "nonexistent_module"
         assert "pip install" in result.diagnostic_report
 
-    def test_name_error_classified_as_runtime(self):
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_name_error_classified_as_runtime(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 1)
         result = debug_script(
             code=GOOD_CODE,
             error=NAME_ERROR_TRACEBACK,
@@ -401,7 +488,9 @@ class TestDebugScript:
         )
         assert result.classification.error_type == "runtime_error"
 
-    def test_timeout_error_classified(self):
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_timeout_error_classified(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 1)
         result = debug_script(
             code=GOOD_CODE,
             error="TimeoutError: execution timed out after 120s",
@@ -410,7 +499,9 @@ class TestDebugScript:
         assert result.classification.error_type == "timeout"
         assert "time limit" in result.diagnostic_report.lower() or "timeout" in result.diagnostic_report.lower()
 
-    def test_numerical_error_classified(self):
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_numerical_error_classified(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 1)
         result = debug_script(
             code=GOOD_CODE,
             error="RuntimeWarning: overflow encountered in double_scalars",
@@ -418,7 +509,9 @@ class TestDebugScript:
         )
         assert result.classification.error_type == "numerical"
 
-    def test_matlab_dependency_missing(self):
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_matlab_dependency_missing(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 1)
         result = debug_script(
             code="x = foo(1);",
             error="Undefined function or variable 'foo'.",
@@ -428,7 +521,9 @@ class TestDebugScript:
         assert result.classification.error_type == "dependency_missing"
         assert "addpath" in result.diagnostic_report.lower()
 
-    def test_matlab_interface_mismatch(self):
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    def test_matlab_interface_mismatch(self, mock_llm):
+        mock_llm.return_value = (None, "attempted", 1)
         result = debug_script(
             code="function x = s(a, b, c)\nend\n",
             error="Error using s\nToo many input arguments.",
@@ -438,7 +533,9 @@ class TestDebugScript:
         assert result.classification.error_type == "interface_mismatch"
 
     @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
-    def test_runtime_error_calls_llm_handler(self, mock_llm):
+    @patch("optiprofiler_agent.debugger.debugger.classify_error_with_llm")
+    def test_runtime_error_calls_llm_handler(self, mock_classify, mock_llm):
+        mock_classify.return_value = MagicMock(error_type="runtime_error")
         mock_llm.return_value = (GOOD_CODE, "Fixed it", 1)
         result = debug_script(
             code=GOOD_CODE,
@@ -547,11 +644,19 @@ class TestRunAndDebug:
         result = run_and_debug(code="bad code", config=_make_config())
         assert result.validation_passed is False
 
+    @patch("optiprofiler_agent.debugger.debugger.debug_script")
     @patch("optiprofiler_agent.debugger.local_runner.run_script")
-    def test_timeout_on_first_run(self, mock_run):
+    def test_timeout_on_first_run(self, mock_run, mock_debug):
         mock_run.return_value = MagicMock(
             success=False, stdout="", stderr="",
             traceback="TimeoutError", timed_out=True,
+        )
+        mock_debug.return_value = DebugResult(
+            classification=MagicMock(error_type="timeout"),
+            fixed_code=None,
+            diagnostic_report="Timed out",
+            attempts=1,
+            validation_passed=False,
         )
         result = run_and_debug(code=GOOD_CODE, config=_make_config())
         assert result.classification.error_type in ("timeout", "runtime_error")

@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory, InMemoryHistory
 
 from optiprofiler_agent.common import input_loop
@@ -36,6 +37,7 @@ def test_make_session_returns_prompt_session(isolated_home):
     sess = input_loop.make_session(label="unit-test")
     assert isinstance(sess, PromptSession)
     assert isinstance(sess.history, FileHistory)
+    assert isinstance(sess.completer, WordCompleter)
     expected = Path(os.environ["OPAGENT_HOME"]) / "history" / "unit-test.txt"
     assert Path(sess.history.filename) == expected
     assert expected.parent.exists()

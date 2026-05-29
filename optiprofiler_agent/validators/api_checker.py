@@ -252,6 +252,8 @@ def _get_valid_enums(kb: KnowledgeBase) -> dict[str, set[str]]:
 class _BenchmarkCallVisitor(ast.NodeVisitor):
     """AST visitor that finds and validates benchmark() calls."""
 
+    _VALID_PTYPE_CODES = frozenset({"u", "b", "l", "n"})
+
     def __init__(self, valid_params: set[str], valid_enums: dict[str, set[str]]):
         self.valid_params = valid_params
         self.valid_enums = valid_enums
@@ -289,24 +291,62 @@ class _BenchmarkCallVisitor(ast.NodeVisitor):
         solvers_arg = node.args[0]
         if isinstance(solvers_arg, (ast.List, ast.Tuple)):
             n = len(solvers_arg.elts)
+            if n == 0:
+                self.issues.append(ValidationIssue(
+                    "error",
+                    "benchmark() requires a non-empty list of at least 2 solvers.",
+                    line=node.lineno,
+                ))
+                return
             if n < 2:
                 self.issues.append(ValidationIssue(
                     "error",
                     f"benchmark() requires at least 2 solvers, but only {n} provided.",
                     line=node.lineno,
                 ))
+                return
+            solver_names = [
+                name for elt in solvers_arg.elts
+                if (name := self._solver_name(elt)) is not None
+            ]
+            duplicates = sorted({
+                name for name in solver_names if solver_names.count(name) > 1
+            })
+            if duplicates:
+                self.issues.append(ValidationIssue(
+                    "warning",
+                    "benchmark() solver list contains duplicate solver(s): "
+                    + ", ".join(duplicates),
+                    line=node.lineno,
+                ))
         elif isinstance(solvers_arg, ast.Name):
             self.issues.append(ValidationIssue(
-                "info",
+                "warning",
                 f"Solvers passed as variable '{solvers_arg.id}'; "
-                "cannot statically verify count >= 2.",
+                "opagent check cannot statically verify the required list "
+                "of at least 2 solvers.",
                 line=node.lineno,
             ))
+        else:
+            self.issues.append(ValidationIssue(
+                "error",
+                "benchmark() first argument must be a list or tuple literal "
+                "with at least 2 solver callables.",
+                line=node.lineno,
+            ))
+
+    def _solver_name(self, node: ast.AST) -> str | None:
+        """Best-effort stable name for duplicate-solver warnings."""
+        if isinstance(node, ast.Name):
+            return node.id
+        if isinstance(node, ast.Attribute):
+            base = self._solver_name(node.value)
+            return f"{base}.{node.attr}" if base else node.attr
+        return None
 
     def _check_keyword_args(self, node: ast.Call):
         """Validate keyword argument names and known enum values."""
         enum_param_map = {
-            "ptype": None,
             "feature_name": "featurename",
             "noise_type": "noisetype",
         }
@@ -324,6 +364,52 @@ class _BenchmarkCallVisitor(ast.NodeVisitor):
 
             if kw.arg in enum_param_map:
                 self._check_enum_value(kw, enum_param_map[kw.arg] or kw.arg)
+            if kw.arg == "ptype":
+                self._check_ptype_value(kw)
+            if kw.arg == "n_runs":
+                self._check_n_runs_value(kw)
+
+    def _check_ptype_value(self, kw: ast.keyword):
+        """Check OptiProfiler's compact problem-type code string."""
+        value = kw.value
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            raw = value.value.strip().lower()
+            if raw == "all":
+                return
+            invalid = sorted(set(raw) - self._VALID_PTYPE_CODES)
+            if not raw or invalid:
+                self.issues.append(ValidationIssue(
+                    "error",
+                    f"'{value.value}' is not a valid value for 'ptype'. "
+                    "Use a combination of 'u', 'b', 'l', 'n' "
+                    "(for example 'u', 'ub', or 'ubln').",
+                    line=value.lineno if hasattr(value, "lineno") else None,
+                ))
+            return
+
+        if isinstance(value, ast.Constant):
+            self.issues.append(ValidationIssue(
+                "error",
+                "benchmark() parameter 'ptype' must be a string such as "
+                "'u', 'b', 'l', 'n', or 'ubln'.",
+                line=value.lineno if hasattr(value, "lineno") else None,
+            ))
+
+    def _check_n_runs_value(self, kw: ast.keyword):
+        """Warn on benchmark configurations that are too small for evaluation."""
+        value = kw.value
+        if (
+            isinstance(value, ast.Constant)
+            and isinstance(value.value, (int, float))
+            and not isinstance(value.value, bool)
+            and value.value <= 1
+        ):
+            self.issues.append(ValidationIssue(
+                "warning",
+                "benchmark() uses n_runs <= 1. This is valid for deterministic "
+                "features, but it is too small to evaluate stochastic behavior.",
+                line=value.lineno if hasattr(value, "lineno") else None,
+            ))
 
     def _check_enum_value(self, kw: ast.keyword, enum_key: str):
         """Check if a keyword's value matches known enum values."""

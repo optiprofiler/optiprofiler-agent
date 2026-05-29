@@ -22,6 +22,7 @@ Usage::
 from __future__ import annotations
 
 import sys
+import shlex
 from pathlib import Path
 
 import click
@@ -29,6 +30,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.spinner import SPINNERS
+from rich.table import Table
 from rich.text import Text
 
 from optiprofiler_agent import __version__
@@ -171,6 +173,7 @@ def _short_repr(value, limit: int = 60) -> str:
 # them so users can introspect / configure without being interrupted.
 _NO_KEY_REQUIRED: frozenset[str] = frozenset({
     "init", "wiki", "memory", "session", "home", "skills", "index", "check",
+    "doctor",
 })
 
 
@@ -286,7 +289,7 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
     console.print(f"  {_LLM_DISCLAIMER}")
     if rag:
         console.print("  RAG: [green]enabled[/]")
-    console.print("  Commands: /reset /prompt /quit\n")
+    console.print("  Commands: /model /provider /reset /prompt /quit\n")
 
     agent = AdvisorAgent(config)
     session_id = _rt_session.new_session(label="chat")
@@ -309,6 +312,20 @@ def chat(provider: str, model: str | None, rag: bool, rag_top_k: int,
         if user_input.lower() in ("/quit", "/exit", "/q"):
             console.print("Bye!")
             break
+
+        lower = user_input.lower()
+        if lower in ("/help", "/h"):
+            _print_help("chat")
+            continue
+
+        if lower.startswith("/model") or lower.startswith("/provider"):
+            command, _, args = user_input.partition(" ")
+            new_config = _resolve_llm_switch(config, command, args.strip())
+            if new_config is not None:
+                config = new_config
+                agent = _rebuild_advisor(agent, config)
+                _print_switch_summary(config)
+            continue
 
         if user_input.lower() == "/reset":
             agent.reset()
@@ -403,6 +420,133 @@ def _validate_reply(reply: str):
         console.print("[bold yellow]⚠ API validation issues:[/]")
         for issue in api.issues:
             console.print(f"  [{issue.severity}] {issue.message}")
+
+
+def _doctor_row(status: str, check: str, detail: str) -> tuple[str, str, str]:
+    return status, check, detail
+
+
+def _doctor_rows() -> list[tuple[str, str, str]]:
+    """Collect local health checks for ``opagent doctor``."""
+    import importlib.util
+    import os
+
+    from optiprofiler_agent import onboarding
+    from optiprofiler_agent.debugger.matlab_runner import is_matlab_available
+    from optiprofiler_agent.runtime import paths as _rt_paths
+
+    cfg = AgentConfig()
+    rows: list[tuple[str, str, str]] = []
+
+    configured = onboarding.detect_configured_providers()
+    if configured:
+        rows.append(_doctor_row("ok", "providers", ", ".join(configured)))
+    else:
+        rows.append(_doctor_row(
+            "error",
+            "providers",
+            "No provider API key found; run `opagent init` or set one of "
+            + ", ".join(onboarding.known_provider_env_vars()),
+        ))
+
+    active = onboarding.active_default_provider() or cfg.llm.provider
+    active_info = PROVIDER_REGISTRY.get(active, {})
+    env_key = active_info.get("env_key")
+    has_key = bool(cfg.llm.api_key) or (bool(env_key) and bool(os.environ.get(env_key)))
+    rows.append(_doctor_row(
+        "ok" if has_key else "error",
+        "default llm",
+        f"{cfg.llm.provider} / {cfg.llm.model}"
+        if has_key else f"{cfg.llm.provider} / {cfg.llm.model} has no reachable API key",
+    ))
+
+    for name, path in _rt_paths.all_writable_paths().items():
+        if name in {"memory", "user", "session_db", "config"}:
+            parent = path.parent
+            exists = parent.exists()
+            rows.append(_doctor_row(
+                "ok" if exists else "error",
+                f"path:{name}",
+                str(path),
+            ))
+        elif name in {"home", "auto_wiki", "skills", "trajectory"}:
+            rows.append(_doctor_row(
+                "ok" if path.exists() else "warning",
+                f"path:{name}",
+                str(path),
+            ))
+
+    knowledge_dir = cfg.knowledge_dir
+    wiki_index = cfg.wiki_dir / "index.md"
+    rows.append(_doctor_row(
+        "ok" if knowledge_dir.exists() and wiki_index.exists() else "error",
+        "knowledge",
+        f"{knowledge_dir}",
+    ))
+
+    rag_dir = Path(str(cfg.rag_persist_dir))
+    rows.append(_doctor_row(
+        "ok" if rag_dir.exists() else "warning",
+        "rag index",
+        f"{rag_dir}" if rag_dir.exists() else f"{rag_dir} not built; run `opagent index`",
+    ))
+
+    optional_imports = {
+        "rag:chromadb": "chromadb",
+        "rag:sentence-transformers": "sentence_transformers",
+        "anthropic": "langchain_anthropic",
+        "web": "langchain_tavily",
+    }
+    for label, module in optional_imports.items():
+        rows.append(_doctor_row(
+            "ok" if importlib.util.find_spec(module) else "warning",
+            f"optional:{label}",
+            "installed" if importlib.util.find_spec(module) else "not installed",
+        ))
+
+    matlab_hint = os.environ.get("MATOP_MATLAB_BIN") or "MATOP_MATLAB_BIN not set"
+    rows.append(_doctor_row(
+        "ok" if is_matlab_available() else "warning",
+        "matlab",
+        matlab_hint if not is_matlab_available() else "MATLAB runner available",
+    ))
+
+    real_results = os.environ.get("MATOP_REAL_RESULTS_DIR")
+    rows.append(_doctor_row(
+        "ok" if real_results and Path(real_results).exists() else "warning",
+        "real results",
+        real_results if real_results else "MATOP_REAL_RESULTS_DIR not set",
+    ))
+
+    return rows
+
+
+def _render_doctor(rows: list[tuple[str, str, str]]) -> None:
+    table = Table(title="opagent doctor", show_lines=False)
+    table.add_column("Status", no_wrap=True)
+    table.add_column("Check", no_wrap=True)
+    table.add_column("Detail")
+    style = {"ok": "green", "warning": "yellow", "error": "red"}
+    label = {"ok": "OK", "warning": "WARN", "error": "ERROR"}
+    for status, check, detail in rows:
+        table.add_row(
+            f"[{style.get(status, 'white')}]{label.get(status, status.upper())}[/]",
+            check,
+            detail,
+        )
+    console.print(table)
+
+
+@main.command()
+def doctor():
+    """Check local opagent configuration and optional runtime dependencies."""
+    from optiprofiler_agent.runtime import bootstrap as _rt_bootstrap
+
+    _rt_bootstrap.ensure()
+    rows = _doctor_rows()
+    _render_doctor(rows)
+    if any(status == "error" for status, _check, _detail in rows):
+        sys.exit(1)
 
 
 @main.command()
@@ -654,7 +798,8 @@ def _print_help(mode: str):
     console.print("[bold]Commands:[/]")
     console.print("  [bold]/agent[/]              Switch to unified agent mode")
     console.print("  [bold]/chat[/]               Switch to advisor chat mode")
-    console.print("  [bold]/model[/]              Switch LLM provider")
+    console.print("  [bold]/model[/] [name]       Show providers, switch provider, or set model")
+    console.print("  [bold]/provider[/] <name>    Switch provider, optionally with model")
     if mode == "chat":
         console.print("  [bold]/reset[/]              Clear chat history")
     console.print("  [bold]/debug[/] <file>       Run & debug a script")
@@ -663,39 +808,125 @@ def _print_help(mode: str):
     console.print("  [bold]/quit[/]               Exit\n")
 
 
-def _slash_model(current_provider: str) -> str | None:
-    """Interactive provider picker. Returns the chosen provider name, or
-    *None* if the user cancels / picks the same one."""
+def _available_provider_rows(current: LLMConfig) -> list[dict[str, str]]:
     from optiprofiler_agent.onboarding import detect_configured_providers
 
     available = detect_configured_providers()
-    if not available:
+    rows = []
+    for name in available:
+        cfg = LLMConfig(provider=name)
+        rows.append({
+            "active": "*" if name == current.provider else "",
+            "provider": name,
+            "model": cfg.model or "",
+            "env": PROVIDER_REGISTRY.get(name, {}).get("env_key", ""),
+        })
+    return rows
+
+
+def _print_provider_table(current: LLMConfig) -> None:
+    rows = _available_provider_rows(current)
+    if not rows:
         console.print("[yellow]No API keys detected. Run [bold]opagent init[/] first.[/]\n")
-        return None
+        return
+    table = Table(title="Available LLM providers")
+    table.add_column("", no_wrap=True)
+    table.add_column("Provider", no_wrap=True)
+    table.add_column("Model")
+    table.add_column("Env")
+    for row in rows:
+        table.add_row(row["active"], row["provider"], row["model"], row["env"])
+    console.print(table)
 
-    console.print("[bold]Available providers (with API key):[/]")
-    for i, name in enumerate(available, 1):
-        marker = " [dim](current)[/]" if name == current_provider else ""
-        console.print(f"  {i}. {name}{marker}")
-    console.print("  0. [dim]cancel[/]")
 
+def _provider_key_hint(provider: str) -> str:
+    env_key = PROVIDER_REGISTRY.get(provider, {}).get("env_key")
+    if env_key:
+        return f"set `{env_key}=...` or run `opagent init`"
+    return "run `opagent init`"
+
+
+def _config_with_llm(config: AgentConfig, provider: str, model: str | None = None) -> AgentConfig:
+    from dataclasses import replace
+
+    return replace(config, llm=LLMConfig(provider=provider, model=model))
+
+
+def _resolve_llm_switch(config: AgentConfig, command: str, args: str) -> AgentConfig | None:
+    """Resolve a slash-command LLM switch without touching conversation state.
+
+    ``/model kimi`` remains supported as a provider switch for the old CLI
+    behavior. ``/model <non-provider>`` changes only the model on the
+    current provider. ``/provider <name> [model]`` switches provider and
+    optionally pins a model id.
+    """
     try:
-        raw = input(f"\nPick 0-{len(available)} [{current_provider}]: ").strip()
-    except (EOFError, KeyboardInterrupt):
-        console.print()
+        parts = shlex.split(args)
+    except ValueError as exc:
+        console.print(f"[yellow]Could not parse arguments:[/] {exc}\n")
         return None
 
-    if not raw or raw == "0":
+    if not parts:
+        _print_provider_table(config.llm)
         return None
-    try:
-        idx = int(raw) - 1
-        if 0 <= idx < len(available):
-            chosen = available[idx]
-            return None if chosen == current_provider else chosen
-    except ValueError:
-        if raw in available:
-            return None if raw == current_provider else raw
-    console.print("[yellow]Invalid choice.[/]\n")
+
+    cmd = command.lower()
+    if cmd == "/provider":
+        provider = parts[0].lower()
+        model = parts[1] if len(parts) > 1 else None
+        if provider not in PROVIDER_REGISTRY:
+            console.print(f"[yellow]Unknown provider:[/] {provider}\n")
+            return None
+    elif cmd == "/model":
+        first = parts[0]
+        if first.lower() in PROVIDER_REGISTRY:
+            provider = first.lower()
+            model = parts[1] if len(parts) > 1 else None
+        else:
+            provider = config.llm.provider
+            model = first
+    else:
+        return None
+
+    new_config = _config_with_llm(config, provider=provider, model=model)
+    if not new_config.llm.api_key:
+        console.print(
+            f"[yellow]Provider `{provider}` has no reachable API key; "
+            f"{_provider_key_hint(provider)}.[/]\n"
+        )
+        return None
+    return new_config
+
+
+def _copy_advisor_state(old, new) -> None:
+    """Preserve AdvisorAgent conversation state across LLM client rebuilds."""
+    if old is None or new is None:
+        return
+    if hasattr(old, "_history") and hasattr(new, "_history"):
+        new._history = list(old._history)
+    if hasattr(old, "_current_language") and hasattr(new, "_current_language"):
+        new._current_language = old._current_language
+
+
+def _rebuild_advisor(old, config: AgentConfig):
+    from optiprofiler_agent.advisor.advisor import AdvisorAgent
+
+    new = AdvisorAgent(config)
+    _copy_advisor_state(old, new)
+    return new
+
+
+def _print_switch_summary(config: AgentConfig) -> None:
+    console.print(
+        f"[green]▸ Switched to [bold]{config.llm.provider}[/] "
+        f"([bold]{config.llm.model}[/])[/]\n"
+    )
+
+
+def _slash_model(current_provider: str) -> str | None:
+    """Backward-compatible provider picker shim for older tests/imports."""
+    config = AgentConfig(llm=LLMConfig(provider=current_provider))
+    _print_provider_table(config.llm)
     return None
 
 
@@ -840,22 +1071,15 @@ def agent(provider: str, model: str | None):
             console.print("[dim]▸ Chat mode (advisor)[/]\n")
             continue
 
-        if cmd.startswith("/model"):
-            new_provider = _slash_model(config.llm.provider)
-            if new_provider:
-                config = AgentConfig(
-                    llm=LLMConfig(provider=new_provider),
-                    rag_enabled=True,
-                )
+        if cmd.startswith("/model") or cmd.startswith("/provider"):
+            command, _, args = user_input.partition(" ")
+            new_config = _resolve_llm_switch(config, command, args.strip())
+            if new_config:
+                config = new_config
                 unified = create_unified_agent(config)
-                advisor = None
-                messages.clear()
-                console.print(
-                    f"[green]▸ Switched to [bold]{config.llm.provider}[/] "
-                    f"([bold]{config.llm.model}[/])[/]\n"
-                )
-            else:
-                console.print()
+                if advisor is not None:
+                    advisor = _rebuild_advisor(advisor, config)
+                _print_switch_summary(config)
             continue
 
         if cmd == "/reset" and mode == "chat":

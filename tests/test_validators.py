@@ -58,6 +58,59 @@ benchmark([solver_a])
         )
         assert has_single_solver_issue or result.benchmark_calls_found >= 0
 
+    def test_string_solver_arg_is_error(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        result = validate_benchmark_call(
+            "from optiprofiler import benchmark\nbenchmark('cobyla', ptype='u')\n"
+        )
+        assert result.has_errors
+        assert any("first argument" in issue.message.lower() for issue in result.issues)
+
+    def test_invalid_ptype_is_error(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        result = validate_benchmark_call(
+            "from optiprofiler import benchmark\nbenchmark([s1, s2], ptype='z')\n"
+        )
+        assert result.has_errors
+        assert any("ptype" in issue.message and issue.severity == "error" for issue in result.issues)
+
+    def test_combined_ptype_is_valid(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        result = validate_benchmark_call(
+            "from optiprofiler import benchmark\nbenchmark([s1, s2], ptype='ubln')\n"
+        )
+        assert not result.has_errors
+
+    def test_solver_variable_is_warning(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        result = validate_benchmark_call(
+            "from optiprofiler import benchmark\nsolvers = [s1, s2]\nbenchmark(solvers)\n"
+        )
+        assert any(issue.severity == "warning" and "cannot statically verify" in issue.message
+                   for issue in result.issues), result.issues
+
+    def test_duplicate_solvers_warns(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        result = validate_benchmark_call(
+            "from optiprofiler import benchmark\nbenchmark([s1, s1], ptype='u')\n"
+        )
+        assert any(issue.severity == "warning" and "duplicate" in issue.message.lower()
+                   for issue in result.issues), result.issues
+
+    def test_n_runs_one_warns(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        result = validate_benchmark_call(
+            "from optiprofiler import benchmark\nbenchmark([s1, s2], n_runs=1)\n"
+        )
+        assert any(issue.severity == "warning" and "n_runs" in issue.message
+                   for issue in result.issues), result.issues
+
 
 class TestImportWhitelist:
     """L1 hallucination guard: catch typo'd / fake optiprofiler imports."""

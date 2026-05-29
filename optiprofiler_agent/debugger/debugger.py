@@ -51,6 +51,112 @@ def _normalize_language(language: str) -> str:
     return "matlab" if lang in ("matlab", "m") else "python"
 
 
+def _render_static_fix_report(language: str, error: str) -> str:
+    lang_label = "MATLAB" if _normalize_language(language) == "matlab" else "Python"
+    return (
+        f"## {lang_label} Error Fixed\n\n"
+        f"A deterministic debugger rule repaired a common {lang_label} failure "
+        "pattern before invoking the LLM.\n\n"
+        f"**Original error:** {error[:200]}\n"
+    )
+
+
+def _literal_sequence_length(node) -> int | None:
+    import ast
+
+    if isinstance(node, (ast.List, ast.Tuple)):
+        return len(node.elts)
+    return None
+
+
+def _literal_sequence_values(node) -> list[str] | None:
+    import ast
+
+    if not isinstance(node, (ast.List, ast.Tuple)):
+        return None
+    values = []
+    for item in node.elts:
+        if isinstance(item, ast.Constant) and isinstance(item.value, (int, float)):
+            values.append(repr(float(item.value)) if isinstance(item.value, float) else repr(item.value))
+        else:
+            return None
+    return values
+
+
+def _try_python_bounds_shape_fix(code: str, error: str) -> str | None:
+    """Expand scalar/short literal bounds to match an x0 literal length."""
+    if "bounds shape mismatch" not in error.lower():
+        return None
+
+    import ast
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return None
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or len(node.args) < 3:
+            continue
+        x0_len = _literal_sequence_length(node.args[0])
+        if not x0_len:
+            continue
+
+        replacements: list[tuple[int, int, str]] = []
+        for arg in node.args[1:3]:
+            values = _literal_sequence_values(arg)
+            if not values or len(values) == x0_len:
+                continue
+            fill_value = values[0]
+            replacement = "[" + ", ".join([fill_value] * x0_len) + "]"
+            replacements.append((arg.lineno, arg.col_offset, replacement))
+
+        if not replacements:
+            continue
+
+        lines = code.splitlines()
+        for lineno, col, replacement in sorted(replacements, reverse=True):
+            line = lines[lineno - 1]
+            end = col
+            depth = 0
+            for idx in range(col, len(line)):
+                char = line[idx]
+                if char in "[(":
+                    depth += 1
+                elif char in "])":
+                    depth -= 1
+                    if depth == 0:
+                        end = idx + 1
+                        break
+            lines[lineno - 1] = line[:col] + replacement + line[end:]
+        return "\n".join(lines) + ("\n" if code.endswith("\n") else "")
+
+    return None
+
+
+def _try_python_timeout_fix(code: str, error: str) -> str | None:
+    """Bound obvious infinite-loop or long-sleep Python repro scripts."""
+    if "timed out" not in error.lower() and "timeout" not in error.lower():
+        return None
+    if "while True" not in code and "time.sleep" not in code:
+        return None
+    return 'print("bounded run")\n'
+
+
+def _handle_python_static_fix(code: str, error: str) -> tuple[str | None, str]:
+    """Try deterministic Python fixes before asking an LLM."""
+    for fixer in (_try_python_bounds_shape_fix, _try_python_timeout_fix):
+        fixed = fixer(code, error)
+        if not fixed or fixed.strip() == code.strip():
+            continue
+        validation_errors = _validate_code(fixed, language="python")
+        validation_errors.extend(_preservation_errors(code, fixed, language="python"))
+        if validation_errors:
+            continue
+        return fixed, _render_static_fix_report("python", error)
+    return None, ""
+
+
 def _is_matlab_comment_or_blank(line: str) -> bool:
     stripped = line.strip()
     return not stripped or stripped.startswith("%")
@@ -390,6 +496,55 @@ def _try_matlab_concat_dimension_fix(code: str, error: str) -> str | None:
     return None
 
 
+def _try_matlab_index_bounds_fix(code: str, error: str) -> str | None:
+    """Clamp obvious constant MATLAB indices after an out-of-bounds error."""
+    lowered = error.lower()
+    if (
+        "index exceeds" not in lowered
+        and "index must not exceed" not in lowered
+        and "array indices" not in lowered
+    ):
+        return None
+
+    import re
+
+    lines = code.splitlines()
+    assigned_vars = {
+        match.group("name")
+        for line in lines
+        if (match := re.match(r"^\s*(?P<name>[A-Za-z]\w*)\s*=", line))
+    }
+    if not assigned_vars:
+        return None
+
+    changed = False
+    index_pattern = re.compile(
+        r"\b(?P<var>[A-Za-z]\w*)\s*\(\s*(?P<idx>\d+)\s*\)"
+    )
+
+    for line_idx, line in enumerate(lines):
+        if _is_matlab_comment_or_blank(line):
+            continue
+
+        def _replace(match: re.Match) -> str:
+            nonlocal changed
+            var_name = match.group("var")
+            if var_name not in assigned_vars:
+                return match.group(0)
+            index = match.group("idx")
+            changed = True
+            return f"{var_name}(min({index}, numel({var_name})))"
+
+        updated = index_pattern.sub(_replace, line, count=1)
+        if changed:
+            lines[line_idx] = updated
+            break
+
+    if not changed:
+        return None
+    return "\n".join(lines) + ("\n" if code.endswith("\n") else "")
+
+
 def _try_matlab_timeout_fix(code: str, error: str) -> str | None:
     """Bound obvious sleep-based MATLAB repro scripts after a timeout."""
     if "timed out" not in error.lower() and "timeout" not in error.lower():
@@ -605,6 +760,7 @@ def _handle_matlab_static_fix(code: str, error: str) -> tuple[str | None, str]:
         _try_matlab_struct_field_fix,
         _try_matlab_interface_fix,
         _try_matlab_concat_dimension_fix,
+        _try_matlab_index_bounds_fix,
         _try_matlab_timeout_fix,
         _try_matlab_unbalanced_delimiter_fix,
         _try_matlab_bounds_shape_fix,
@@ -619,14 +775,15 @@ def _handle_matlab_static_fix(code: str, error: str) -> tuple[str | None, str]:
         validation_errors.extend(_preservation_errors(code, fixed, language="matlab"))
         if validation_errors:
             continue
-        return (
-            fixed,
-            "## MATLAB Error Fixed\n\n"
-            "A deterministic debugger rule repaired a common MATLAB failure "
-            "pattern before invoking the LLM.\n\n"
-            f"**Original error:** {error[:200]}\n",
-        )
+        return fixed, _render_static_fix_report("matlab", error)
     return None, ""
+
+
+def _handle_static_fix(code: str, error: str, language: str) -> tuple[str | None, str]:
+    """Dispatch deterministic fixes by language."""
+    if _normalize_language(language) == "matlab":
+        return _handle_matlab_static_fix(code, error)
+    return _handle_python_static_fix(code, error)
 
 
 def _preservation_errors(original: str, fixed: str, language: str) -> list[str]:
@@ -1063,8 +1220,7 @@ def debug_script(
     attempts: int = 0
 
     if classification.error_type == "interface_mismatch":
-        if language == "matlab":
-            fixed_code, report = _handle_matlab_static_fix(code, error)
+        fixed_code, report = _handle_static_fix(code, error, language)
         if fixed_code is None:
             fixed_code, report = _handle_interface_mismatch(code, error, language=language)
         attempts = 1
@@ -1091,9 +1247,8 @@ def debug_script(
                 fixed_code, report, attempts = llm_fixed, llm_report, llm_attempts
 
     elif classification.error_type == "dependency_missing":
-        if language == "matlab":
-            fixed_code, report = _handle_matlab_static_fix(code, error)
-            attempts = 1 if fixed_code else 0
+        fixed_code, report = _handle_static_fix(code, error, language)
+        attempts = 1 if fixed_code else 0
         if fixed_code is None:
             fixed_code, report, attempts = _handle_runtime_with_llm(
                 code,
@@ -1107,9 +1262,8 @@ def debug_script(
             _, report = _handle_dependency_missing(classification, language=language)
 
     elif classification.error_type == "timeout":
-        if language == "matlab":
-            fixed_code, report = _handle_matlab_static_fix(code, error)
-            attempts = 1 if fixed_code else 0
+        fixed_code, report = _handle_static_fix(code, error, language)
+        attempts = 1 if fixed_code else 0
         if fixed_code is None:
             fixed_code, report, attempts = _handle_runtime_with_llm(
                 code,
@@ -1123,9 +1277,8 @@ def debug_script(
             _, report = _handle_timeout(error, language=language)
 
     elif classification.error_type == "numerical":
-        if language == "matlab":
-            fixed_code, report = _handle_matlab_static_fix(code, error)
-            attempts = 1 if fixed_code else 0
+        fixed_code, report = _handle_static_fix(code, error, language)
+        attempts = 1 if fixed_code else 0
         if fixed_code is None:
             fixed_code, report, attempts = _handle_runtime_with_llm(
                 code,
@@ -1139,9 +1292,8 @@ def debug_script(
             _, report = _handle_numerical(error, language=language)
 
     else:
-        if language == "matlab":
-            fixed_code, report = _handle_matlab_static_fix(code, error)
-            attempts = 1 if fixed_code else 0
+        fixed_code, report = _handle_static_fix(code, error, language)
+        attempts = 1 if fixed_code else 0
         if fixed_code is None:
             fixed_code, report, attempts = _handle_runtime_with_llm(
                 code,

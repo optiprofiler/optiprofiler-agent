@@ -103,6 +103,13 @@ python scripts/run_debugger_eval.py --language matlab --strategy golden
 python scripts/run_debugger_eval.py --language python --strategy llm --provider minimax
 ```
 
+Latest release artifact:
+
+- `docs/eval/provider_sweep_debugger.md` records the 2026-05-29 LLM
+  provider sweep: MiniMax, Kimi, DeepSeek, and MiMo each reached 15/15
+  Pass@1 on the Python fixture set and 15/15 Pass@1 on the MATLAB fixture
+  set.
+
 ### Agent C — Interpreter
 
 Node-level checks:
@@ -222,10 +229,21 @@ opagent interpret /path/to/results \
   --format json
 ```
 
+Local payload/schema smoke:
+
+```bash
+python scripts/run_constrained_decoding_smoke.py \
+  --output docs/eval/constrained_decoding_smoke.json
+```
+
 The `custom` provider should point at the vLLM OpenAI-compatible base URL.
 The constrained path sends vLLM's `structured_outputs.json` schema hint;
 if that endpoint rejects the hint, Interpreter falls back to the normal
 structured-output chain and the same report validators still run.
+When `OPAGENT_CUSTOM_BASE_URL`, `OPAGENT_CUSTOM_MODEL`, and
+`OPAGENT_CUSTOM_API_KEY` are not configured, the smoke artifact marks the
+real endpoint check as `blocked` while still verifying the local schema
+binding and parser path.
 
 ### Provider Sweep
 
@@ -241,8 +259,31 @@ for provider in minimax kimi deepseek mimo; do
 
   python scripts/run_debugger_eval.py \
     --language python --strategy llm --provider "$provider" \
-    --output "docs/eval/debugger_python_${provider}.json"
+    --output "docs/eval/debugger_python_${provider}_llm.json" \
+    --markdown-output "docs/eval/debugger_python_${provider}_llm.md"
+
+  python scripts/run_debugger_eval.py \
+    --language matlab --strategy llm --provider "$provider" \
+    --output "docs/eval/debugger_matlab_${provider}_llm.json" \
+    --markdown-output "docs/eval/debugger_matlab_${provider}_llm.md"
 done
+```
+
+After a Debugger sweep, regenerate the consolidated table:
+
+```bash
+python - <<'PY'
+import json
+from pathlib import Path
+from datetime import datetime, timezone
+base = Path("docs/eval")
+rows = []
+for f in sorted(base.glob("debugger_*_*_llm.json")):
+    data = json.loads(f.read_text())
+    rows.append({k: data.get(k) for k in ("language", "provider", "model", "n_total", "n_pass", "pass_rate")} | {"artifact": str(f)})
+payload = {"timestamp_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "agent": "debugger", "strategy": "llm", "results": rows, "passed": all(r["n_pass"] == r["n_total"] for r in rows)}
+(base / "provider_sweep_debugger.json").write_text(json.dumps(payload, indent=2))
+PY
 ```
 
 ## Known Gaps
@@ -252,6 +293,9 @@ done
   calls, and whether final answers faithfully use tool outputs.
 - Release CI should separate cheap deterministic gates from expensive
   provider/Judge sweeps.
+- Constrained-decoding fallback-rate measurement still needs a real
+  self-hosted vLLM thinking-model endpoint; the current local smoke proves
+  request shape and schema parsing, not provider-side token masking quality.
 - Historical `results.json` used an older judge parser and should not
   be treated as a current L4 result; it had `judge_avg = null` for all
   cases due to parse/provider errors.
