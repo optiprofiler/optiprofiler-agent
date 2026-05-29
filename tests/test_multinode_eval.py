@@ -26,6 +26,29 @@ def test_debugger_classify_case_passes():
     assert results[0]["details"]["actual_category"] == "dependency_missing"
 
 
+def test_debugger_web_context_case_passes():
+    results = run_cases([
+        {
+            "id": "web",
+            "agent": "debugger",
+            "task": "web_context",
+            "language": "python",
+            "code": "from scipy.optimize import minimize\n",
+            "error_text": "ImportError: cannot import name 'minimize' from scipy.optimize",
+            "classification": {
+                "error_type": "runtime_error",
+                "module_name": None,
+            },
+            "mock_search_result": "[1] scipy issue\nUse scipy wheels.\nurl: https://example.com",
+            "expect_context": True,
+            "must_contain": ["source=web", "https://example.com"],
+        }
+    ])
+    assert results[0]["passed"] is True
+    assert results[0]["details"]["has_context"] is True
+    assert "scipy" in results[0]["details"]["query"]
+
+
 def test_summary_groups_by_agent_and_task():
     summary = summarize([
         {"agent": "debugger", "task": "classify_error", "passed": True},

@@ -214,6 +214,18 @@
 - [x] `tests/test_debugger_eval_python.py` — pytest gate at ≥70% Pass@1.
 - [x] `tests/test_interpreter_eval_matlab.py` — fact-check on real MATLAB experiments.
 
+### Phase 6 — Near-term UX hardening
+
+- [x] N1: opt-in vLLM JSON Schema constrained decoding for `BenchmarkReport` with local schema-binding smoke artifact.
+- [x] N2: Debugger `web_search` context for external dependency/traceback failures, with `source=web` provenance and deterministic node-level eval cases.
+- [x] N3: `opagent doctor` local environment self-check.
+- [x] N4a: tighter `opagent check` AST validators.
+- [x] N4b: in-session `/model` and `/provider` switch.
+- [x] N4: prompt-toolkit history and slash-command tab completion.
+- [x] N5: MATLAB support for Agent B and C.
+- [ ] L1: opt-in trajectory remote upload.
+- [ ] N5 follow-up: broaden report/CLI polish after platform embedding feedback.
+
 ---
 
 ## Long-term Iterations
@@ -272,6 +284,7 @@ python scripts/run_eval_suite.py --skip-advisor --output-dir docs/eval/latest_de
 - [x] Add release-suite orchestrator with subprocess hard timeouts and aggregate reports.
 - [x] Wire Agent C report fact-checking and report-specific LLM-as-Judge rubric.
 - [x] Add the N1 opt-in vLLM JSON Schema constrained-decoding path for `BenchmarkReport`; local schema-binding smoke passes in `docs/eval/constrained_decoding_smoke.json`. Real fallback-rate measurement remains blocked until a self-hosted vLLM `custom` endpoint is configured.
+- [x] Add the N2 Debugger external-context path and deterministic web-search eval cases (`tests/eval_cases/debugger_web.json`); CI mocks Tavily and verifies disabled-search fallback plus `source=web` provenance.
 - [x] Run Python Debugger LLM Pass@1 on MiniMax; latest accepted provider artifact is `docs/eval/debugger_python_minimax_llm.md` (`15/15`, 2026-05-22).
 - [x] Run MATLAB Debugger LLM Pass@1 on MiniMax; latest accepted provider artifact is `docs/eval/debugger_matlab_minimax_llm.md` (`15/15`, 2026-05-22).
 - [x] Run provider/Judge release sample on MiniMax and record the accepted artifact in `docs/eval/latest/summary.md` (`PASS`, 2026-05-21).

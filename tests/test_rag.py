@@ -14,6 +14,67 @@ def _has_chromadb():
         return False
 
 
+class _DeterministicEmbeddingFunction:
+    """Tiny test embedding that avoids loading sentence-transformers."""
+
+    def __init__(self, model_name: str | None = None):
+        self.model_name = model_name
+
+    def __call__(self, input):
+        texts = [input] if isinstance(input, str) else list(input)
+        return [_embed_text(text) for text in texts]
+
+    def embed_documents(self, input):
+        return self(input)
+
+    def embed_query(self, input):
+        return self(input)
+
+    @staticmethod
+    def name() -> str:
+        return "default"
+
+    @staticmethod
+    def is_legacy() -> bool:
+        return True
+
+
+def _embed_text(text: str) -> list[float]:
+    import re
+
+    lowered = re.sub(r"more", "moré", text.lower())
+    features = [
+        ("performance profile", "dolan", "moré", "profiles/", "performance ratio"),
+        ("common errors", "wrong number of solver arguments", "typeerror", "picklingerror", "lambda"),
+        ("benchmark", "ptype", "parameter", "n_runs", "benchmark()"),
+        ("matlab", "fminunc", "optim"),
+        ("python", "import", "pip"),
+        ("wiki", "guide", "concept", "troubleshooting"),
+    ]
+    vector = []
+    for terms in features:
+        vector.append(float(sum(lowered.count(term) for term in terms)))
+    vector.append(float(len(lowered) % 17) / 17.0)
+    vector.append(1.0)
+    return vector
+
+
+@pytest.fixture(autouse=True)
+def _use_deterministic_rag_embeddings(monkeypatch):
+    """Keep RAG tests focused on indexing/retrieval, not ML model loading."""
+    if not _has_chromadb():
+        return
+
+    import chromadb
+    from optiprofiler_agent.common.rag import KnowledgeRAG
+
+    monkeypatch.setattr(
+        KnowledgeRAG,
+        "_ensure_deps",
+        lambda self: (chromadb, _DeterministicEmbeddingFunction),
+    )
+
+
 @pytest.mark.skipif(not _has_chromadb(), reason="chromadb not installed")
 class TestKnowledgeRAG:
 

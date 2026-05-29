@@ -1,0 +1,45 @@
+[
+  {
+    "id": "dbg_web_scipy_context",
+    "agent": "debugger",
+    "task": "web_context",
+    "language": "python",
+    "code": "from scipy.optimize import minimize\n",
+    "error_text": "ImportError: cannot import name 'minimize' from scipy.optimize",
+    "classification": {
+      "error_type": "runtime_error",
+      "module_name": null
+    },
+    "mock_search_result": "[1] scipy optimize issue\nUse a compatible scipy version.\nurl: https://example.com/scipy",
+    "expect_context": true,
+    "must_contain": ["source=web", "scipy", "https://example.com/scipy"]
+  },
+  {
+    "id": "dbg_web_disabled_filtered",
+    "agent": "debugger",
+    "task": "web_context",
+    "language": "python",
+    "code": "import pycutest\n",
+    "error_text": "ModuleNotFoundError: No module named 'pycutest'",
+    "classification": {
+      "error_type": "dependency_missing",
+      "module_name": "pycutest"
+    },
+    "mock_search_result": "web_search disabled: set TAVILY_API_KEY",
+    "expect_context": false
+  },
+  {
+    "id": "dbg_web_internal_optiprofiler_skipped",
+    "agent": "debugger",
+    "task": "web_context",
+    "language": "python",
+    "code": "from optiprofiler import benchmark\n",
+    "error_text": "ModuleNotFoundError: No module named 'optiprofiler'",
+    "classification": {
+      "error_type": "dependency_missing",
+      "module_name": "optiprofiler"
+    },
+    "mock_search_result": "[1] should not be used\nurl: https://example.com",
+    "expect_context": false
+  }
+]

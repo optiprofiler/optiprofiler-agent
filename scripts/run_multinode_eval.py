@@ -11,17 +11,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tempfile
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from optiprofiler_agent.common.interface_adapter import analyze_solver
+from optiprofiler_agent.debugger.debugger import (
+    _collect_web_debug_context,
+    _format_web_debug_context,
+)
 from optiprofiler_agent.debugger.error_classifier import classify_error
+from optiprofiler_agent.debugger.error_classifier import ErrorClassification
 from optiprofiler_agent.interpreter.result_loader import _parse_log_txt, load_results
 from optiprofiler_agent.interpreter.summary import build_summary
 from optiprofiler_agent.validators.matlab_checker import check_matlab_code
@@ -36,6 +43,7 @@ def _load_cases(paths: list[str] | None) -> list[dict]:
     else:
         files = [
             EVAL_CASES_DIR / "debugger_matlab.json",
+            EVAL_CASES_DIR / "debugger_web.json",
             EVAL_CASES_DIR / "interpreter_matlab.json",
         ]
     cases: list[dict] = []
@@ -107,6 +115,39 @@ def _eval_debugger_case(case: dict) -> tuple[bool, dict]:
             "needs_wrapper": analysis.needs_wrapper,
             "func_name": analysis.func_name,
             "expected_needs_wrapper": case["expect_needs_wrapper"],
+        }
+
+    if task == "web_context":
+        cls_data = case.get("classification", {})
+        classification = ErrorClassification(
+            error_type=cls_data.get("error_type", "runtime_error"),
+            confidence=cls_data.get("confidence", 1.0),
+            details=cls_data.get("details", "test case"),
+            module_name=cls_data.get("module_name"),
+        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False), patch(
+            "optiprofiler_agent.debugger.debugger._run_debugger_web_search",
+            return_value=case.get("mock_search_result", ""),
+        ):
+            context = _collect_web_debug_context(
+                code=case.get("code", ""),
+                error=case.get("error_text", ""),
+                classification=classification,
+                language=lang,
+            )
+        rendered = _format_web_debug_context(context)
+        expect_context = bool(case.get("expect_context"))
+        passed = bool(context) == expect_context
+        missing = [
+            needle for needle in case.get("must_contain", [])
+            if needle not in rendered
+        ]
+        passed = passed and not missing
+        return passed, {
+            "has_context": bool(context),
+            "query": context[0] if context else None,
+            "missing": missing,
+            "rendered_excerpt": rendered[:500],
         }
 
     raise ValueError(f"Unknown debugger task: {task}")

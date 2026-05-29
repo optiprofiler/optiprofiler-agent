@@ -972,6 +972,189 @@ def _handle_numerical(error: str, language: str = "python") -> tuple[str | None,
     return None, report
 
 
+_WEB_SEARCH_DISABLED_PREFIXES = (
+    "web_search disabled:",
+    "web_search error:",
+    "No web results found.",
+)
+
+_EXTERNAL_DEBUG_TERMS = (
+    "scipy",
+    "pycutest",
+    "cutest",
+    "prima",
+    "pdfo",
+    "nlopt",
+    "cobyqa",
+    "bobyqa",
+    "newuoa",
+    "uobyqa",
+    "lincoa",
+    "matcutest",
+    "fminunc",
+    "fmincon",
+    "patternsearch",
+    "optimoptions",
+    "optimset",
+    "optimization toolbox",
+)
+
+_INTERNAL_DEBUG_TERMS = (
+    "optiprofiler",
+    "optiprofiler_agent",
+    "opagent",
+)
+
+
+def _last_nonempty_line(text: str) -> str:
+    for line in reversed((text or "").splitlines()):
+        stripped = line.strip()
+        if stripped:
+            return stripped
+    return ""
+
+
+def _extract_traceback_packages(error: str) -> list[str]:
+    """Return third-party package-like names visible in traceback file paths."""
+    import re
+
+    packages: list[str] = []
+    patterns = [
+        r"(?:site-packages|dist-packages)/(?P<name>[A-Za-z_][\w-]*)",
+        r"File\s+[\"'][^\"']*/(?P<name>scipy|pycutest|prima|pdfo|nlopt|numpy)/",
+    ]
+    for pattern in patterns:
+        for match in re.finditer(pattern, error or "", flags=re.IGNORECASE):
+            name = match.group("name").replace("-", "_").lower()
+            if name and name not in packages:
+                packages.append(name)
+    return packages
+
+
+def _module_is_internal(name: str | None) -> bool:
+    if not name:
+        return False
+    lowered = name.lower()
+    return any(term in lowered for term in _INTERNAL_DEBUG_TERMS)
+
+
+def _debug_error_has_external_context(
+    classification: ErrorClassification,
+    error: str,
+    code: str,
+    language: str,
+) -> bool:
+    """Decide whether a traceback is open-world enough to search the web."""
+    import os
+
+    if os.environ.get("OPAGENT_DEBUGGER_WEB_SEARCH", "").strip().lower() in {"0", "false", "off"}:
+        return False
+
+    module_name = classification.module_name
+    if _module_is_internal(module_name):
+        return False
+
+    if classification.error_type == "dependency_missing" and module_name:
+        return True
+
+    haystack = f"{error}\n{code if classification.error_type == 'dependency_missing' else ''}".lower()
+    if any(term in haystack for term in _INTERNAL_DEBUG_TERMS) and not any(
+        term in haystack for term in _EXTERNAL_DEBUG_TERMS
+    ):
+        return False
+
+    if _extract_traceback_packages(error):
+        return True
+
+    return any(term in haystack for term in _EXTERNAL_DEBUG_TERMS)
+
+
+def _build_debugger_web_query(
+    classification: ErrorClassification,
+    error: str,
+    code: str,
+    language: str,
+) -> str:
+    """Build a compact search query from traceback/package facts only."""
+    import re
+
+    terms: list[str] = []
+    if classification.module_name and not _module_is_internal(classification.module_name):
+        terms.append(classification.module_name)
+
+    for package in _extract_traceback_packages(error):
+        if package not in terms and not _module_is_internal(package):
+            terms.append(package)
+
+    lowered = f"{error}\n{code if classification.error_type == 'dependency_missing' else ''}".lower()
+    for term in _EXTERNAL_DEBUG_TERMS:
+        if term in lowered and term not in terms:
+            terms.append(term)
+
+    last_line = _last_nonempty_line(error)
+    if last_line:
+        # Strip absolute paths and line-number clutter; keep exception text.
+        last_line = re.sub(r'File\s+"[^"]+",\s*line\s+\d+,?\s*', "", last_line)
+        last_line = re.sub(r"/[^\s:]+/", "", last_line)
+        terms.append(last_line[:240])
+
+    lang_label = "MATLAB" if _normalize_language(language) == "matlab" else "Python"
+    terms.append(f"{lang_label} traceback fix")
+    return " ".join(dict.fromkeys(part.strip() for part in terms if part.strip()))[:500]
+
+
+def _run_debugger_web_search(query: str) -> str:
+    """Run the shared web_search tool. Split out for cheap unit testing."""
+    from optiprofiler_agent.tools.web_search import web_search
+
+    try:
+        return web_search.invoke({"query": query})
+    except Exception as exc:  # defensive: debugger must not fail because search failed.
+        return f"web_search error: {exc}"
+
+
+def _collect_web_debug_context(
+    code: str,
+    error: str,
+    classification: ErrorClassification,
+    language: str,
+) -> tuple[str, str] | None:
+    """Fetch web snippets for external-library errors, if configured."""
+    if not _debug_error_has_external_context(classification, error, code, language):
+        return None
+
+    query = _build_debugger_web_query(classification, error, code, language)
+    if not query:
+        return None
+
+    result = (_run_debugger_web_search(query) or "").strip()
+    if not result:
+        return None
+    if any(result.startswith(prefix) for prefix in _WEB_SEARCH_DISABLED_PREFIXES):
+        return None
+    return query, result
+
+
+def _format_web_debug_context(web_context: tuple[str, str] | None, *, limit: int = 1800) -> str:
+    """Render retrieved snippets with auditable provenance."""
+    if not web_context:
+        return ""
+    query, result = web_context
+    result = result[:limit].rstrip() + ("..." if len(result) > limit else "")
+    return (
+        "## External Search Context (source=web)\n\n"
+        f"query: `{query}`\n\n"
+        f"{result}"
+    )
+
+
+def _append_web_debug_context(report: str, web_context: tuple[str, str] | None) -> str:
+    formatted = _format_web_debug_context(web_context)
+    if not formatted:
+        return report
+    return report.rstrip() + "\n\n" + formatted + "\n"
+
+
 def _handle_runtime_with_llm(
     code: str,
     error: str,
@@ -979,6 +1162,7 @@ def _handle_runtime_with_llm(
     max_retries: int = 3,
     code_char_limit: int = 0,
     language: str = "python",
+    web_context: tuple[str, str] | None = None,
 ) -> tuple[str | None, str, int]:
     """Use LLM to analyze and fix runtime errors.
 
@@ -1048,6 +1232,15 @@ def _handle_runtime_with_llm(
         user_msg = (
             f"## Code\n\n```{code_tag}\n{code_for_llm}\n```\n\n"
             f"## Error\n\n```\n{last_error[-2000:]}\n```\n\n"
+        )
+        formatted_web_context = _format_web_debug_context(web_context)
+        if formatted_web_context:
+            user_msg += (
+                f"{formatted_web_context}\n\n"
+                "Use the source=web context only as supporting external context. "
+                "Do not cite it as an OptiProfiler API source.\n\n"
+            )
+        user_msg += (
             f"Please fix the code. Return the COMPLETE corrected code in a "
             f"{lang_label} code block. "
             "Include ALL imports and function definitions, not just the changed part."
@@ -1090,6 +1283,7 @@ def _handle_runtime_with_llm(
                     f"The LLM identified and fixed the issue.\n\n"
                     f"**Original error:** {error[:200]}\n"
                 )
+                report = _append_web_debug_context(report, web_context)
                 return fixed, report, attempts
 
             last_error = f"Validation failed: {'; '.join(validation_errors)}"
@@ -1116,6 +1310,7 @@ def _handle_runtime_with_llm(
             "2. All required imports are present.\n"
             "3. The `benchmark()` call has at least 2 solvers.\n"
         )
+    report = _append_web_debug_context(report, web_context)
     return None, report, attempts
 
 
@@ -1214,6 +1409,12 @@ def debug_script(
     language = _normalize_language(language)
 
     classification = classify_error_with_llm(error, code, config, language=language)
+    web_context = _collect_web_debug_context(
+        code=code,
+        error=error,
+        classification=classification,
+        language=language,
+    )
 
     fixed_code: str | None = None
     report: str = ""
@@ -1242,6 +1443,7 @@ def debug_script(
                 max_retries=config.max_debug_retries,
                 code_char_limit=config.code_char_limit,
                 language=language,
+                web_context=web_context,
             )
             if llm_fixed:
                 fixed_code, report, attempts = llm_fixed, llm_report, llm_attempts
@@ -1257,9 +1459,11 @@ def debug_script(
                 max_retries=config.max_debug_retries,
                 code_char_limit=config.code_char_limit,
                 language=language,
+                web_context=web_context,
             )
         if fixed_code is None:
             _, report = _handle_dependency_missing(classification, language=language)
+            report = _append_web_debug_context(report, web_context)
 
     elif classification.error_type == "timeout":
         fixed_code, report = _handle_static_fix(code, error, language)
@@ -1272,9 +1476,11 @@ def debug_script(
                 max_retries=config.max_debug_retries,
                 code_char_limit=config.code_char_limit,
                 language=language,
+                web_context=web_context,
             )
         if fixed_code is None:
             _, report = _handle_timeout(error, language=language)
+            report = _append_web_debug_context(report, web_context)
 
     elif classification.error_type == "numerical":
         fixed_code, report = _handle_static_fix(code, error, language)
@@ -1287,9 +1493,11 @@ def debug_script(
                 max_retries=config.max_debug_retries,
                 code_char_limit=config.code_char_limit,
                 language=language,
+                web_context=web_context,
             )
         if fixed_code is None:
             _, report = _handle_numerical(error, language=language)
+            report = _append_web_debug_context(report, web_context)
 
     else:
         fixed_code, report = _handle_static_fix(code, error, language)
@@ -1302,6 +1510,7 @@ def debug_script(
                 max_retries=config.max_debug_retries,
                 code_char_limit=config.code_char_limit,
                 language=language,
+                web_context=web_context,
             )
 
     validation_passed = False

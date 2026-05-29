@@ -3,11 +3,16 @@
 All tests use mocked LLM calls; no real API key needed.
 """
 
+import os
 from unittest.mock import MagicMock, patch
 
 from optiprofiler_agent.debugger.debugger import (
     DebugResult,
+    _build_debugger_web_query,
+    _collect_web_debug_context,
+    _debug_error_has_external_context,
     _extract_code_from_reply,
+    _format_web_debug_context,
     _handle_python_static_fix,
     _handle_matlab_static_fix,
     _handle_interface_mismatch,
@@ -49,6 +54,15 @@ Traceback (most recent call last):
   File "script.py", line 1, in <module>
     import nonexistent_module
 ModuleNotFoundError: No module named 'nonexistent_module'
+"""
+
+SCIPY_TRACEBACK = """\
+Traceback (most recent call last):
+  File "script.py", line 3, in <module>
+    from scipy.optimize import minimize
+  File "/venv/lib/python3.11/site-packages/scipy/optimize/__init__.py", line 1, in <module>
+    raise ImportError("cannot import name 'minimize'")
+ImportError: cannot import name 'minimize' from 'scipy.optimize'
 """
 
 
@@ -460,23 +474,166 @@ validate_bounds([0.0, 1.0], [0.0], [2.0, 3.0])
 
 
 # ---------------------------------------------------------------------------
+# Debugger web-search context
+# ---------------------------------------------------------------------------
+
+class TestDebuggerWebSearchContext:
+
+    def test_external_dependency_triggers_web_context(self):
+        classification = MagicMock(
+            error_type="dependency_missing",
+            module_name="scipy",
+        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False):
+            assert _debug_error_has_external_context(
+                classification,
+                SCIPY_TRACEBACK,
+                "from scipy.optimize import minimize",
+                "python",
+            )
+
+    def test_internal_optiprofiler_error_does_not_trigger_web_context(self):
+        classification = MagicMock(
+            error_type="dependency_missing",
+            module_name="optiprofiler",
+        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False):
+            assert not _debug_error_has_external_context(
+                classification,
+                "ModuleNotFoundError: No module named 'optiprofiler'",
+                "from optiprofiler import benchmark",
+                "python",
+            )
+
+    def test_env_flag_disables_web_context(self):
+        classification = MagicMock(
+            error_type="dependency_missing",
+            module_name="scipy",
+        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "0"}, clear=False):
+            assert not _debug_error_has_external_context(
+                classification,
+                "ModuleNotFoundError: No module named 'scipy'",
+                "import scipy",
+                "python",
+            )
+
+    def test_builds_focused_query_from_traceback(self):
+        classification = MagicMock(
+            error_type="runtime_error",
+            module_name=None,
+        )
+        query = _build_debugger_web_query(
+            classification,
+            SCIPY_TRACEBACK,
+            "from scipy.optimize import minimize",
+            "python",
+        )
+        assert "scipy" in query
+        assert "ImportError" in query
+        assert "Python traceback fix" in query
+
+    @patch("optiprofiler_agent.debugger.debugger._run_debugger_web_search")
+    def test_collect_context_filters_disabled_search(self, mock_search):
+        mock_search.return_value = "web_search disabled: set TAVILY_API_KEY"
+        classification = MagicMock(
+            error_type="dependency_missing",
+            module_name="scipy",
+        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False):
+            assert _collect_web_debug_context(
+                code="import scipy",
+                error="ModuleNotFoundError: No module named 'scipy'",
+                classification=classification,
+                language="python",
+            ) is None
+
+    @patch("optiprofiler_agent.debugger.debugger._run_debugger_web_search")
+    def test_collect_context_returns_query_and_results(self, mock_search):
+        mock_search.return_value = "[1] scipy install issue\nUse scipy>=1.11\nurl: https://example.com"
+        classification = MagicMock(
+            error_type="dependency_missing",
+            module_name="scipy",
+        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False):
+            context = _collect_web_debug_context(
+                code="import scipy",
+                error="ModuleNotFoundError: No module named 'scipy'",
+                classification=classification,
+                language="python",
+            )
+        assert context is not None
+        assert "scipy" in context[0]
+        assert "source=web" in _format_web_debug_context(context)
+
+    @patch("optiprofiler_agent.common.llm_client.create_llm")
+    def test_llm_prompt_receives_source_web_context(self, mock_create):
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = MagicMock(
+            content="```python\nimport scipy\nprint('fixed')\n```"
+        )
+        mock_create.return_value = mock_llm
+
+        from optiprofiler_agent.debugger.debugger import _handle_runtime_with_llm
+
+        fixed, report, attempts = _handle_runtime_with_llm(
+            code="import scipy\nprint('broken')\n",
+            error="ImportError: cannot import name 'minimize' from scipy.optimize",
+            config=_make_config(),
+            max_retries=1,
+            language="python",
+            web_context=(
+                "scipy ImportError Python traceback fix",
+                "[1] scipy issue\nUse a compatible scipy version.\nurl: https://example.com",
+            ),
+        )
+
+        assert fixed is not None
+        assert attempts == 1
+        assert "source=web" in report
+        user_msg = mock_llm.invoke.call_args.args[0][1].content
+        assert "External Search Context (source=web)" in user_msg
+        assert "Use the source=web context only as supporting external context" in user_msg
+
+
+# ---------------------------------------------------------------------------
 # debug_script
 # ---------------------------------------------------------------------------
 
 class TestDebugScript:
 
     @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
-    def test_dependency_missing_no_llm_needed(self, mock_llm):
+    @patch("optiprofiler_agent.debugger.debugger._run_debugger_web_search")
+    def test_dependency_missing_no_llm_needed(self, mock_search, mock_llm):
+        mock_search.return_value = "web_search disabled: set TAVILY_API_KEY"
         mock_llm.return_value = (None, "attempted", 1)
-        result = debug_script(
-            code="import nonexistent_module",
-            error=IMPORT_ERROR_TRACEBACK,
-            config=_make_config(),
-        )
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False):
+            result = debug_script(
+                code="import nonexistent_module",
+                error=IMPORT_ERROR_TRACEBACK,
+                config=_make_config(),
+            )
         assert isinstance(result, DebugResult)
         assert result.classification.error_type == "dependency_missing"
         assert result.classification.module_name == "nonexistent_module"
         assert "pip install" in result.diagnostic_report
+
+    @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
+    @patch("optiprofiler_agent.debugger.debugger._run_debugger_web_search")
+    def test_dependency_missing_appends_web_context_to_fallback_report(self, mock_search, mock_llm):
+        mock_search.return_value = "[1] scipy install\nInstall scipy wheels.\nurl: https://example.com"
+        mock_llm.return_value = (None, "attempted", 1)
+        with patch.dict(os.environ, {"OPAGENT_DEBUGGER_WEB_SEARCH": "1"}, clear=False):
+            result = debug_script(
+                code="import scipy",
+                error="ModuleNotFoundError: No module named 'scipy'",
+                config=_make_config(),
+            )
+        assert result.fixed_code is None
+        assert "pip install scipy" in result.diagnostic_report
+        assert "source=web" in result.diagnostic_report
+        assert "url: https://example.com" in result.diagnostic_report
+        assert "scipy" in mock_search.call_args.args[0]
 
     @patch("optiprofiler_agent.debugger.debugger._handle_runtime_with_llm")
     def test_name_error_classified_as_runtime(self, mock_llm):

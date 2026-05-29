@@ -93,6 +93,9 @@ Node-level checks:
   checks.
 - **Sandbox**: `broken.<ext>` fails and proposed or golden `fix.<ext>`
   runs cleanly.
+- **External context**: third-party dependency/traceback cases can retrieve
+  web snippets, disabled search is filtered, and rendered reports preserve
+  `source=web` provenance.
 - **Task success**: Pass@1/Pass@3 over curated broken scripts.
 
 Commands:
@@ -101,6 +104,10 @@ Commands:
 python scripts/run_debugger_eval.py --language python --strategy golden
 python scripts/run_debugger_eval.py --language matlab --strategy golden
 python scripts/run_debugger_eval.py --language python --strategy llm --provider minimax
+python scripts/run_multinode_eval.py \
+  --cases tests/eval_cases/debugger_web.json \
+  --output /tmp/debugger_web_eval.json \
+  --report /tmp/debugger_web_eval.md
 ```
 
 Latest release artifact:
@@ -159,6 +166,11 @@ supports:
 `scripts/run_debugger_eval.py` is the Debugger task-success runner. It
 supports golden and LLM strategies, Python and MATLAB fixtures, and
 Markdown/JSON reporting.
+
+`scripts/run_multinode_eval.py` includes deterministic node-level Debugger
+coverage for web-search context. The N2 cases mock the actual Tavily call so
+CI validates routing, fallback filtering, query construction, and report
+provenance without needing network access or `TAVILY_API_KEY`.
 
 `scripts/run_interpreter_eval.py` is the Interpreter report evaluator.
 It fact-checks generated Markdown against `BenchmarkSummary` and can

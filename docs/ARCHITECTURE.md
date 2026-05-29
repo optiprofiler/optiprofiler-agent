@@ -196,6 +196,16 @@ adapter. We only fall back to LLM when classification is `runtime_error`
 or `unknown`, and even then the suggested fix is re-validated by
 `validate_benchmark_call` before being returned.
 
+For external-library errors, the specialist Debugger can also call the
+shared `tools/web_search.py` helper directly after classification. The
+trigger is deliberately narrow: third-party dependency failures,
+recognised solver/package names, or traceback frames from `site-packages`.
+Internal OptiProfiler/API errors stay on the local knowledge path. Any
+retrieved snippets are tagged as `source=web`, passed to the LLM only as
+supporting context, and appended to the diagnostic report for provenance.
+Disabled search, empty results, and Tavily errors are filtered out so the
+pre-existing deterministic/LLM debug path still runs unchanged.
+
 #### 3.3.3 Interpreter (`interpreter/interpreter.py`)
 
 Strict structured-output pipeline:

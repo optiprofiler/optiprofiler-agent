@@ -66,6 +66,13 @@ on thinking models to <1 %. Free-form fallback can then be deleted.
 
 ### N2. `web_search` in the debugger path
 
+**Status:** Implemented (2026-05). Debugger now detects external-library
+tracebacks and dependency failures, builds a focused traceback query, calls
+the shared `tools/web_search.py` helper, and appends auditable
+`source=web` context to the LLM prompt and diagnostic report. Missing Tavily
+configuration, empty results, and tool errors degrade to the pre-existing
+Debugger path without failing the debug run.
+
 **Problem.** [`debugger/debugger.py`](../optiprofiler_agent/debugger/debugger.py)
 classifies tracebacks but only consults `knowledge_search` (our own
 wiki) and the LLM's parametric memory. Errors raised by third-party
