@@ -81,3 +81,75 @@ class TestKnowledgeBase:
         enum = kb.get_enum("FeatureName")
         assert enum is not None
         assert "PLAIN" in enum
+
+    def test_python_public_exports_match_current_package_root(self):
+        from optiprofiler_agent.common.knowledge_base import KnowledgeBase
+
+        kb = KnowledgeBase(KNOWLEDGE_DIR)
+        notes = kb.get_api_notes("python")
+        exports = set(notes["public_exports"])
+
+        assert {
+            "benchmark",
+            "Problem",
+            "Feature",
+            "FeaturedProblem",
+            "show_versions",
+            "get_plib_config",
+            "set_plib_config",
+        } <= exports
+        assert "s2mpj_load" not in exports
+        assert "pycutest_select" not in exports
+
+    def test_worker_defaults_synced_from_source(self):
+        from optiprofiler_agent.common.knowledge_base import KnowledgeBase
+
+        kb = KnowledgeBase(KNOWLEDGE_DIR)
+        for lang in ("python", "matlab"):
+            n_jobs = kb.get_param(lang, "n_jobs")
+            assert n_jobs is not None
+            text = f"{n_jobs.get('default', '')} {n_jobs.get('description', '')}".lower()
+            assert "conservative" in text
+            assert "half" in text
+            assert "available workers" in text
+
+    def test_matlab_draw_hist_plots_default_is_source_synced(self):
+        from optiprofiler_agent.common.knowledge_base import KnowledgeBase
+
+        kb = KnowledgeBase(KNOWLEDGE_DIR)
+        opt = kb.get_param("matlab", "draw_hist_plots")
+        assert opt is not None
+        text = f"{opt.get('default', '')} {opt.get('description', '')}".lower()
+        assert "parallel" in text
+        assert "load" in text
+        assert "sequential" in text
+
+    def test_output_report_diagnostics_are_documented(self):
+        from optiprofiler_agent.common.knowledge_base import KnowledgeBase
+
+        kb = KnowledgeBase(KNOWLEDGE_DIR)
+        for lang in ("python", "matlab"):
+            artifacts = kb.get_benchmark(lang).get("output_artifacts", {})
+            report = artifacts.get("test_log_report", "").lower()
+            assert "selected problem" in report
+            assert "abnormal solver" in report
+            assert "output fallback" in report
+            assert "solver scores" in report
+
+    def test_matlab_custom_problem_library_uses_folder_convention(self):
+        path = KNOWLEDGE_DIR / "wiki" / "guides" / "custom-problem-library-matlab.md"
+        content = path.read_text()
+        assert "options.custom_problem_libs_path" not in content
+        assert "optiprofiler/problem_libs" in content
+        assert "options.plibs" in content
+        assert "MATLAB has no `custom_problem_libs_path` option" in content
+
+    def test_solver_compat_scipy_nonlinear_constraints_are_vector_safe(self):
+        path = KNOWLEDGE_DIR / "wiki" / "troubleshooting" / "solver-compat.md"
+        content = path.read_text()
+        assert "np.atleast_1d(cub(x0))" in content
+        assert "np.zeros_like(c_ub_x0)" in content
+        assert "np.atleast_1d(ceq(x0))" in content
+        assert "np.zeros_like(c_eq_x0)" in content
+        assert "NonlinearConstraint(cub, -np.inf, 0)" not in content
+        assert "NonlinearConstraint(ceq, 0, 0)" not in content

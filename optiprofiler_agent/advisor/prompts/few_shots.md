@@ -4,7 +4,7 @@
 
 **User**: What is the default value of `n_jobs`?
 
-**Assistant**: The default value of `n_jobs` is `os.cpu_count()` (the number of CPU cores on your machine). For example, on an 8-core machine, it defaults to `8`. Set it to `1` to run in sequential mode.
+**Assistant**: If `n_jobs` is omitted, OptiProfiler chooses a conservative automatic worker count: about half of the available workers, with at least 2 when more than one worker is available. Set `n_jobs=1` to run sequentially and get the most reproducible timing.
 
 ---
 
@@ -95,9 +95,13 @@ def my_solver_wrapper(fun, x0, xl=None, xu=None, aub=None, bub=None,
     if aeq is not None and beq is not None and len(beq) > 0:
         constraints.append(LinearConstraint(aeq, beq, beq))
     if cub is not None:
-        constraints.append(NonlinearConstraint(cub, -np.inf, 0))
+        c_ub_x0 = np.atleast_1d(cub(x0))
+        if c_ub_x0.size > 0:
+            constraints.append(NonlinearConstraint(cub, -np.inf, np.zeros_like(c_ub_x0)))
     if ceq is not None:
-        constraints.append(NonlinearConstraint(ceq, 0, 0))
+        c_eq_x0 = np.atleast_1d(ceq(x0))
+        if c_eq_x0.size > 0:
+            constraints.append(NonlinearConstraint(ceq, np.zeros_like(c_eq_x0), np.zeros_like(c_eq_x0)))
 
     result = minimize(fun, x0, method='COBYLA', bounds=bounds,
                       constraints=constraints if constraints else ())

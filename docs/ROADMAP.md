@@ -297,6 +297,14 @@ The two sub-features have **different interaction shapes** on purpose:
 
 #### M4a. Custom feature generation (chat-first)
 
+**Status:** First version implemented (2026-06). The unified agent now has
+`scaffold_feature`, backed by `advisor/scaffold_feature.py`, which maps common
+custom-feature descriptions to validated Python `feature_name="custom"` code.
+It covers objective noise, gradient-scaled noise, quantized/noisy objectives,
+initial-point perturbation, bound shrinking, affine rotation, and nonlinear
+constraint modifiers. The first version returns inline code only; file writes
+remain deferred to the shared `write_scaffold_file` tool planned for M4b.
+
 **Problem.** When none of the ten built-in `feature_name` presets
 matches what a user wants to test, they have to read
 [`guides/custom-feature.md`](../optiprofiler_agent/knowledge/wiki/guides/custom-feature.md),
@@ -362,6 +370,8 @@ composite, infeasible-side constraint perturbation) each produce code
 that runs without modification inside a `benchmark()` call and survives
 a 2-process parallel run (i.e. pickles cleanly — see
 [`guides/parallel-and-pickle.md`](../optiprofiler_agent/knowledge/wiki/concepts/parallel-and-pickle.md)).
+The deterministic node eval is `tests/eval_cases/advisor_scaffold_feature.json`
+and currently passes 5/5.
 
 ---
 

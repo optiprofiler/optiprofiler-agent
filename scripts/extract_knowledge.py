@@ -364,11 +364,24 @@ def extract_python_plib_tools() -> dict:
 def extract_python_api_notes() -> dict:
     return {
         "language": "Python",
+        "public_exports": [
+            "benchmark",
+            "Problem",
+            "Feature",
+            "FeaturedProblem",
+            "show_versions",
+            "get_plib_config",
+            "set_plib_config",
+        ],
         "solver_format": "list of callables: [solver1, solver2]",
         "options_format": "keyword arguments to benchmark()",
         "vector_convention": "1-D numpy arrays, shape (n,)",
         "problem_libs": ["s2mpj", "pycutest", "custom"],
         "python_only_options": ["custom_problem_libs_path"],
+        "installation": {
+            "pip": "pip install optiprofiler",
+            "conda_forge": "conda install conda-forge::optiprofiler",
+        },
         "pycutest_note": "Requires separate installation; Linux and macOS only",
         "lambda_warning": "Lambda functions are not picklable — use named functions (def) for parallel execution (n_jobs > 1)",
     }
@@ -595,9 +608,14 @@ def extract_matlab_api_notes() -> dict:
         "vector_convention": "column vectors (n×1 matrices)",
         "problem_libs": ["s2mpj", "matcutest"],
         "matcutest_note": "matcutest is only available on Linux",
+        "setup": {
+            "interactive": "setup",
+            "noninteractive": "setup(struct('install_matcutest', true)) or setup(struct('install_matcutest', false))",
+            "uninstall": "setup uninstall",
+        },
         "differences_from_python": {
             "maxdim_default": "mindim + 10 (Python: mindim + 1)",
-            "draw_hist_plots_default": "'sequential' (Python: 'parallel')",
+            "draw_hist_plots_default": "'parallel' in normal runs; load mode forces 'sequential'",
             "solvers_to_load": "1-indexed (Python: 0-indexed)",
             "line_colors_default": "MATLAB 'gem' colororder (Python: matplotlib tab10)",
             "no_custom_problem_libs_path": "MATLAB uses folder structure instead",

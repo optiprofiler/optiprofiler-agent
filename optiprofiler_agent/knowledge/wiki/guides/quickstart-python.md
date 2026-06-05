@@ -2,7 +2,7 @@
 tags: [guide, python, quickstart]
 sources: [_sources/python/api_notes.json]
 related: [api/python/benchmark.md, concepts/benchmark-function.md, guides/custom-solver.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # Python Quickstart
@@ -12,6 +12,15 @@ last_updated: 2025-04-13
 ```bash
 pip install optiprofiler
 ```
+
+Conda-forge is also supported:
+
+```bash
+conda install conda-forge::optiprofiler
+```
+
+S2MPJ is bundled by default. PyCUTEst is optional, requires a separate
+installation, and is available only on Linux and macOS.
 
 ## Example 1: Basic Benchmark
 
@@ -35,6 +44,13 @@ scores = benchmark([my_solver, another_solver], ptype='u', mindim=2, maxdim=5)
 ```
 
 **Important**: At least **2 solvers** are required.
+
+By default, OptiProfiler creates an `out/<feature_stamp>_<timestamp>/`
+folder under the current working directory and writes `summary.pdf`,
+per-problem results, and `test_log/`. `test_log/report.txt` records the
+selected problem names, timing information, `merit_init = phi(x_0) =
+inf` cases, abnormal solver terminations, output fallbacks, and solver
+scores; `test_log/log.txt` contains printed run messages.
 
 ## Example 2: Noisy Feature
 
@@ -70,6 +86,11 @@ def my_solver(fun, x0):
 
 scores = benchmark([my_solver, other_solver], n_jobs=4)
 ```
+
+If `n_jobs` is omitted, OptiProfiler chooses a conservative default:
+about half of the available workers, with at least 2 workers when more
+than one worker is available. Set `n_jobs=1` for the most reproducible
+timing experiments.
 
 The same `def`-not-`lambda` rule applies to any callable that has to
 cross a worker boundary (custom `mod_*` features, `profile_options`

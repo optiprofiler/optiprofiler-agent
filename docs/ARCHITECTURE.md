@@ -133,7 +133,8 @@ model rarely picks the wrong one. Source of truth is
 | 6 | `update_user_profile` | Set a whitelisted profile field                             | —                       | `~/.opagent/USER.md` (frontmatter) |
 | 7 | `recall_past`       | Full-text search past chat turns (FTS5)                       | `~/.opagent/sessions.db`| —                               |
 | 8 | `add_wiki_page`     | Author a new knowledge page                                   | —                       | `~/.opagent/wiki/auto/*.md`     |
-| 9 | `web_search`        | External search (Tavily) — guard-railed scope                 | external API            | —                               |
+| 9 | `scaffold_feature`  | Generate validated Python custom-feature code                 | user description        | —                               |
+|10 | `web_search`        | External search (Tavily) — guard-railed scope                 | external API            | —                               |
 
 **Routing discipline.** The system prompt contains a hard rule that the
 model must call the tool **before** claiming it is unavailable, to
@@ -142,10 +143,10 @@ search is disabled and refuses preemptively. The tool itself returns a
 `web_search disabled: ...` string when keys are missing, which the
 model is then explicitly allowed to relay.
 
-**Why these nine?** They map 1:1 to the user journey we ship for, and
+**Why these ten?** They map 1:1 to the user journey we ship for, and
 to the L4 follow-up in the roadmap (constrained decoding can later
 replace `validate_script`'s post-hoc check with a generation-time
-guarantee). Adding a tenth tool means adding routing reasoning to the
+guarantee). Adding another tool means adding routing reasoning to the
 prompt — a real cost — so the bar is high.
 
 ### 3.3 Specialist agents (when the unified loop is overkill)
@@ -284,10 +285,11 @@ L2 (validation): post-generation AST lint (api_checker)
   (≥ 2 solvers, kwarg names, enum values).
 - `_ImportVisitor`: catches the most-common reference hallucination
   patterns in the wild — `optiprobe` typos and fake submodules
-  (`optiprofiler.solvers` does not exist). The whitelist is **derived
-  automatically** from `knowledge/_sources/python/*.json`, so the
-  validator stays in sync with upstream API without a separate
-  maintenance task.
+  (`optiprofiler.solvers` does not exist). The whitelist is read from
+  `api_notes.public_exports` in the Python knowledge source, with a
+  conservative derived fallback for older snapshots. This keeps the guard
+  aligned with the real package-root API instead of accidentally treating
+  adapter internals such as `s2mpj_load` as top-level exports.
 
 `validators/lint_loop.py` is the L2 *lint-and-retry* path used by
 `opagent chat --validate`: extract code blocks → run the constraint

@@ -98,5 +98,16 @@
     "language": null,
     "category": "tool_routing",
     "expect_tool": "knowledge_search"
+  },
+  {
+    "id": "tr11",
+    "question": "Generate a Python custom feature that adds heavy-tailed noise to objective evaluations.",
+    "expected_keywords": ["custom", "mod_fun", "noise"],
+    "must_contain": ["feature_name=\"custom\""],
+    "must_not_contain": ["lambda"],
+    "language": "python",
+    "category": "tool_routing",
+    "expect_tool": "scaffold_feature",
+    "expect_code": true
   }
 ]

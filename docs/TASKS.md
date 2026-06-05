@@ -223,7 +223,9 @@
 - [x] N4b: in-session `/model` and `/provider` switch.
 - [x] N4: prompt-toolkit history and slash-command tab completion.
 - [x] N5: MATLAB support for Agent B and C.
+- [x] M4a first version: Advisor/Unified `scaffold_feature` generates validated Python custom-feature scaffolds with deterministic 5-case eval coverage.
 - [ ] L1: opt-in trajectory remote upload.
+- [ ] M4a follow-up: optional file write/append workflow via shared `write_scaffold_file`.
 - [ ] N5 follow-up: broaden report/CLI polish after platform embedding feedback.
 
 ---
@@ -256,7 +258,7 @@ unambiguously. CI gates pass at L0; release gates publish at L1+L2; the
 
 | Agent | Python | MATLAB |
 |-------|--------|--------|
-| A — Advisor | L0 ✅ · L2 ✅ (factual/adversarial/tool_routing eval) · L3/L4 not gated | L0 ✅ · L2 partial (`language: matlab` cases) · L3/L4 not gated |
+| A — Advisor | L0 ✅ · L2 ✅ (factual/adversarial/tool_routing eval + M4a scaffold-feature node eval 5/5) · L3/L4 not gated | L0 ✅ · L2 partial (`language: matlab` cases) · L3/L4 not gated |
 | B — Debugger | L0 ✅ · L1 ✅ (mocked local_runner) · L2 ✅ (deterministic) · **L3 ✅ Pass@1 15/15 across MiniMax/Kimi/DeepSeek/MiMo LLM strategy — see `docs/eval/provider_sweep_debugger.md`** | L0 ✅ · L1 ✅ (real `matlab -batch` sandbox via `MATOP_MATLAB_BIN`) · L2 ✅ (15 deterministic cases) · **L3 ✅ Pass@1 15/15 across MiniMax/Kimi/DeepSeek/MiMo LLM strategy — see `docs/eval/provider_sweep_debugger.md`** |
 | C — Interpreter | L0 ✅ · L1 ✅ (synthetic + thinking-model JSON path) · L2 ✅ · **L3 ✅ report fact-check runner (`scripts/run_interpreter_eval.py`)** · L4 wired, release sample pending | L0 ✅ · L1 ✅ (synthetic + **real** experiment via `MATOP_REAL_RESULTS_DIR`) · L2 ✅ · **L3 ✅ fact-check on real output — see `tests/test_interpreter_eval_matlab.py` and `scripts/run_interpreter_eval.py`** · L4 wired, release sample pending |
 

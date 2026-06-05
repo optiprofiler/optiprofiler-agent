@@ -123,8 +123,11 @@ class TestImportWhitelist:
         assert "Problem" in exports
         assert "Feature" in exports
         assert "FeaturedProblem" in exports
-        assert "s2mpj_load" in exports
-        assert "pycutest_select" in exports
+        assert "show_versions" in exports
+        assert "get_plib_config" in exports
+        assert "set_plib_config" in exports
+        assert "s2mpj_load" not in exports
+        assert "pycutest_select" not in exports
 
     def test_typo_optiprobe_is_error(self):
         from optiprofiler_agent.validators.api_checker import validate_benchmark_call
@@ -157,7 +160,7 @@ class TestImportWhitelist:
 
         code = (
             "from optiprofiler import benchmark, Problem, Feature\n"
-            "from optiprofiler import s2mpj_load\n"
+            "from optiprofiler import get_plib_config\n"
             "benchmark([s1, s2])\n"
         )
         result = validate_benchmark_call(code)
@@ -166,6 +169,14 @@ class TestImportWhitelist:
             if "import" in i.message.lower() or "submodule" in i.message.lower()
         ]
         assert import_issues == []
+
+    def test_problem_library_helper_is_not_top_level_export(self):
+        from optiprofiler_agent.validators.api_checker import validate_benchmark_call
+
+        code = "from optiprofiler import s2mpj_load\nbenchmark([s1, s2])\n"
+        result = validate_benchmark_call(code)
+        assert any("s2mpj_load" in i.message and i.severity == "warning"
+                   for i in result.issues), result.issues
 
     def test_plain_import_optiprofiler_is_fine(self):
         from optiprofiler_agent.validators.api_checker import validate_benchmark_call

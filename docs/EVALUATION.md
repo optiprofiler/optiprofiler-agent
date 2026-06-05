@@ -69,10 +69,14 @@ python scripts/run_eval.py \
 Node-level checks:
 
 - **Tool route**: expected tool is called (`knowledge_search`,
-  `validate_script`, `debug_error`, `interpret_results`, etc.).
+  `validate_script`, `debug_error`, `interpret_results`,
+  `scaffold_feature`, etc.).
 - **Tool result use**: final answer should reflect the tool output.
 - **No premature refusal**: if a tool exists, the agent should call it
   before claiming a capability is unavailable.
+- **Scaffold nodes**: deterministic custom-feature generation validates
+  selected `mod_*` signatures and generated code before any LLM routing
+  is tested.
 
 Commands:
 
@@ -82,6 +86,11 @@ python scripts/run_eval.py \
   --cases tests/eval_cases/tool_routing.json \
   --output /tmp/unified_routing.json \
   --report /tmp/unified_routing.md
+
+python scripts/run_multinode_eval.py \
+  --cases tests/eval_cases/advisor_scaffold_feature.json \
+  --output /tmp/advisor_scaffold_feature_eval.json \
+  --report /tmp/advisor_scaffold_feature_eval.md
 ```
 
 ### Agent B — Debugger
@@ -167,9 +176,11 @@ supports:
 supports golden and LLM strategies, Python and MATLAB fixtures, and
 Markdown/JSON reporting.
 
-`scripts/run_multinode_eval.py` includes deterministic node-level Debugger
-coverage for web-search context. The N2 cases mock the actual Tavily call so
-CI validates routing, fallback filtering, query construction, and report
+`scripts/run_multinode_eval.py` includes deterministic node-level coverage for
+Advisor custom-feature scaffolding and Debugger web-search context. The M4a
+cases validate generated `feature_name="custom"` snippets and `mod_*`
+selection without an LLM. The N2 cases mock the actual Tavily call so CI
+validates routing, fallback filtering, query construction, and report
 provenance without needing network access or `TAVILY_API_KEY`.
 
 `scripts/run_interpreter_eval.py` is the Interpreter report evaluator.

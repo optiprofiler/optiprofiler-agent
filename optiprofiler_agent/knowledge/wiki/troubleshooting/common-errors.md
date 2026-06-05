@@ -2,7 +2,7 @@
 tags: [troubleshooting, errors, debugging]
 sources: [_sources/python/benchmark.json]
 related: [troubleshooting/solver-compat.md, troubleshooting/timeout-issues.md, concepts/solver-interface.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # Common Errors
@@ -91,6 +91,33 @@ range filters selects zero problems.
 
 **Fix**: Broaden the selection criteria (increase `maxdim`, adjust
 constraint ranges).
+
+## E9: Importing Problem-Library Helpers from the Package Root
+
+**Error**: `ImportError: cannot import name 's2mpj_load' from 'optiprofiler'`
+
+**Cause**: Current OptiProfiler exports a flat public API containing
+`benchmark`, `Problem`, `Feature`, `FeaturedProblem`, `show_versions`,
+`get_plib_config`, and `set_plib_config`. The library-specific
+`s2mpj_*` and `pycutest_*` helper functions are adapter internals, not
+top-level exports.
+
+**Fix**: In normal user code, use `benchmark(..., plibs=['s2mpj'])` or
+`benchmark(..., plibs=['pycutest'])`. For custom libraries, use
+`custom_problem_libs_path` rather than importing built-in adapter
+helpers from the package root.
+
+## E10: Reading `test_log/report.txt`
+
+**Symptom**: A run completes, but some problems are listed under
+`merit_init = phi(x_0) = inf`, abnormal solver termination, or output
+fallback sections.
+
+**Meaning**: `report.txt` is diagnostic, not just a problem list. It
+records selected problem names, timing information, degenerate initial
+merit cases where all solvers pass by convention, solver calls that
+raised exceptions, solver outputs replaced by `x_0` as a penalty, and
+final solver scores.
 
 ## See Also
 

@@ -349,9 +349,9 @@ Two layers are deliberately *not* implemented:
 Two complementary surfaces, by design redundant:
 
 1. **System prompt facts.** `_SYSTEM_PROMPT_BASE` ends with an explicit
-   paragraph listing the package name, the ten public top-level symbols,
-   and the three or four submodule paths users (and LLMs) commonly
-   invent. This is unconditional context, paid once per session.
+   paragraph listing the package name, the current public top-level
+   symbols, and the three or four submodule paths users (and LLMs)
+   commonly invent. This is unconditional context, paid once per session.
 2. **RAG-retrievable wiki page.** [`imports-and-exports.md`](../optiprofiler_agent/knowledge/wiki/api/python/imports-and-exports.md)
    carries the same facts in markdown, indexed alongside the rest of
    `knowledge/wiki/`. When the agent issues `knowledge_search('Python
@@ -365,25 +365,31 @@ Together they cover both behaviours.
 
 #### 7.4.1 Whitelist derivation
 
-The set of legal `from optiprofiler import …` symbols is **derived at
-import time** from the same JSON files the rest of the validator already
-consumes (`knowledge/_sources/python/*.json`):
+The set of legal `from optiprofiler import …` symbols is read at import
+time from `api_notes.public_exports` in the same JSON source tree used by
+the rest of the knowledge base. If an older snapshot lacks
+`public_exports`, the validator falls back to a conservative derivation:
 
 ```python
 @functools.lru_cache(maxsize=4)
 def _load_optiprofiler_python_exports(_kb_id: int = 0) -> frozenset[str]:
     kb = KnowledgeBase()
+    notes = kb.get_api_notes("python") or {}
+    public_exports = notes.get("public_exports")
+    if isinstance(public_exports, list) and public_exports:
+        return frozenset(str(name) for name in public_exports)
+
     exports: set[str] = set()
     exports.update((kb.get_classes("python") or {}).keys())   # Problem, Feature, FeaturedProblem
-    exports.update((kb.get_plib_tools("python") or {}).keys()) # s2mpj_load, pycutest_select, ...
     if kb.get_benchmark("python"):
         exports.add("benchmark")
     return frozenset(exports)
 ```
 
-The whitelist is therefore a *projection* of the same data structures
-used to validate `benchmark()` kwargs. There is no parallel list to keep
-in sync; updating `_sources/python/*.json` updates the validator.
+The primary whitelist is intentionally explicit because OptiProfiler also
+documents adapter-level helpers (`s2mpj_load`, `pycutest_select`, ...)
+that are useful internally but are not package-root imports. Updating
+`api_notes.public_exports` updates the validator.
 
 The cache key `_kb_id` is a synthetic integer (default `0`) that lets
 unit tests bypass the singleton when constructing a fixture KB.

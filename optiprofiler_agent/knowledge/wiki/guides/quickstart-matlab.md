@@ -2,7 +2,7 @@
 tags: [guide, matlab, quickstart]
 sources: [_sources/matlab/api_notes.json]
 related: [api/matlab/benchmark.md, concepts/benchmark-function.md, guides/quickstart-python.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # MATLAB Quickstart
@@ -31,6 +31,9 @@ setup(struct('install_matcutest', true))  % Or false
 
 To uninstall: `setup uninstall`
 
+MatCUTEst is not available on macOS or Windows. On those platforms,
+run `setup(struct('install_matcutest', false))` in automated scripts.
+
 ## Example 1: Basic Benchmark
 
 ```matlab
@@ -38,6 +41,11 @@ scores = benchmark({@solver1, @solver2})
 ```
 
 This benchmarks two solvers on unconstrained problems (default `ptype='u'`).
+By default, OptiProfiler creates an `out/<feature_stamp>_<timestamp>/`
+folder and writes `summary.pdf`, per-problem results, and `test_log/`.
+`test_log/report.txt` records selected problem names, timing,
+`merit_init = phi(x_0) = Inf` cases, abnormal solver terminations,
+output fallbacks, and solver scores.
 
 ## Example 2: With Options
 
@@ -68,6 +76,11 @@ for i = 1:3
 end
 scores = benchmark(solvers, options)
 ```
+
+If `options.n_jobs` is omitted, OptiProfiler uses a conservative worker
+count: about half of the available workers, with at least 2 when more
+than one worker is available. Set `options.n_jobs = 1` for reproducible
+timing experiments.
 
 ## Example 5: Custom Problem Library
 

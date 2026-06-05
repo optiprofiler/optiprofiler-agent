@@ -1,6 +1,6 @@
 ---
 tags: [index, navigation]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # OptiProfiler Knowledge Wiki — Index
@@ -20,7 +20,7 @@ last_updated: 2025-04-13
 - [Imports and Public API](api/python/imports-and-exports.md) — what you can `from optiprofiler import …`
 - [benchmark()](api/python/benchmark.md) — full Python parameter reference
 - [Problem Class](api/python/problem-class.md) — Problem, Feature, FeaturedProblem classes
-- [Problem Library Tools](api/python/plib-tools.md) — s2mpj_load, pycutest_select, etc.
+- [Problem Library Tools](api/python/plib-tools.md) — adapter-level problem library helpers and config APIs
 
 ### MATLAB
 - [benchmark()](api/matlab/benchmark.md) — MATLAB API reference and differences from Python

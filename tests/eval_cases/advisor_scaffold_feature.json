@@ -1,0 +1,47 @@
+[
+  {
+    "id": "adv_scaffold_heavy_tail_noise",
+    "agent": "advisor",
+    "task": "scaffold_feature",
+    "description": "heavy-tailed objective noise with level 1e-3",
+    "expected_modifiers": ["mod_fun"],
+    "must_contain": ["feature_name=\"custom\"", "rng.standard_t", "mod_fun=custom_mod_fun"],
+    "must_not_contain": ["lambda"]
+  },
+  {
+    "id": "adv_scaffold_x0_perturb",
+    "agent": "advisor",
+    "task": "scaffold_feature",
+    "description": "ellipsoidal x0 perturbation that respects bounds",
+    "expected_modifiers": ["mod_x0"],
+    "must_contain": ["mod_x0=custom_mod_x0", "np.clip", "problem.x0"],
+    "must_not_contain": ["lambda"]
+  },
+  {
+    "id": "adv_scaffold_gradient_scaled_noise",
+    "agent": "advisor",
+    "task": "scaffold_feature",
+    "description": "gradient-scaled noise for objective evaluations",
+    "expected_modifiers": ["mod_fun"],
+    "must_contain": ["finite-difference", "grad_norm_sq", "rng.standard_normal"],
+    "must_not_contain": ["lambda"]
+  },
+  {
+    "id": "adv_scaffold_quantized_noisy",
+    "agent": "advisor",
+    "task": "scaffold_feature",
+    "description": "quantized and noisy composite feature with mesh 1e-2",
+    "expected_modifiers": ["mod_fun"],
+    "must_contain": ["x_quantized", "np.round", "mesh_size = 0.01"],
+    "must_not_contain": ["lambda"]
+  },
+  {
+    "id": "adv_scaffold_constraint_perturb",
+    "agent": "advisor",
+    "task": "scaffold_feature",
+    "description": "infeasible-side nonlinear inequality constraint perturbation",
+    "expected_modifiers": ["mod_cub"],
+    "must_contain": ["mod_cub=custom_mod_cub", "ptype=\"n\"", "problem.cub"],
+    "must_not_contain": ["lambda", "mod_ceq=custom_mod_ceq"]
+  }
+]

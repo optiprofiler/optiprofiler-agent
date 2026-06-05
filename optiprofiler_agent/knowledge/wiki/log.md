@@ -1,5 +1,34 @@
 # Wiki Change Log
 
+## [2026-06-05] sync | OptiProfiler 1.1 docs/API sync
+
+Synced agent knowledge against the local `optiprofiler` repository at
+commit `e6fd6f3` (`Modify the docs`), with source checks against
+`README.rst`, `doc/source/user/*.rst`, Python `profiles.py`,
+`profile_utils.py`, `opclasses.py`, MATLAB `benchmark.m`,
+`getDefaultProfileOptions.m`, and wrapper examples.
+
+**Updated facts:**
+- Python install now documents both `pip install optiprofiler` and
+  `conda install conda-forge::optiprofiler`.
+- MATLAB install documents non-interactive `setup(struct('install_matcutest', ...))`
+  and notes MatCUTEst is Linux-only.
+- `n_jobs` default is conservative auto: about half of available workers,
+  with at least 2 when possible.
+- MATLAB `draw_hist_plots` default is `parallel` in normal runs; `load`
+  mode forces `sequential`. This follows current source even though some
+  generated text had stale wording.
+- `test_log/report.txt` now records selected problems, timing,
+  `merit_init = phi(x_0)` degenerate cases, abnormal solver terminations,
+  output fallbacks, and solver scores.
+- Public Python exports are limited to `benchmark`, `Problem`, `Feature`,
+  `FeaturedProblem`, `show_versions`, `get_plib_config`, and
+  `set_plib_config`; `s2mpj_load` / `pycutest_select` are adapter-level
+  internals, not package-root imports.
+- Custom solver docs now include SciPy `NonlinearConstraint` conversion
+  for `ptype='n'` and MATLAB `fmincon` conversion via
+  `@(x) deal(cub(x), ceq(x))`.
+
 ## [2025-04-13] migrate | Initial Wiki Migration
 
 Migrated knowledge base from flat directory structure to LLM Wiki pattern.

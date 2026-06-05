@@ -2,7 +2,7 @@
 tags: [troubleshooting, solver, compatibility, wrapper]
 sources: [_sources/python/benchmark.json, _sources/matlab/benchmark.json]
 related: [troubleshooting/common-errors.md, concepts/solver-interface.md, guides/custom-solver.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # Solver Compatibility
@@ -32,6 +32,25 @@ def scipy_lbfgsb(fun, x0, xl, xu):
     return minimize(fun, x0, method='L-BFGS-B', bounds=bounds).x
 ```
 
+For nonlinearly constrained problems, OptiProfiler provides `cub` and
+`ceq` separately. SciPy `minimize` expects constraint objects, so wrap
+`cub(x) <= 0` as `NonlinearConstraint(cub, -np.inf, zeros)` and
+`ceq(x) = 0` as `NonlinearConstraint(ceq, zeros, zeros)`, where `zeros`
+matches the vector length returned by the callback. Linear constraints
+become `LinearConstraint(aub, -np.inf, bub)` and
+`LinearConstraint(aeq, beq, beq)`.
+
+```python
+import numpy as np
+from scipy.optimize import NonlinearConstraint
+
+c_ub_x0 = np.atleast_1d(cub(x0))
+ineq = NonlinearConstraint(cub, -np.inf, np.zeros_like(c_ub_x0))
+
+c_eq_x0 = np.atleast_1d(ceq(x0))
+eq = NonlinearConstraint(ceq, np.zeros_like(c_eq_x0), np.zeros_like(c_eq_x0))
+```
+
 ## Python: NLopt
 
 NLopt uses a different objective function convention:
@@ -57,6 +76,18 @@ def pdfo_solver(fun, x0):
 ```matlab
 function x = my_solver(fun, x0)
     x = fminsearch(fun, x0);
+end
+```
+
+## MATLAB: fmincon Nonlinear Constraints
+
+`fmincon` expects a single nonlinear constraint function returning two
+outputs. Convert OptiProfiler's `cub` and `ceq` callbacks with `deal`:
+
+```matlab
+function x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+    nonlcon = @(x) deal(cub(x), ceq(x));
+    x = fmincon(fun, x0, aub, bub, aeq, beq, xl, xu, nonlcon);
 end
 ```
 

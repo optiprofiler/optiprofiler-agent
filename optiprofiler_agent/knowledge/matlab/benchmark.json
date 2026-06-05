@@ -37,7 +37,8 @@
       "description": "the identifier of the test. It is used to create the specific directory to store the results. Default is'out'if the optionloadis not provided, otherwise default is'.'."
     },
     "draw_hist_plots": {
-      "description": "whether or how to draw the history plots of all the problems. It can be either'none','sequential', or'parallel'. If it is'none', we will not draw the history plots. If it is'parallel', we will draw the history plots in the same time when solvers are solving the problems. If it is'sequential', we will draw the history plots after all the problems are solved. Default is'sequential'.",
+      "description": "whether or how to draw the history plots of all the problems. It can be either 'none', 'sequential', or 'parallel'. If it is 'none', no history plots are drawn. If it is 'parallel', history plots are drawn while solvers are solving problems. If it is 'sequential', history plots are drawn after all problems are solved. Default is 'parallel' in normal runs; when the load option is provided, OptiProfiler forces 'sequential'.",
+      "default": "'parallel' in normal runs; 'sequential' in load mode",
       "choices": [
         "none",
         "sequential",
@@ -107,8 +108,8 @@
       "description": "the merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a function handle(fun_value,maxcv_value,maxcv_init)->merit_value,wherefun_valueis the objective function value,maxcv_valueis the maximum constraint violation, andmaxcv_initis the maximum constraint violation at the initial guess. The size offun_valuesandmaxcv_valuesis the same, and the size ofmaxcv_initis the same as the second to last dimensions offun_values"
     },
     "n_jobs": {
-      "description": "the number of parallel jobs to run the test. Default is the default number of workers in the default local cluster.",
-      "default": "the default number of workers in the default local cluster"
+      "description": "the number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers, with at least 2 when more than one worker is available.",
+      "default": "about half of available workers, at least 2 when possible"
     },
     "normalized_scores": {
       "description": "whether to normalize the scores of the solvers by the maximum score of the solvers. Default istrue."
@@ -248,7 +249,7 @@
       "description": "whether the featured problem is the ground truth or not in the'quantized'feature. Default istrue."
     },
     "mod_x0": {
-      "description": "the modifier function to modify the inital guess in the'custom'feature. It should be a function handle(random_stream,problem)->modified_x0,whereproblemis an instance of the class Problem, andmodified_x0is the modified initial guess. No default."
+      "description": "the modifier function to modify the initial guess in the'custom'feature. It should be a function handle(random_stream,problem)->modified_x0,whereproblemis an instance of the class Problem, andmodified_x0is the modified initial guess. No default."
     },
     "mod_affine": {
       "description": "the modifier function to generate the affine transformation applied to the variables in the'custom'feature. It should be a function handle(random_stream,problem)->(A,b,inv),whereproblemis an instance of the class Problem,Ais the matrix of the affine transformation,bis the vector of the affine transformation, andinvis the inverse of matrixA. No default."
@@ -344,5 +345,11 @@
       "type": "cell array",
       "description": "Curves of all the profiles."
     }
+  },
+  "output_artifacts": {
+    "result_directory": "`<savepath>/<benchmark_id>/<feature_stamp>_<timestamp>/`",
+    "summary_pdf": "summary.pdf summarizes performance profiles and data profiles.",
+    "test_log_report": "test_log/report.txt records selected problem names, timing information, merit_init = phi(x_0) = Inf cases, abnormal solver terminations, output fallbacks, and solver scores.",
+    "test_log_log": "test_log/log.txt records messages printed during the run."
   }
 }

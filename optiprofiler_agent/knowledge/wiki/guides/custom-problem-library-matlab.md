@@ -1,14 +1,16 @@
 ---
 tags: [guide, matlab, problem-library, custom, adapter]
 related: [api/python/problem-class.md, guides/custom-problem-library-python.md, guides/problem-metadata.md]
-last_updated: 2026-05-11
+last_updated: 2026-06-05
 ---
 
 # Custom Problem Library — MATLAB
 
 The MATLAB version of OptiProfiler discovers user-supplied problem
-libraries through the same directory-convention approach as the
-Python side, but with `.m` files instead of `_tools.py`.
+libraries through the package `problem_libs/<library>/` folder
+convention, not through Python's `custom_problem_libs_path` option.
+Each MATLAB library is a subfolder under `optiprofiler/problem_libs`,
+with `.m` files instead of `_tools.py`.
 
 The real-world references this guide leans on:
 
@@ -58,7 +60,7 @@ CSV pattern + an `mylib_load.m` written from scratch.
 ## Anatomy
 
 ```
-my_libs/                       <- you point options.custom_problem_libs_path here
+optiprofiler/problem_libs/
 └── mylib/                     <- this folder name is what users put in options.plibs
     ├── mylib_load.m
     ├── mylib_select.m
@@ -67,7 +69,9 @@ my_libs/                       <- you point options.custom_problem_libs_path her
     └── src/                   <- whatever your problems need
 ```
 
-OptiProfiler adds `my_libs/mylib/` to the MATLAB path and calls
+OptiProfiler validates `options.plibs` against the subfolder names under
+`optiprofiler/problem_libs`. It then adds
+`optiprofiler/problem_libs/mylib/` to the MATLAB path and calls
 `mylib_load` and `mylib_select` by name.
 
 ## Required functions
@@ -258,6 +262,8 @@ keep them in lockstep so OptiProfiler's results are comparable.
 
 ## Validation checklist
 
+- [ ] The library folder lives under `optiprofiler/problem_libs/mylib/`;
+      MATLAB has no `custom_problem_libs_path` option.
 - [ ] `mylib_load(name)` returns a `Problem` instance for every name
       from `mylib_select(struct())`.
 - [ ] `problem.fun(problem.x0)` returns a finite scalar.

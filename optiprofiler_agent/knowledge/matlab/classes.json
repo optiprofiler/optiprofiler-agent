@@ -174,13 +174,13 @@
         "description": "whether the featured problem is the ground truth or not in the 'quantized' feature. Default is true."
       },
       "mod_x0": {
-        "description": "the modifier function to modify the inital guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
+        "description": "the modifier function to modify the initial guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
       },
       "mod_affine": {
         "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of th"
       },
       "mod_bounds": {
-        "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper boun"
+        "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound."
       },
       "mod_linear_ub": {
         "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constrai"

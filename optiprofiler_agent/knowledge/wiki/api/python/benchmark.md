@@ -2,7 +2,7 @@
 tags: [api, python, benchmark, reference]
 sources: [_sources/python/benchmark.json, _sources/python/api_notes.json]
 related: [concepts/benchmark-function.md, concepts/solver-interface.md, api/python/problem-class.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # Python benchmark() API Reference
@@ -59,7 +59,7 @@ All vectors are 1-D `numpy.ndarray` of shape `(n,)`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `n_jobs` | int | auto | Parallel workers |
+| `n_jobs` | int | conservative auto | Parallel workers; about half of available workers, at least 2 when possible |
 | `seed` | int | 0 | Random seed |
 | `max_tol_order` | int | 10 | Tolerances: 10^(-1) to 10^(-max_tol_order) |
 | `max_eval_factor` | int | 500 | Max evaluations = factor * dimension |
@@ -74,6 +74,38 @@ All vectors are 1-D `numpy.ndarray` of shape `(n,)`.
 | `load` | str | None | Load previous results: `'latest'` or timestamp |
 | `solvers_to_load` | list | all | 0-indexed solver indices to load |
 
+`score_only=True` forces history plotting off. In `load` mode,
+OptiProfiler redraws profiles from stored data; solver indices in
+`solvers_to_load` are 0-indexed in Python.
+
+## Return Values
+
+`benchmark()` returns a tuple:
+
+| Return | Type | Meaning |
+|---|---|---|
+| `solver_scores` | `numpy.ndarray` | Aggregate solver scores computed from the profiles |
+| `profile_scores` | `numpy.ndarray | None` | 4D tensor indexed by solver, tolerance, history/output basis, and profile type |
+| `curves` | `list[dict] | None` | Raw profile curve data |
+
+Use tuple unpacking when you need all details:
+
+```python
+solver_scores, profile_scores, curves = benchmark([solver1, solver2])
+```
+
+## Output Artifacts
+
+By default, a normal run writes
+`<savepath>/<benchmark_id>/<feature_stamp>_<timestamp>/`. The folder
+contains `summary.pdf`, stored result data, history/profile outputs, and
+`test_log/`.
+
+`test_log/report.txt` records selected problem names, timing,
+`merit_init = phi(x_0) = inf` cases, abnormal solver terminations,
+output fallbacks, and solver scores. `test_log/log.txt` records messages
+printed during the run.
+
 ## Python-Specific Notes
 
 - Solver format: list of callables `[solver1, solver2]`
@@ -82,6 +114,8 @@ All vectors are 1-D `numpy.ndarray` of shape `(n,)`.
 - **Lambda functions are not picklable** — use named functions for `n_jobs > 1`
 - PyCUTEst requires separate installation; Linux and macOS only
 - `custom_problem_libs_path` is Python-only (MATLAB uses folder structure)
+- `pip install optiprofiler` and `conda install conda-forge::optiprofiler`
+  are both supported installation paths.
 
 ## See Also
 

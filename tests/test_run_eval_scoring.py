@@ -139,6 +139,16 @@ scores = benchmark({@solver1, @solver2}, options);
     assert any("matlab_ok" in item for item in result["code_details"])
 
 
+def test_score_code_quality_accepts_scaffold_feature_block():
+    from optiprofiler_agent.advisor.scaffold_feature import scaffold_custom_feature
+
+    response = scaffold_custom_feature("heavy-tailed objective noise").to_markdown()
+    result = score_code_quality(response, {"language": "python", "expect_code": True})
+
+    assert result["code_score"] == 1.0
+    assert "api_ok" in result["code_details"]
+
+
 def test_extract_language_code_blocks_gets_matlab_fence():
     response = "```matlab\nx = 1;\n```"
     assert extract_language_code_blocks(response, "matlab") == ["x = 1;"]

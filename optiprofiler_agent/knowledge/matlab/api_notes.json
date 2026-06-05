@@ -8,9 +8,14 @@
     "matcutest"
   ],
   "matcutest_note": "matcutest is only available on Linux",
+  "setup": {
+    "interactive": "setup",
+    "noninteractive": "setup(struct('install_matcutest', true)) or setup(struct('install_matcutest', false))",
+    "uninstall": "setup uninstall"
+  },
   "differences_from_python": {
     "maxdim_default": "mindim + 10 (Python: mindim + 1)",
-    "draw_hist_plots_default": "'sequential' (Python: 'parallel')",
+    "draw_hist_plots_default": "'parallel' in normal runs; load mode forces 'sequential'",
     "solvers_to_load": "1-indexed (Python: 0-indexed)",
     "line_colors_default": "MATLAB 'gem' colororder (Python: matplotlib tab10)",
     "no_custom_problem_libs_path": "MATLAB uses folder structure instead"

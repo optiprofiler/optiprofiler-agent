@@ -2,7 +2,7 @@
 tags: [concept, api, benchmark]
 sources: [_sources/python/benchmark.json, _sources/matlab/benchmark.json]
 related: [concepts/dfo.md, concepts/solver-interface.md, concepts/problem-types.md, concepts/features.md, api/python/benchmark.md, api/matlab/benchmark.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # The benchmark() Function
@@ -20,6 +20,9 @@ profiles, data profiles, and log-ratio profiles, and returns solver scores.
    [problem type](problem-types.md).
 3. The function generates output in a timestamped directory including PDF
    profiles, log files, and history plots.
+4. The default `n_jobs` is conservative: about half of available workers,
+   with at least 2 when more than one worker is available. Use `n_jobs=1`
+   for reproducible timing experiments.
 
 ## Python Calling Convention
 
@@ -48,6 +51,14 @@ scores = benchmark({@solver1, @solver2}, options)
 | `solver_scores` | array               | Aggregate scores based on profile performance |
 | `profile_scores`| 4D array or None    | Per-tolerance, per-profile-type scores        |
 | `curves`        | list of dict / None | Raw profile curve data                        |
+
+## Diagnostic Files
+
+Every normal run writes a `test_log/` directory. `test_log/report.txt`
+records selected problem names, timing information, degenerate
+`merit_init = phi(x_0)` cases where all solvers pass by convention,
+abnormal solver terminations, output fallbacks to `x_0`, and solver
+scores. `test_log/log.txt` contains the printed run messages.
 
 ## See Also
 

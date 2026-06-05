@@ -60,7 +60,9 @@
   {
     "id": "f09",
     "question": "What is the return type of benchmark() in Python?",
-    "expected_keywords": ["dict", "scores"],
+    "expected_keywords": ["solver_scores", "profile_scores", "curves"],
+    "must_not_contain": ["dict"],
+    "reference_answer": "`benchmark()` returns `(solver_scores, profile_scores, curves)`, where `solver_scores` is a NumPy array, `profile_scores` is a 4D NumPy array or `None`, and `curves` is a list of dictionaries or `None`.",
     "language": "python",
     "category": "factual_query"
   },
@@ -82,6 +84,47 @@
     "id": "f12",
     "question": "How do I pass options to benchmark() in MATLAB?",
     "expected_keywords": ["struct", "options"],
+    "language": "matlab",
+    "category": "factual_query"
+  },
+  {
+    "id": "f13",
+    "question": "Can I install OptiProfiler Python from conda-forge?",
+    "expected_keywords": ["conda", "conda-forge", "optiprofiler"],
+    "reference_answer": "Yes. Use `conda install conda-forge::optiprofiler`; `pip install optiprofiler` is also supported.",
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f14",
+    "question": "What does test_log/report.txt record after a benchmark run?",
+    "expected_keywords": ["selected problem", "timing", "abnormal", "output fallback", "solver scores"],
+    "reference_answer": "`test_log/report.txt` records selected problem names, timing information, merit_init = phi(x_0) degenerate cases, abnormal solver terminations, output fallbacks, and solver scores.",
+    "language": null,
+    "category": "factual_query"
+  },
+  {
+    "id": "f15",
+    "question": "What are the public Python symbols I can import from optiprofiler?",
+    "expected_keywords": ["benchmark", "Problem", "Feature", "FeaturedProblem", "show_versions", "get_plib_config", "set_plib_config"],
+    "must_not_contain": ["s2mpj_load", "pycutest_select", "optiprofiler.solvers"],
+    "reference_answer": "The current package-root exports are `benchmark`, `Problem`, `Feature`, `FeaturedProblem`, `show_versions`, `get_plib_config`, and `set_plib_config`.",
+    "language": "python",
+    "category": "factual_query"
+  },
+  {
+    "id": "f16",
+    "question": "What is the default n_jobs behavior in OptiProfiler?",
+    "expected_keywords": ["conservative", "half", "available workers", "at least 2"],
+    "reference_answer": "If `n_jobs` is omitted, OptiProfiler chooses a conservative worker count: about half of available workers, with at least 2 when more than one worker is available.",
+    "language": null,
+    "category": "factual_query"
+  },
+  {
+    "id": "f17",
+    "question": "How do I convert OptiProfiler nonlinear constraints for MATLAB fmincon?",
+    "expected_keywords": ["cub", "ceq", "deal", "nonlcon", "fmincon"],
+    "reference_answer": "Use `nonlcon = @(x) deal(cub(x), ceq(x))` so OptiProfiler's separate nonlinear inequality/equality callbacks become the two outputs expected by `fmincon`.",
     "language": "matlab",
     "category": "factual_query"
   }

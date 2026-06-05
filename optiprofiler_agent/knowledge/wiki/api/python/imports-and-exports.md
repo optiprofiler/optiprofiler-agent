@@ -1,6 +1,6 @@
 ---
 tags: [api, python, imports, exports]
-last_updated: 2026-04-19
+last_updated: 2026-06-05
 related: [api/python/benchmark.md, api/python/problem-class.md, api/python/plib-tools.md]
 ---
 
@@ -37,10 +37,7 @@ from optiprofiler import (
     Problem,
     Feature,
     FeaturedProblem,
-    s2mpj_load,
-    s2mpj_select,
-    pycutest_load,
-    pycutest_select,
+    show_versions,
     get_plib_config,
     set_plib_config,
 )
@@ -52,12 +49,16 @@ from optiprofiler import (
 | `Problem` | class | One optimization problem (`fun`, `x0`, bounds, constraints). | [Problem class](problem-class.md) |
 | `Feature` | class | A perturbation applied to problems during a benchmark run. | [Problem class](problem-class.md) |
 | `FeaturedProblem` | class | `Problem` already wrapped with a `Feature`. | [Problem class](problem-class.md) |
-| `s2mpj_load` | function | Load a single S2MPJ problem by name. | [Problem libraries](plib-tools.md) |
-| `s2mpj_select` | function | List S2MPJ problem names matching criteria. | [Problem libraries](plib-tools.md) |
-| `pycutest_load` | function | Load a single PyCUTEst problem by name (Linux/macOS). | [Problem libraries](plib-tools.md) |
-| `pycutest_select` | function | List PyCUTEst problem names matching criteria. | [Problem libraries](plib-tools.md) |
+| `show_versions` | function | Print OptiProfiler and dependency version information for bug reports. | [Problem libraries](plib-tools.md) |
 | `get_plib_config` | function | Read the effective config of a problem library. | [Problem libraries](plib-tools.md) |
 | `set_plib_config` | function | Override a problem library's config at runtime. | [Problem libraries](plib-tools.md) |
+
+The built-in problem-library helper functions (`s2mpj_load`,
+`s2mpj_select`, `pycutest_load`, `pycutest_select`) are documented as
+adapter functions, but they are not currently exported from the package
+root. For normal user code, select libraries through
+`benchmark(..., plibs=[...])` and configure variable-size behavior with
+`get_plib_config` / `set_plib_config`.
 
 ## Submodules That Do **Not** Exist
 
@@ -68,7 +69,9 @@ validator will warn on every one of them:
   from `optiprofiler` itself.
 - `optiprofiler.algorithms` — same as above.
 - `optiprofiler.utils` — there is no public utils namespace.
-- `optiprofiler.problems` — use `s2mpj_load` / `pycutest_load` instead.
+- `optiprofiler.problems` — use `benchmark(..., plibs=[...])` for normal
+  runs, or import adapter internals from their explicit module path only
+  when you are intentionally developing a problem-library adapter.
 - `optiprofiler.features` — `Feature` is a top-level class, not a module.
 
 ## Where Solvers Come From
@@ -105,7 +108,9 @@ from optiprofiler import benchmark, Problem        # OK
 from optiprofiler import (                         # OK
     benchmark, Problem, Feature, FeaturedProblem,
 )
+from optiprofiler import get_plib_config           # OK
 import optiprofiler.solvers                        # WARNING — no submodule
 from optiprofiler.solvers import bobyqa            # WARNING — no submodule
+from optiprofiler import s2mpj_load                # WARNING — not top-level
 from optiprobe import benchmark                    # ERROR — package typo
 ```

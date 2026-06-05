@@ -23,6 +23,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from optiprofiler_agent.common.interface_adapter import analyze_solver
+from optiprofiler_agent.advisor.scaffold_feature import scaffold_custom_feature
 from optiprofiler_agent.debugger.debugger import (
     _collect_web_debug_context,
     _format_web_debug_context,
@@ -42,6 +43,7 @@ def _load_cases(paths: list[str] | None) -> list[dict]:
         files = [Path(p) for p in paths]
     else:
         files = [
+            EVAL_CASES_DIR / "advisor_scaffold_feature.json",
             EVAL_CASES_DIR / "debugger_matlab.json",
             EVAL_CASES_DIR / "debugger_web.json",
             EVAL_CASES_DIR / "interpreter_matlab.json",
@@ -153,6 +155,34 @@ def _eval_debugger_case(case: dict) -> tuple[bool, dict]:
     raise ValueError(f"Unknown debugger task: {task}")
 
 
+def _eval_advisor_case(case: dict) -> tuple[bool, dict]:
+    task = case["task"]
+
+    if task == "scaffold_feature":
+        result = scaffold_custom_feature(
+            description=case["description"],
+            feature_name=case.get("feature_name", ""),
+            n_runs=case.get("n_runs"),
+        )
+        code = result.code
+        missing = [needle for needle in case.get("must_contain", []) if needle not in code]
+        forbidden = [needle for needle in case.get("must_not_contain", []) if needle in code]
+        expected_mods = case.get("expected_modifiers", [])
+        missing_mods = [mod for mod in expected_mods if mod not in result.selected_modifiers]
+        passed = result.ok and not missing and not forbidden and not missing_mods
+        return passed, {
+            "selected_modifiers": result.selected_modifiers,
+            "missing": missing,
+            "forbidden": forbidden,
+            "missing_modifiers": missing_mods,
+            "validation_errors": result.validation_errors,
+            "validation_warnings": result.validation_warnings,
+            "code_excerpt": code[:500],
+        }
+
+    raise ValueError(f"Unknown advisor task: {task}")
+
+
 def _eval_interpreter_case(case: dict) -> tuple[bool, dict]:
     task = case["task"]
     expect = case.get("expect", {})
@@ -218,7 +248,9 @@ def run_cases(cases: list[dict]) -> list[dict]:
     for case in cases:
         t0 = time.perf_counter()
         try:
-            if case.get("agent") == "debugger":
+            if case.get("agent") == "advisor":
+                passed, details = _eval_advisor_case(case)
+            elif case.get("agent") == "debugger":
                 passed, details = _eval_debugger_case(case)
             elif case.get("agent") == "interpreter":
                 passed, details = _eval_interpreter_case(case)

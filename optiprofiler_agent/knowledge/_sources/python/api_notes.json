@@ -1,5 +1,14 @@
 {
   "language": "Python",
+  "public_exports": [
+    "benchmark",
+    "Problem",
+    "Feature",
+    "FeaturedProblem",
+    "show_versions",
+    "get_plib_config",
+    "set_plib_config"
+  ],
   "solver_format": "list of callables: [solver1, solver2]",
   "options_format": "keyword arguments to benchmark()",
   "vector_convention": "1-D numpy arrays, shape (n,)",
@@ -11,6 +20,10 @@
   "python_only_options": [
     "custom_problem_libs_path"
   ],
+  "installation": {
+    "pip": "pip install optiprofiler",
+    "conda_forge": "conda install conda-forge::optiprofiler"
+  },
   "pycutest_note": "Requires separate installation; Linux and macOS only",
   "lambda_warning": "Lambda functions are not picklable — use named functions (def) for parallel execution (n_jobs > 1)"
 }

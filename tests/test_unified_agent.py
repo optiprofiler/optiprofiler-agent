@@ -15,8 +15,8 @@ class TestBuildTools:
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
         tools = _build_tools(config)
         # 4 original optiprofiler tools + 4 Hermes-inspired runtime tools
-        # + 1 web_search tool (optional, scope-restricted to open-world Q)
-        assert len(tools) == 9
+        # + scaffold_feature + web_search.
+        assert len(tools) == 10
 
     def test_tool_names(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
@@ -31,6 +31,7 @@ class TestBuildTools:
             "update_user_profile",
             "recall_past",
             "add_wiki_page",
+            "scaffold_feature",
             "web_search",
         }
 
@@ -90,6 +91,20 @@ class TestBuildTools:
 
         result = interp.invoke({"results_dir": "/nonexistent/path/xyz"})
         assert "error" in result.lower() or "does not exist" in result.lower()
+
+    def test_scaffold_feature_tool_generates_valid_custom_feature(self):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        scaffold = next(t for t in tools if t.name == "scaffold_feature")
+
+        result = scaffold.invoke({
+            "description": "heavy-tailed objective noise with level 1e-3",
+            "feature_name": "heavy_tail_noise",
+        })
+        assert "feature_name=\"custom\"" in result
+        assert "mod_fun=custom_mod_fun" in result
+        assert "rng.standard_t" in result
+        assert "Validation: passed" in result
 
 
 class TestCreateUnifiedAgent:

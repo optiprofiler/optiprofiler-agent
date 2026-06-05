@@ -82,6 +82,15 @@ not configured; only then may you relay that information to the user. \
 Preemptively refusing without invoking the tool is a hallucination \
 and is forbidden.
 
+10. **scaffold_feature** — Generate a validated Python custom-feature \
+scaffold for `benchmark(..., feature_name="custom", mod_*=...)`. Use when \
+the user asks for a custom feature, objective noise, initial-point \
+perturbation, quantization, affine rotation, bound modification, or \
+constraint perturbation. The tool returns complete Python code plus \
+assumptions and validation status. For ordinary built-in features such as \
+`feature_name="noisy"`, use knowledge_search unless the user asks for a \
+custom feature implementation.
+
 **Guidelines:**
 - OptiProfiler focuses on **Derivative-Free Optimization (DFO)**.
 - `fun` provides ONLY function values, no gradients.
@@ -101,8 +110,10 @@ and is forbidden.
 - The package is named **`optiprofiler`** (one word, lowercase, no hyphen, no underscore). \
 Common typos to avoid: `optiprobe`, `opti_profiler`, `opti-profiler`.
 - The public API is **flat**: `from optiprofiler import benchmark, Problem, Feature, FeaturedProblem, \
-s2mpj_load, s2mpj_select, pycutest_load, pycutest_select, get_plib_config, set_plib_config`. \
+show_versions, get_plib_config, set_plib_config`. \
 There is **no** `optiprofiler.solvers`, `optiprofiler.algorithms`, or `optiprofiler.utils` submodule.
+- Do **not** generate `from optiprofiler import s2mpj_load` or `pycutest_select`; current OptiProfiler \
+does not export those helpers at package root. Use `benchmark(..., plibs=[...])` for normal problem selection.
 - Solvers are **third-party callables you import yourself** (e.g. `from prima import bobyqa`), \
 not symbols from the `optiprofiler` package.
 - If you are unsure whether a symbol exists, call **knowledge_search** with a query like \
@@ -326,6 +337,26 @@ def _build_tools(config: AgentConfig) -> list:
         path = _wl.add_page(slug, content, summary=summary, source="agent")
         return f"Wrote {path}"
 
+    @tool
+    def scaffold_feature(
+        description: Annotated[str, "Natural-language description of the desired Python custom feature"],
+        feature_name: Annotated[str, "Short optional name used in comments"] = "",
+        n_runs: Annotated[int, "Optional number of benchmark repetitions; use 0 for the scaffold default"] = 0,
+    ) -> str:
+        """Generate validated Python code for an OptiProfiler custom feature.
+
+        Use this for `feature_name="custom"` requests involving `mod_fun`,
+        `mod_x0`, `mod_bounds`, `mod_affine`, `mod_cub`, or `mod_ceq`.
+        """
+        from optiprofiler_agent.advisor.scaffold_feature import scaffold_custom_feature
+
+        result = scaffold_custom_feature(
+            description=description,
+            feature_name=feature_name,
+            n_runs=n_runs or None,
+        )
+        return result.to_markdown()
+
     from optiprofiler_agent.tools.web_search import web_search
 
     return [
@@ -337,6 +368,7 @@ def _build_tools(config: AgentConfig) -> list:
         update_user_profile,
         recall_past,
         add_wiki_page,
+        scaffold_feature,
         web_search,
     ]
 

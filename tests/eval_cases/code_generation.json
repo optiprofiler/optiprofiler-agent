@@ -103,5 +103,25 @@
     "language": "python",
     "category": "code_generation",
     "expect_code": true
+  },
+  {
+    "id": "cg11",
+    "question": "Write a Python wrapper for scipy.optimize.minimize with method='COBYQA' for nonlinearly constrained OptiProfiler problems.",
+    "expected_keywords": ["NonlinearConstraint", "LinearConstraint", "Bounds", "cub", "ceq", "COBYQA"],
+    "must_contain": ["def", "return result.x"],
+    "must_not_contain": ["jac=", "hess=", "from optiprofiler import s2mpj_load"],
+    "language": "python",
+    "category": "code_generation",
+    "expect_code": true
+  },
+  {
+    "id": "cg12",
+    "question": "Write a MATLAB fmincon wrapper for OptiProfiler nonlinearly constrained problems.",
+    "expected_keywords": ["fmincon", "nonlcon", "deal", "cub", "ceq"],
+    "must_contain": ["deal(cub(x), ceq(x))"],
+    "must_not_contain": ["jac", "gradient"],
+    "language": "matlab",
+    "category": "code_generation",
+    "expect_code": true
   }
 ]

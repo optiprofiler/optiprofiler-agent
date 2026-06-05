@@ -7,9 +7,8 @@ Two layers:
 * **Import validation** (`_ImportVisitor`): catches the most common
   reference-hallucination pattern we observe in the wild — ``optiprobe``
   typos and fake submodules (``optiprofiler.solvers`` does not exist).
-  The whitelist is **derived automatically** from
-  ``knowledge/_sources/python/*.json`` so it stays in sync with the upstream
-  API without a separate maintenance task.
+  The whitelist is read from ``api_notes.public_exports`` in the knowledge
+  sources, with a conservative derived fallback for older snapshots.
 
 Design note (hallucination guard, L1):
   This module is the *post-generation verifier* in our L0-L2 stack. It is
@@ -63,7 +62,7 @@ class ValidationResult:
 
 
 # ───────────────────────────────────────────────────────────────────────────
-# Import whitelist (auto-derived from knowledge/_sources/python/*.json)
+# Import whitelist (from api_notes.public_exports; derived fallback)
 #
 # We deliberately do NOT enumerate `optiprofiler` internals (private
 # helpers, submodule paths). Anything not in this set fires a warning with
@@ -85,13 +84,15 @@ def _load_optiprofiler_python_exports(_kb_id: int = 0) -> frozenset[str]:
     tests can pass an alternative KB without polluting prod cache.
     """
     kb = KnowledgeBase()
+    notes = kb.get_api_notes("python") or {}
+    public_exports = notes.get("public_exports")
+    if isinstance(public_exports, list) and public_exports:
+        return frozenset(str(name) for name in public_exports)
+
     exports: set[str] = set()
 
     classes = kb.get_classes("python") or {}
     exports.update(classes.keys())
-
-    plib = kb.get_plib_tools("python") or {}
-    exports.update(plib.keys())
 
     if kb.get_benchmark("python"):
         exports.add("benchmark")

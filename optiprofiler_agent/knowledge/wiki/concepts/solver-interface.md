@@ -2,7 +2,7 @@
 tags: [concept, solver, interface]
 sources: [_sources/python/benchmark.json, _sources/matlab/benchmark.json]
 related: [concepts/dfo.md, concepts/benchmark-function.md, concepts/problem-types.md, troubleshooting/solver-compat.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # Solver Interface
@@ -24,6 +24,9 @@ The solver must return the solution vector `x`.
 - `fun(x) -> float`: returns only the function value (no gradient)
 - `xl`, `xu` may contain `-np.inf` / `np.inf`
 - `cub(x)`, `ceq(x)` return 1-D arrays
+- For SciPy `minimize`, convert `cub(x) <= 0` and `ceq(x) = 0` to
+  `NonlinearConstraint` objects; linear blocks map to
+  `LinearConstraint`.
 
 ## MATLAB Signatures
 
@@ -36,6 +39,9 @@ The solver must return the solution vector `x`.
 
 - All vectors are column vectors (n x 1 matrices)
 - `fun(x)` returns a scalar
+- MATLAB solvers such as `fmincon` expect one nonlinear constraint
+  callback returning `[c, ceq]`; adapt OptiProfiler's separate `cub`
+  and `ceq` callbacks with `@(x) deal(cub(x), ceq(x))`.
 
 ## Important Notes
 

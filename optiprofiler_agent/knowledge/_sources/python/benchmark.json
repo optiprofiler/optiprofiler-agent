@@ -258,12 +258,12 @@
     },
     "merit_fun": {
       "type": "callable",
-      "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess."
+      "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, all solvers are declared to pass that degenerate convergence test, and the case is listed in test_log/report.txt."
     },
     "n_jobs": {
       "type": "int",
-      "description": "The number of parallel jobs to run the test. Default is the default number of workers in the default local cluster.",
-      "default": "the default number of workers in the default local cluster"
+      "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers, with at least 2 when more than one worker is available.",
+      "default": "about half of available workers, at least 2 when possible"
     },
     "normalized_scores": {
       "type": "bool",
@@ -494,6 +494,12 @@
       "type": "list of dict or None",
       "description": "A list containing the curves of all the profiles."
     }
+  },
+  "output_artifacts": {
+    "result_directory": "`<savepath>/<benchmark_id>/<feature_stamp>_<timestamp>/`",
+    "summary_pdf": "summary.pdf summarizes performance profiles and data profiles.",
+    "test_log_report": "test_log/report.txt records selected problem names, timing information, merit_init = phi(x_0) = inf cases, abnormal solver terminations, output fallbacks, and solver scores.",
+    "test_log_log": "test_log/log.txt records messages printed during the run."
   },
   "raises": [
     {

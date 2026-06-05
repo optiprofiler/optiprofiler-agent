@@ -2,7 +2,7 @@
 tags: [guide, solver, wrapper, adaptation]
 sources: [_sources/python/benchmark.json, _sources/matlab/benchmark.json]
 related: [concepts/solver-interface.md, troubleshooting/solver-compat.md, concepts/problem-types.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-05
 ---
 
 # Writing Custom Solver Wrappers
@@ -37,6 +37,45 @@ def scipy_lbfgsb(fun, x0, xl, xu):
     return res.x
 ```
 
+## Python: Wrapping SciPy COBYQA for Nonlinear Constraints
+
+For `ptype='n'`, OptiProfiler calls solvers as
+`solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)`, with
+`cub(x) <= 0` and `ceq(x) = 0`. SciPy `minimize` represents these with
+`Bounds`, `LinearConstraint`, and `NonlinearConstraint`.
+
+```python
+import numpy as np
+from scipy.optimize import Bounds, LinearConstraint, NonlinearConstraint, minimize
+
+
+def scipy_cobyqa_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, maxfev=200):
+    constraints = []
+
+    if bub.size > 0:
+        constraints.append(LinearConstraint(aub, -np.inf, bub))
+    if beq.size > 0:
+        constraints.append(LinearConstraint(aeq, beq, beq))
+
+    c_ub_x0 = np.atleast_1d(cub(x0))
+    if c_ub_x0.size > 0:
+        constraints.append(NonlinearConstraint(cub, -np.inf, np.zeros_like(c_ub_x0)))
+
+    c_eq_x0 = np.atleast_1d(ceq(x0))
+    if c_eq_x0.size > 0:
+        constraints.append(NonlinearConstraint(ceq, np.zeros_like(c_eq_x0), np.zeros_like(c_eq_x0)))
+
+    result = minimize(
+        fun,
+        x0,
+        method="COBYQA",
+        bounds=Bounds(xl, xu),
+        constraints=constraints,
+        options={"maxfev": maxfev},
+    )
+    return result.x
+```
+
 ## Python: Wrapping NLopt
 
 ```python
@@ -59,6 +98,31 @@ def pdfo_newuoa(fun, x0):
     return res.x
 ```
 
+## MATLAB: Wrapping fmincon for Nonlinear Constraints
+
+For `ptype='n'`, OptiProfiler passes nonlinear inequality and equality
+callbacks separately. `fmincon` expects one `nonlcon` callback returning
+two outputs, so use `deal(cub(x), ceq(x))`.
+
+```matlab
+function x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, max_fun_evals)
+    nonlcon = @(x) deal(cub(x), ceq(x));
+    options = optimoptions('fmincon', 'MaxFunctionEvaluations', max_fun_evals);
+    x = fmincon(fun, x0, aub, bub, aeq, beq, xl, xu, nonlcon, options);
+end
+```
+
+Then benchmark two named wrappers with different budgets:
+
+```matlab
+options.ptype = 'n';
+options.problem_names = {'HS10', 'HS11', 'HS12'};
+options.plibs = {'s2mpj'};
+options.n_jobs = 1;
+options.solver_names = {'fmincon short', 'fmincon long'};
+scores = benchmark({@fmincon_short, @fmincon_long}, options);
+```
+
 ## Key Rules
 
 1. **Return type**: Must return `np.ndarray` of shape `(n,)` (Python) or
@@ -68,6 +132,9 @@ def pdfo_newuoa(fun, x0):
    (`n_jobs > 1`) — lambdas are not picklable
 4. **Match the signature**: The wrapper must accept exactly the arguments
    for the chosen `ptype`
+5. **Adapt nonlinear constraints explicitly**: SciPy needs
+   `NonlinearConstraint`; MATLAB `fmincon` needs one two-output
+   `nonlcon` callback.
 
 ## See Also
 
