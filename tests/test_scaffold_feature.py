@@ -6,6 +6,7 @@ import ast
 import importlib.util
 import pickle
 import sys
+import types
 
 import pytest
 
@@ -45,15 +46,19 @@ def test_bound_scaffold_uses_bound_problem_type():
     assert result.validation_warnings == []
 
 
-def test_generated_modifier_functions_are_pickleable(tmp_path):
+def test_generated_modifier_functions_are_pickleable(tmp_path, monkeypatch):
     result = scaffold_custom_feature("heavy-tailed objective noise")
     module_path = tmp_path / "generated_feature.py"
     module_path.write_text(result.code, encoding="utf-8")
 
+    optiprofiler_stub = types.ModuleType("optiprofiler")
+    optiprofiler_stub.benchmark = lambda *args, **kwargs: None
+    monkeypatch.setitem(sys.modules, "optiprofiler", optiprofiler_stub)
+
     spec = importlib.util.spec_from_file_location("generated_feature", module_path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
-    sys.modules["generated_feature"] = module
+    monkeypatch.setitem(sys.modules, "generated_feature", module)
     spec.loader.exec_module(module)
 
     pickle.dumps(module.custom_mod_fun)
