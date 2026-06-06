@@ -2,7 +2,7 @@
 tags: [profiles, features, interpretation]
 sources: [_sources/python/benchmark.json]
 related: [concepts/features.md, profiles/methodology.md, profiles/performance-profile.md]
-last_updated: 2025-04-13
+last_updated: 2026-06-07
 ---
 
 # Feature Effects on Profiles
@@ -31,6 +31,22 @@ Adds noise to function evaluations. Tests **noise resilience**.
 - Higher noise levels amplify differences between solvers
 - `noise_type='relative'` is harder than `'absolute'` for functions
   with large values
+- `distribution='gaussian'` is the default; `distribution='uniform'`
+  draws from `[-1, 1]`. For custom noise, pass a callable rather than an
+  unsupported string.
+- `noise_type='mixed'` applies
+  `f + max(1, abs(f)) * noise_level * noise` to objective values and the
+  analogous elementwise formula to nonlinear constraints.
+
+`distribution` for `noisy` has a subtle callable contract:
+
+- Objective values use scalar noise: `distribution(random_stream)`.
+- Nonlinear constraints use vector noise:
+  `distribution(random_stream, dimension)`.
+
+For `perturbed_x0`, the same option has a different contract:
+`distribution(random_stream, dimension) -> random vector`, with allowed
+strings `'spherical'` (default) and `'gaussian'`.
 
 ## Truncated
 

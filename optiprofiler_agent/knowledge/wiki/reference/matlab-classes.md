@@ -1,0 +1,590 @@
+---
+tags: [reference, source-backed, matlab, classes]
+sources: [_sources/matlab/classes.json]
+related: []
+last_updated: 2026-06-07
+generated: true
+---
+
+# Source Reference: Matlab classes.json
+
+This page is auto-generated from `_sources/matlab/classes.json`. It is the lossless wiki mirror for this source.
+Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing the source.
+
+## Source Metadata
+
+- Source path: `_sources/matlab/classes.json`
+- Canonical SHA256: `2bfea9814a222d92b69ca7e185835e3556c40c276230ca81b0bb31a9528e08c4`
+- Top-level keys: `Problem`, `Feature`, `FeaturedProblem`
+
+## Path Index
+
+| Path | Kind |
+|---|---|
+| `Problem` | dict[4] |
+| `Feature` | dict[4] |
+| `FeaturedProblem` | dict[3] |
+
+## Problem
+
+```json
+{
+  "description": "Problemis a class that defines an optimization problem.",
+  "methods": {
+    "ceq": {
+      "description": ""
+    },
+    "cub": {
+      "description": ""
+    },
+    "fun": {
+      "description": ""
+    },
+    "grad": {
+      "description": ""
+    },
+    "hceq": {
+      "description": ""
+    },
+    "hcub": {
+      "description": ""
+    },
+    "hess": {
+      "description": ""
+    },
+    "jceq": {
+      "description": ""
+    },
+    "jcub": {
+      "description": ""
+    },
+    "maxcv": {
+      "description": "the maximum constraint violation maxcv(x) -> float, which is defined as the maximum of the infinity norms of max(xl - x, 0), max(x - xu, 0), max(aub * x - bub, 0), aeq * x - beq, max(cub(x), 0), ceq(x)."
+    },
+    "project_x0": {
+      "description": "trying to project the initial guess x0 onto the feasible region if it is not feasible (but it may fail)."
+    }
+  },
+  "name": "Problem",
+  "properties": {
+    "aeq": {
+      "description": ""
+    },
+    "aub": {
+      "description": ""
+    },
+    "beq": {
+      "description": ""
+    },
+    "bub": {
+      "description": ""
+    },
+    "ceq": {
+      "description": "the function of nonlinearly equality constraints ceq(x) <= 0, where ceq(x) -> float vector. By default, ceq(x) will return an empty vector."
+    },
+    "cub": {
+      "description": "the function of nonlinearly inequality constraints cub(x) <= 0, where cub(x) -> float vector. By default, cub(x) will return an empty vector."
+    },
+    "fun": {
+      "description": "The objective function to be minimized. It should accept a vector and return a real number: fun(x) -> float, where x is a vector."
+    },
+    "grad": {
+      "description": "the gradient of the objective function grad(x) -> float vector. By default, grad(x) will return an empty vector."
+    },
+    "hceq": {
+      "description": "the Hessian of the nonlinearly equality constraints hceq(x) -> cell array of float matrices. The i-th element of hceq(x) should be the Hessian of the i-th function in ceq. By default, hceq(x) will return an empty cell."
+    },
+    "hcub": {
+      "description": "the Hessian of the nonlinearly inequality constraints hcub(x) -> cell array of float matrices. The i-th element of hcub(x) should be the Hessian of the i-th function in cub. By default, hcub(x) will return an empty cell."
+    },
+    "hess": {
+      "description": "the Hessian of the objective function hess(x) -> float matrix. By default, hess(x) will return an empty matrix."
+    },
+    "jceq": {
+      "description": "the Jacobian of the nonlinearly equality constraints jceq(x) -> float matrix. Note that the column size of jceq(x) should be the same as the length of x while the row size should be the same as the length of ceq(x). By default, jceq(x) will return an empty matrix."
+    },
+    "jcub": {
+      "description": "the Jacobian of the nonlinearly inequality constraints jcub(x) -> float matrix. Note that the column size of jcub(x) should be the same as the length of x while the row size should be the same as the length of cub(x). By default, jcub(x) will return an empty matrix."
+    },
+    "m_linear_eq": {
+      "description": "number of the linear equality constraints, which is the length of beq."
+    },
+    "m_linear_ub": {
+      "description": "number of the linear inequality constraints, which is the length of bub."
+    },
+    "m_nonlinear_eq": {
+      "description": "number of the nonlinear equality constraints, which is the length of ceq(x)."
+    },
+    "m_nonlinear_ub": {
+      "description": "number of the nonlinear inequality constraints, which is the length of cub(x)."
+    },
+    "mb": {
+      "description": "number of the bound constraints, which is the length of finite elements in xl and xu."
+    },
+    "mcon": {
+      "description": "number of the constraints, which is the sum of mlcon and mnlcon."
+    },
+    "mlcon": {
+      "description": "number of the linear constraints, which is the sum of m_linear_ub and m_linear_eq."
+    },
+    "mnlcon": {
+      "description": "number of the nonlinear constraints, which is the sum of m_nonlinear_ub and m_nonlinear_eq."
+    },
+    "n": {
+      "description": "dimension of the problem, which is the length of the variable x."
+    },
+    "name": {
+      "description": "the name of the problem. It should be a string or a char. Default is 'Unnamed Problem'."
+    },
+    "ptype": {
+      "description": "type of the problem. It should be 'u' (unconstrained), 'b' (bound-constrained), 'l' (linearly constrained), or 'n' (nonlinearly constrained)."
+    },
+    "x0": {
+      "description": "the initial guess."
+    },
+    "xl": {
+      "description": "the lower bounds on the variable x in the form of xl <= x. It should be a vector of the same size as x. Default is -Inf."
+    },
+    "xu": {
+      "description": "the upper bounds on the variable x in the form of xl >= x. It should be a vector of the same size as x. Default is Inf. aub, bub: the coefficient matrix and right-hand side vector of the linear inequality constraints aub * x <= bub. The default setting of aub and bub are empty matrix and vector. aeq"
+    }
+  }
+}
+```
+
+## Feature
+
+```json
+{
+  "description": "Featureis a class that defines a mapping from an optimization problem to a new one with specified features.",
+  "methods": {
+    "modifier_affine": {
+      "description": "a function handle to generate an invertible matrix A (and its inverse) and a vector b for the affine transformation applied to the variables."
+    },
+    "modifier_bounds": {
+      "description": "a function handle to modify the lower and upper bounds."
+    },
+    "modifier_ceq": {
+      "description": "a function handle to modify the values of the nonlinear equality constraints."
+    },
+    "modifier_cub": {
+      "description": "a function handle to modify the values of the nonlinear inequality constraints."
+    },
+    "modifier_fun": {
+      "description": "a function handle to modify the objective function value."
+    },
+    "modifier_linear_eq": {
+      "description": "a function handle to modify the linear equality constraints."
+    },
+    "modifier_linear_ub": {
+      "description": "a function handle to modify the linear inequality constraints."
+    },
+    "modifier_x0": {
+      "description": "a function handle to modify the initial guess."
+    }
+  },
+  "name": "Feature",
+  "properties": {
+    "condition_factor": {
+      "description": "the scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ^ (condition_factor * n / 2), where n is the dimension of the problem. Default is 0."
+    },
+    "distribution": {
+      "description": "the distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a string (or char), or a function handle (random_stream, dimension) -> random vector that accepts a random_stream and the dimension of a problem and returning a random vector with the given di"
+    },
+    "ground_truth": {
+      "description": "whether the featured problem is the ground truth or not in the 'quantized' feature. Default is true."
+    },
+    "mesh_size": {
+      "description": "the size of the mesh in the 'quantized' feature. Default is 1e-3."
+    },
+    "mesh_type": {
+      "description": "the type of the mesh in the 'quantized' feature. It should be either 'absolute' or 'relative'. Default is 'absolute'."
+    },
+    "mod_affine": {
+      "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of th"
+    },
+    "mod_bounds": {
+      "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound."
+    },
+    "mod_ceq": {
+      "description": "the modifier function to modify the nonlinear equality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_ceq, where x is the evaluation point, problem is an instance of the class Problem, and modified_ceq is the modified vector of the nonline"
+    },
+    "mod_cub": {
+      "description": "the modifier function to modify the nonlinear inequality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_cub, where x is the evaluation point, problem is an instance of the class Problem, and modified_cub is the modified vector of the nonli"
+    },
+    "mod_fun": {
+      "description": "the modifier function to modify the objective function in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_fun, where x is the evaluation point, problem is an instance of the class Problem, and modified_fun is the modified objective function value. No defa"
+    },
+    "mod_linear_eq": {
+      "description": "the modifier function to modify the linear equality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aeq, modified_beq), where problem is an instance of the class Problem, modified_aeq is the modified matrix of the linear equality constraints,"
+    },
+    "mod_linear_ub": {
+      "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constrai"
+    },
+    "mod_x0": {
+      "description": "the modifier function to modify the initial guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
+    },
+    "n_runs": {
+      "description": "the number of runs of the experiments under the given feature. Default is 5 for stochastic features and 1 for deterministic features."
+    },
+    "nan_rate": {
+      "description": "the probability that the evaluation of the objective function will return NaN in the 'random_nan' feature. Default is 0.05."
+    },
+    "noise_level": {
+      "description": "the magnitude of the noise in the 'noisy' feature. Default is 1e-3."
+    },
+    "noise_type": {
+      "description": "the type of the noise in the 'noisy' features. It should be either 'absolute', 'relative', or 'mixed'. Default is 'mixed'."
+    },
+    "perturbation_level": {
+      "description": "the magnitude of the perturbation to the initial guess in the 'perturbed_x0' feature. Default is 1e-3."
+    },
+    "perturbed_trailing_digits": {
+      "description": "whether we will randomize the trailing digits of the objective function value in the 'truncated' feature. Default is false."
+    },
+    "rotated": {
+      "description": "whether to use a random or given rotation matrix to rotate the coordinates of a problem in the 'linearly_transformed' feature. Default is true."
+    },
+    "significant_digits": {
+      "description": "the number of significant digits in the 'truncated' feature. Default is 6."
+    },
+    "unrelaxable_bounds": {
+      "description": "whether the bound constraints are unrelaxable or not in the 'unrelaxable_constraints' feature. Default is true."
+    },
+    "unrelaxable_linear_constraints": {
+      "description": "whether the linear constraints are unrelaxable or not in the 'unrelaxable_constraints' feature. Default is false."
+    },
+    "unrelaxable_nonlinear_constraints": {
+      "description": "whether the nonlinear constraints are unrelaxable or not in the 'unrelaxable_constraints' feature. Default is false."
+    }
+  }
+}
+```
+
+## FeaturedProblem
+
+```json
+{
+  "description": "FeaturedProblemis a subclass ofProblemclass and defines an optimization problem with a specific feature.",
+  "name": "FeaturedProblem",
+  "properties": {
+    "ceq_hist": {
+      "description": "the history of the evaluated nonlinear equality constraints."
+    },
+    "cub_hist": {
+      "description": "the history of the evaluated nonlinear inequality constraints."
+    },
+    "feature": {
+      "description": "the feature applied to the optimization problem."
+    },
+    "fun_hist": {
+      "description": "the history of the evaluated objective function values."
+    },
+    "fun_init": {
+      "description": "the objective function value at the initial point."
+    },
+    "max_eval": {
+      "description": "the maximum number of function evaluations."
+    },
+    "maxcv_hist": {
+      "description": "the history of the maximum constraint violation."
+    },
+    "maxcv_init": {
+      "description": "the maximum constraint violation at the initial point."
+    },
+    "n_eval_ceq": {
+      "description": "the minimum between the number of nonlinear equality constraint evaluations and max_eval."
+    },
+    "n_eval_cub": {
+      "description": "the minimum between the number of nonlinear inequality constraint evaluations and max_eval."
+    },
+    "n_eval_fun": {
+      "description": "the minimum between the number of objective function evaluations and max_eval."
+    },
+    "problem": {
+      "description": "the original optimization problem."
+    },
+    "seed": {
+      "description": "the seed for the random number generator."
+    }
+  }
+}
+```
+
+## Canonical JSON Mirror
+
+```json
+{
+  "Feature": {
+    "description": "Featureis a class that defines a mapping from an optimization problem to a new one with specified features.",
+    "methods": {
+      "modifier_affine": {
+        "description": "a function handle to generate an invertible matrix A (and its inverse) and a vector b for the affine transformation applied to the variables."
+      },
+      "modifier_bounds": {
+        "description": "a function handle to modify the lower and upper bounds."
+      },
+      "modifier_ceq": {
+        "description": "a function handle to modify the values of the nonlinear equality constraints."
+      },
+      "modifier_cub": {
+        "description": "a function handle to modify the values of the nonlinear inequality constraints."
+      },
+      "modifier_fun": {
+        "description": "a function handle to modify the objective function value."
+      },
+      "modifier_linear_eq": {
+        "description": "a function handle to modify the linear equality constraints."
+      },
+      "modifier_linear_ub": {
+        "description": "a function handle to modify the linear inequality constraints."
+      },
+      "modifier_x0": {
+        "description": "a function handle to modify the initial guess."
+      }
+    },
+    "name": "Feature",
+    "properties": {
+      "condition_factor": {
+        "description": "the scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ^ (condition_factor * n / 2), where n is the dimension of the problem. Default is 0."
+      },
+      "distribution": {
+        "description": "the distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a string (or char), or a function handle (random_stream, dimension) -> random vector that accepts a random_stream and the dimension of a problem and returning a random vector with the given di"
+      },
+      "ground_truth": {
+        "description": "whether the featured problem is the ground truth or not in the 'quantized' feature. Default is true."
+      },
+      "mesh_size": {
+        "description": "the size of the mesh in the 'quantized' feature. Default is 1e-3."
+      },
+      "mesh_type": {
+        "description": "the type of the mesh in the 'quantized' feature. It should be either 'absolute' or 'relative'. Default is 'absolute'."
+      },
+      "mod_affine": {
+        "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of th"
+      },
+      "mod_bounds": {
+        "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound."
+      },
+      "mod_ceq": {
+        "description": "the modifier function to modify the nonlinear equality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_ceq, where x is the evaluation point, problem is an instance of the class Problem, and modified_ceq is the modified vector of the nonline"
+      },
+      "mod_cub": {
+        "description": "the modifier function to modify the nonlinear inequality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_cub, where x is the evaluation point, problem is an instance of the class Problem, and modified_cub is the modified vector of the nonli"
+      },
+      "mod_fun": {
+        "description": "the modifier function to modify the objective function in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_fun, where x is the evaluation point, problem is an instance of the class Problem, and modified_fun is the modified objective function value. No defa"
+      },
+      "mod_linear_eq": {
+        "description": "the modifier function to modify the linear equality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aeq, modified_beq), where problem is an instance of the class Problem, modified_aeq is the modified matrix of the linear equality constraints,"
+      },
+      "mod_linear_ub": {
+        "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constrai"
+      },
+      "mod_x0": {
+        "description": "the modifier function to modify the initial guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
+      },
+      "n_runs": {
+        "description": "the number of runs of the experiments under the given feature. Default is 5 for stochastic features and 1 for deterministic features."
+      },
+      "nan_rate": {
+        "description": "the probability that the evaluation of the objective function will return NaN in the 'random_nan' feature. Default is 0.05."
+      },
+      "noise_level": {
+        "description": "the magnitude of the noise in the 'noisy' feature. Default is 1e-3."
+      },
+      "noise_type": {
+        "description": "the type of the noise in the 'noisy' features. It should be either 'absolute', 'relative', or 'mixed'. Default is 'mixed'."
+      },
+      "perturbation_level": {
+        "description": "the magnitude of the perturbation to the initial guess in the 'perturbed_x0' feature. Default is 1e-3."
+      },
+      "perturbed_trailing_digits": {
+        "description": "whether we will randomize the trailing digits of the objective function value in the 'truncated' feature. Default is false."
+      },
+      "rotated": {
+        "description": "whether to use a random or given rotation matrix to rotate the coordinates of a problem in the 'linearly_transformed' feature. Default is true."
+      },
+      "significant_digits": {
+        "description": "the number of significant digits in the 'truncated' feature. Default is 6."
+      },
+      "unrelaxable_bounds": {
+        "description": "whether the bound constraints are unrelaxable or not in the 'unrelaxable_constraints' feature. Default is true."
+      },
+      "unrelaxable_linear_constraints": {
+        "description": "whether the linear constraints are unrelaxable or not in the 'unrelaxable_constraints' feature. Default is false."
+      },
+      "unrelaxable_nonlinear_constraints": {
+        "description": "whether the nonlinear constraints are unrelaxable or not in the 'unrelaxable_constraints' feature. Default is false."
+      }
+    }
+  },
+  "FeaturedProblem": {
+    "description": "FeaturedProblemis a subclass ofProblemclass and defines an optimization problem with a specific feature.",
+    "name": "FeaturedProblem",
+    "properties": {
+      "ceq_hist": {
+        "description": "the history of the evaluated nonlinear equality constraints."
+      },
+      "cub_hist": {
+        "description": "the history of the evaluated nonlinear inequality constraints."
+      },
+      "feature": {
+        "description": "the feature applied to the optimization problem."
+      },
+      "fun_hist": {
+        "description": "the history of the evaluated objective function values."
+      },
+      "fun_init": {
+        "description": "the objective function value at the initial point."
+      },
+      "max_eval": {
+        "description": "the maximum number of function evaluations."
+      },
+      "maxcv_hist": {
+        "description": "the history of the maximum constraint violation."
+      },
+      "maxcv_init": {
+        "description": "the maximum constraint violation at the initial point."
+      },
+      "n_eval_ceq": {
+        "description": "the minimum between the number of nonlinear equality constraint evaluations and max_eval."
+      },
+      "n_eval_cub": {
+        "description": "the minimum between the number of nonlinear inequality constraint evaluations and max_eval."
+      },
+      "n_eval_fun": {
+        "description": "the minimum between the number of objective function evaluations and max_eval."
+      },
+      "problem": {
+        "description": "the original optimization problem."
+      },
+      "seed": {
+        "description": "the seed for the random number generator."
+      }
+    }
+  },
+  "Problem": {
+    "description": "Problemis a class that defines an optimization problem.",
+    "methods": {
+      "ceq": {
+        "description": ""
+      },
+      "cub": {
+        "description": ""
+      },
+      "fun": {
+        "description": ""
+      },
+      "grad": {
+        "description": ""
+      },
+      "hceq": {
+        "description": ""
+      },
+      "hcub": {
+        "description": ""
+      },
+      "hess": {
+        "description": ""
+      },
+      "jceq": {
+        "description": ""
+      },
+      "jcub": {
+        "description": ""
+      },
+      "maxcv": {
+        "description": "the maximum constraint violation maxcv(x) -> float, which is defined as the maximum of the infinity norms of max(xl - x, 0), max(x - xu, 0), max(aub * x - bub, 0), aeq * x - beq, max(cub(x), 0), ceq(x)."
+      },
+      "project_x0": {
+        "description": "trying to project the initial guess x0 onto the feasible region if it is not feasible (but it may fail)."
+      }
+    },
+    "name": "Problem",
+    "properties": {
+      "aeq": {
+        "description": ""
+      },
+      "aub": {
+        "description": ""
+      },
+      "beq": {
+        "description": ""
+      },
+      "bub": {
+        "description": ""
+      },
+      "ceq": {
+        "description": "the function of nonlinearly equality constraints ceq(x) <= 0, where ceq(x) -> float vector. By default, ceq(x) will return an empty vector."
+      },
+      "cub": {
+        "description": "the function of nonlinearly inequality constraints cub(x) <= 0, where cub(x) -> float vector. By default, cub(x) will return an empty vector."
+      },
+      "fun": {
+        "description": "The objective function to be minimized. It should accept a vector and return a real number: fun(x) -> float, where x is a vector."
+      },
+      "grad": {
+        "description": "the gradient of the objective function grad(x) -> float vector. By default, grad(x) will return an empty vector."
+      },
+      "hceq": {
+        "description": "the Hessian of the nonlinearly equality constraints hceq(x) -> cell array of float matrices. The i-th element of hceq(x) should be the Hessian of the i-th function in ceq. By default, hceq(x) will return an empty cell."
+      },
+      "hcub": {
+        "description": "the Hessian of the nonlinearly inequality constraints hcub(x) -> cell array of float matrices. The i-th element of hcub(x) should be the Hessian of the i-th function in cub. By default, hcub(x) will return an empty cell."
+      },
+      "hess": {
+        "description": "the Hessian of the objective function hess(x) -> float matrix. By default, hess(x) will return an empty matrix."
+      },
+      "jceq": {
+        "description": "the Jacobian of the nonlinearly equality constraints jceq(x) -> float matrix. Note that the column size of jceq(x) should be the same as the length of x while the row size should be the same as the length of ceq(x). By default, jceq(x) will return an empty matrix."
+      },
+      "jcub": {
+        "description": "the Jacobian of the nonlinearly inequality constraints jcub(x) -> float matrix. Note that the column size of jcub(x) should be the same as the length of x while the row size should be the same as the length of cub(x). By default, jcub(x) will return an empty matrix."
+      },
+      "m_linear_eq": {
+        "description": "number of the linear equality constraints, which is the length of beq."
+      },
+      "m_linear_ub": {
+        "description": "number of the linear inequality constraints, which is the length of bub."
+      },
+      "m_nonlinear_eq": {
+        "description": "number of the nonlinear equality constraints, which is the length of ceq(x)."
+      },
+      "m_nonlinear_ub": {
+        "description": "number of the nonlinear inequality constraints, which is the length of cub(x)."
+      },
+      "mb": {
+        "description": "number of the bound constraints, which is the length of finite elements in xl and xu."
+      },
+      "mcon": {
+        "description": "number of the constraints, which is the sum of mlcon and mnlcon."
+      },
+      "mlcon": {
+        "description": "number of the linear constraints, which is the sum of m_linear_ub and m_linear_eq."
+      },
+      "mnlcon": {
+        "description": "number of the nonlinear constraints, which is the sum of m_nonlinear_ub and m_nonlinear_eq."
+      },
+      "n": {
+        "description": "dimension of the problem, which is the length of the variable x."
+      },
+      "name": {
+        "description": "the name of the problem. It should be a string or a char. Default is 'Unnamed Problem'."
+      },
+      "ptype": {
+        "description": "type of the problem. It should be 'u' (unconstrained), 'b' (bound-constrained), 'l' (linearly constrained), or 'n' (nonlinearly constrained)."
+      },
+      "x0": {
+        "description": "the initial guess."
+      },
+      "xl": {
+        "description": "the lower bounds on the variable x in the form of xl <= x. It should be a vector of the same size as x. Default is -Inf."
+      },
+      "xu": {
+        "description": "the upper bounds on the variable x in the form of xl >= x. It should be a vector of the same size as x. Default is Inf. aub, bub: the coefficient matrix and right-hand side vector of the linear inequality constraints aub * x <= bub. The default setting of aub and bub are empty matrix and vector. aeq"
+      }
+    }
+  }
+}
+```

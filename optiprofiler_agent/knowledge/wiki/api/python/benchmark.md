@@ -50,10 +50,45 @@ All vectors are 1-D `numpy.ndarray` of shape `(n,)`.
 | `noise_level` | float | 1e-3 | Noise magnitude for `'noisy'` |
 | `noise_type` | str | `'mixed'` | `'absolute'`, `'relative'`, or `'mixed'` |
 | `perturbation_level` | float | 1e-3 | Perturbation for `'perturbed_x0'` |
-| `distribution` | str/callable | `'spherical'` | Distribution for perturbation/noise |
+| `distribution` | str/callable | feature-dependent | Distribution for `'perturbed_x0'` perturbation or `'noisy'` noise; see mapping below |
 | `significant_digits` | int | 6 | Digits for `'truncated'` |
 | `nan_rate` | float | 0.05 | NaN probability for `'random_nan'` |
 | `mesh_size` | float | 1e-3 | Mesh size for `'quantized'` |
+
+### `distribution` Option Mapping
+
+`distribution` is valid only for `feature_name='perturbed_x0'` and
+`feature_name='noisy'`. Its legal string values, defaults, and callable
+contracts depend on the feature:
+
+| `feature_name` | Default | Allowed string values | Callable contract |
+|---|---|---|---|
+| `'perturbed_x0'` | `'spherical'` | `'spherical'`, `'gaussian'` | `distribution(random_stream, dimension) -> random vector` |
+| `'noisy'` | `'gaussian'` | `'gaussian'`, `'uniform'` | Objective noise: `distribution(random_stream) -> scalar`; nonlinear constraint noise: `distribution(random_stream, dimension) -> random vector` |
+
+For `feature_name='noisy'`, the built-in string distributions mean:
+
+- `'gaussian'`: standard normal noise via `random_stream.standard_normal()`
+  for objective values, or `standard_normal(size)` for nonlinear
+  constraint vectors.
+- `'uniform'`: uniform noise on `[-1, 1]`, scalar for objective values
+  and vector-valued for nonlinear constraints.
+
+`noise_type` controls how the noise is applied:
+
+| `noise_type` | Objective formula |
+|---|---|
+| `'absolute'` | `f + noise_level * noise` |
+| `'relative'` | `f * (1 + noise_level * noise)` |
+| `'mixed'` | `f + max(1, abs(f)) * noise_level * noise` |
+
+For nonlinear constraints `cub` and `ceq`, the same three formulas are
+applied elementwise, replacing `f` with the constraint vector and using
+`np.maximum(1, np.abs(values))` for `'mixed'`.
+
+Any callable passed through `distribution` must be a module-level `def`
+when `n_jobs > 1`; lambdas and nested functions are not reliably
+picklable in Python multiprocessing.
 
 ## Profile & Plot Parameters
 

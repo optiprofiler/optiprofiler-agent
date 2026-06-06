@@ -19,6 +19,7 @@ knowledge/
     ├── log.md             # Chronological change log
     ├── concepts/          # Core domain concepts
     ├── api/               # API reference (python/, matlab/ subdirs)
+    ├── reference/         # Generated lossless mirrors of bundled sources
     ├── guides/            # How-to guides and quickstarts
     ├── profiles/          # Profile methodology and interpretation
     ├── solvers/           # Solver entity pages (one per solver)
@@ -96,6 +97,30 @@ Brief description of what changed.
 
 Actions: `ingest`, `update`, `create`, `lint`, `migrate`.
 
+## Lossless Coverage Contract
+
+The wiki is structured knowledge, not a lossy summary. Human-authored
+narrative pages may reorganize or explain source material, but exact API
+facts must remain available inside `wiki/`.
+
+1. `knowledge/_sources/**/*.json`, `knowledge/_sources/refs/*.md`, and
+   bundled legacy Markdown docs/examples must have generated mirrors under
+   `wiki/reference/`.
+2. Generated reference pages are source-backed and marked with
+   `generated: true`; do not hand-edit them.
+3. If any source changes, run:
+
+   ```bash
+   python scripts/sync_wiki_reference.py
+   python scripts/audit_wiki_coverage.py
+   ```
+
+4. `scripts/audit_wiki_coverage.py` is the guardrail for hidden
+   compression loss. It fails when a reference page is missing or stale.
+5. Narrative pages should link to the relevant reference page whenever a
+   topic includes feature options, defaults, choices, callable contracts,
+   examples, or language-specific API differences.
+
 ## Content Rules
 
 1. **One concept per page** — do not combine unrelated topics
@@ -115,7 +140,9 @@ Actions: `ingest`, `update`, `create`, `lint`, `migrate`.
 3. Create or update wiki pages
 4. Add cross-references to/from related pages
 5. Update `index.md`
-6. Append entry to `log.md`
+6. Regenerate source-backed reference pages with `python scripts/sync_wiki_reference.py`
+7. Audit exact source coverage with `python scripts/audit_wiki_coverage.py`
+8. Append entry to `log.md`
 
 ### Lint Check
 
@@ -125,3 +152,4 @@ Verify:
 - No orphan pages (unreferenced by any other page)
 - `index.md` lists every wiki page
 - No contradictions between pages
+- `wiki/reference/` is synchronized with all bundled source facts

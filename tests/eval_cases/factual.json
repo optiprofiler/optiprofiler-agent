@@ -127,5 +127,14 @@
     "reference_answer": "Use `nonlcon = @(x) deal(cub(x), ceq(x))` so OptiProfiler's separate nonlinear inequality/equality callbacks become the two outputs expected by `fmincon`.",
     "language": "matlab",
     "category": "factual_query"
+  },
+  {
+    "id": "f18",
+    "question": "What are all valid definitions and requirements for the distribution option in OptiProfiler features?",
+    "expected_keywords": ["noisy", "perturbed_x0", "gaussian", "uniform", "spherical", "callable", "random_stream"],
+    "must_not_contain": ["distribution='normal'", "distribution=\"normal\"", "distribution='laplace'", "distribution=\"laplace\""],
+    "reference_answer": "`distribution` is valid for `feature_name='noisy'` and `feature_name='perturbed_x0'`. For `noisy`, string values are `'gaussian'` (default) or `'uniform'`; custom objective noise callables are called as `distribution(random_stream)` and nonlinear-constraint noise callables as `distribution(random_stream, dimension)`. For `perturbed_x0`, string values are `'spherical'` (default) or `'gaussian'`; custom callables are `distribution(random_stream, dimension) -> random vector`. Python callables should be module-level `def` functions for `n_jobs > 1`.",
+    "language": "python",
+    "category": "factual_query"
   }
 ]

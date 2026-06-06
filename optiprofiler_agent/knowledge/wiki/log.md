@@ -1,5 +1,18 @@
 # Wiki Change Log
 
+## [2026-06-07] update | Source-backed reference mirrors
+
+Added generated `wiki/reference/` pages and coverage tooling so the wiki
+remains structured without losing raw facts. `scripts/sync_wiki_reference.py`
+now mirrors `_sources/**/*.json`, `_sources/refs/*.md`, enum JSON, and
+bundled legacy Markdown docs/examples into source-backed wiki pages.
+`scripts/audit_wiki_coverage.py` fails when those pages are missing or
+stale.
+
+This closes the failure mode where narrative pages compressed a detailed
+source fact, such as feature-dependent `distribution` choices and callable
+contracts, into an underspecified summary.
+
 ## [2026-06-05] sync | OptiProfiler 1.1 docs/API sync
 
 Synced agent knowledge against the local `optiprofiler` repository at

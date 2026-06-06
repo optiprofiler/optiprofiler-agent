@@ -333,10 +333,20 @@ knowledge/
     ├── log.md             # Chronological change log
     ├── concepts/          # Core domain concepts (DFO, benchmark, solver interface)
     ├── api/               # API reference (python/, matlab/)
+    ├── reference/         # Generated, source-backed mirrors; no lossy compression
     ├── guides/            # Quickstart guides, custom solver howto
     ├── profiles/          # Profile methodology and interpretation
     ├── solvers/           # Per-solver entity pages (NEWUOA, COBYLA, etc.)
     └── troubleshooting/   # Error patterns and fixes
+```
+
+The narrative wiki pages are for explanation and synthesis; generated
+`wiki/reference/` pages are for exact coverage. After changing bundled
+knowledge sources, run:
+
+```bash
+python scripts/sync_wiki_reference.py
+python scripts/audit_wiki_coverage.py
 ```
 
 RAG retrieval uses **two-stage search**: index scan → targeted vector search.

@@ -29,8 +29,9 @@ every source added and every question asked.
 ├───────────────────────────────────────┤
 │  Layer 2: Wiki (wiki/)                │  ← Compiled, interlinked pages
 │    index.md  log.md                   │
-│    concepts/  api/  guides/           │
-│    profiles/  solvers/  troubleshoot/ │
+│    concepts/  api/  reference/        │
+│    guides/  profiles/  solvers/       │
+│    troubleshoot/                      │
 ├───────────────────────────────────────┤
 │  Layer 1: Raw Sources (_sources/)     │  ← Immutable extractions
 │    python/*.json  matlab/*.json       │
@@ -46,10 +47,12 @@ them. Contains JSON files extracted from OptiProfiler source code
 
 ### Layer 2 — Wiki (`wiki/`)
 
-LLM-generated and LLM-maintained markdown pages. Each page focuses on one
-concept, entity, or topic. Pages are interlinked via relative markdown
-links. The LLM owns this layer entirely — it creates pages, updates them
-when new sources arrive, and maintains cross-references.
+Markdown pages that sit between raw sources and user answers. Narrative
+pages are LLM/human-maintained and focus on one concept, entity, or topic.
+Generated `reference/` pages are deterministic mirrors of raw sources and
+legacy docs. This means the wiki is structured, but not lossy: every exact
+API fact extracted into `_sources/` must remain represented inside
+`wiki/reference/`.
 
 ### Layer 3 — Schema (`SCHEMA.md`)
 
@@ -67,6 +70,7 @@ Wiki pages are organized into six categories:
 |------------------|----------------------------------------------|-----------------------------------------|
 | `concepts/`      | Core domain concepts                         | DFO, benchmark function, problem types  |
 | `api/`           | API reference (per-language)                 | benchmark parameters, Problem class     |
+| `reference/`     | Generated, lossless source mirrors           | python-benchmark, legacy-docs           |
 | `guides/`        | Step-by-step instructions                    | Python quickstart, custom solver guide  |
 | `profiles/`      | Profile methodology and interpretation       | Performance profiles, data profiles     |
 | `solvers/`       | Per-solver entity pages                      | NEWUOA, COBYLA, Nelder-Mead             |
@@ -115,8 +119,12 @@ This reduces noise, saves tokens, and improves answer quality.
 2. LLM reads the raw source and extracts key information
 3. Create or update wiki pages with cross-references
 4. Update `wiki/index.md` with new/modified entries
-5. Append an entry to `wiki/log.md`
-6. Rebuild the RAG vector index (`build_index(force=True)`)
+5. Regenerate source-backed reference pages:
+   `python scripts/sync_wiki_reference.py`
+6. Run the lossless coverage audit:
+   `python scripts/audit_wiki_coverage.py`
+7. Append an entry to `wiki/log.md`
+8. Rebuild the RAG vector index (`build_index(force=True)`)
 
 ### Lint — Health Check
 
@@ -127,6 +135,17 @@ Periodically verify wiki integrity:
 - Missing pages referenced by wiki links
 - `index.md` consistency with actual files
 - Gaps that could be filled with new sources
+- Stale or missing generated pages in `wiki/reference/`
+
+### Lossless Coverage Rule
+
+The wiki is allowed to reorganize knowledge, but not to erase it.
+Human-readable pages may summarize, but generated `reference/` pages must
+mirror all bundled source facts exactly enough that a RAG query can recover
+API option names, defaults, choices, callable signatures, examples, and
+language-specific differences. The command
+`python scripts/audit_wiki_coverage.py` is the mechanical guardrail for
+this contract.
 
 ### Query — Answering Questions
 

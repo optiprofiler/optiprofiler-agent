@@ -153,3 +153,18 @@ class TestKnowledgeBase:
         assert "np.zeros_like(c_eq_x0)" in content
         assert "NonlinearConstraint(cub, -np.inf, 0)" not in content
         assert "NonlinearConstraint(ceq, 0, 0)" not in content
+
+    def test_distribution_mapping_is_rag_visible(self):
+        api = (KNOWLEDGE_DIR / "wiki" / "api" / "python" / "benchmark.md").read_text()
+        features = (KNOWLEDGE_DIR / "wiki" / "concepts" / "features.md").read_text()
+        profiles = (KNOWLEDGE_DIR / "wiki" / "profiles" / "feature-effects.md").read_text()
+        combined = "\n".join([api, features, profiles])
+
+        assert "`feature_name='noisy'`" in api
+        assert "'gaussian'" in combined
+        assert "'uniform'" in combined
+        assert "'spherical'" in combined
+        assert "distribution(random_stream) -> scalar" in combined
+        assert "distribution(random_stream, dimension) -> random vector" in combined
+        assert "Do not use `distribution='normal'`" in features
+        assert "max(1, abs(f)) * noise_level * noise" in combined

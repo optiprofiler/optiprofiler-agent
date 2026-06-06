@@ -102,7 +102,12 @@ class TestKnowledgeRAG:
         results = rag.retrieve("TypeError solver wrong number arguments PicklingError lambda", top_k=5)
         assert len(results) > 0
         sources = [r["source"] for r in results]
-        assert any("troubleshooting/" in s or "debugging/" in s for s in sources)
+        assert any(
+            "troubleshooting/" in s
+            or "debugging/" in s
+            or s == "wiki/reference/legacy-docs.md"
+            for s in sources
+        )
 
     def test_persistence_avoids_rebuild(self, tmp_path):
         from optiprofiler_agent.common.rag import KnowledgeRAG
@@ -146,6 +151,8 @@ class TestKnowledgeRAG:
         for r in results:
             assert not r["source"].startswith("matlab/")
             assert not r["source"].startswith("wiki/api/matlab/")
+            assert not r["source"].startswith("wiki/reference/matlab-")
+            assert not r["source"].startswith("_sources/matlab/")
 
     def test_wiki_pages_indexed(self):
         from optiprofiler_agent.common.rag import KnowledgeRAG
@@ -187,7 +194,7 @@ class TestWikiStructure:
         assert (KNOWLEDGE_DIR / "wiki" / "log.md").exists()
 
     def test_wiki_categories_exist(self):
-        for cat in ("concepts", "api", "guides", "profiles", "solvers", "troubleshooting"):
+        for cat in ("concepts", "api", "reference", "guides", "profiles", "solvers", "troubleshooting"):
             assert (KNOWLEDGE_DIR / "wiki" / cat).is_dir(), f"Missing wiki/{cat}/"
 
     def test_sources_dir_exists(self):

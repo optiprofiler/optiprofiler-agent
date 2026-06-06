@@ -35,6 +35,18 @@ _CHUNK_SEPARATOR = re.compile(r"\n#{1,2}\s")
 _FRONTMATTER_RE = re.compile(r"^---\s*\n.*?\n---\s*\n", re.DOTALL)
 
 
+def _excluded_language_prefixes(language: str | None) -> tuple[str, ...]:
+    """Prefixes to skip when a query is scoped to one language."""
+    if language not in ("python", "matlab"):
+        return ()
+    other = "matlab" if language == "python" else "python"
+    return (
+        f"wiki/api/{other}/",
+        f"wiki/reference/{other}-",
+        f"_sources/{other}/",
+    )
+
+
 def _strip_frontmatter(text: str) -> str:
     """Remove YAML frontmatter from markdown text."""
     return _FRONTMATTER_RE.sub("", text, count=1)
@@ -350,14 +362,11 @@ class KnowledgeRAG:
             metas = results["metadatas"][0] if results["metadatas"] else [{}] * len(docs)
             dists = results["distances"][0] if results["distances"] else [0.0] * len(docs)
 
-            exclude_prefix = None
-            if language and language in ("python", "matlab"):
-                other = "matlab" if language == "python" else "python"
-                exclude_prefix = f"wiki/api/{other}/"
+            exclude_prefixes = _excluded_language_prefixes(language)
 
             for doc, meta, dist in zip(docs, metas, dists):
                 source = meta.get("source", "")
-                if exclude_prefix and source.startswith(exclude_prefix):
+                if exclude_prefixes and source.startswith(exclude_prefixes):
                     continue
                 items.append({
                     "text": doc,
@@ -424,14 +433,11 @@ class KnowledgeRAG:
             metas = results["metadatas"][0] if results["metadatas"] else [{}] * len(docs)
             dists = results["distances"][0] if results["distances"] else [0.0] * len(docs)
 
-            exclude_prefix = None
-            if language and language in ("python", "matlab"):
-                other = "matlab" if language == "python" else "python"
-                exclude_prefix = f"wiki/api/{other}/"
+            exclude_prefixes = _excluded_language_prefixes(language)
 
             for doc, meta, dist in zip(docs, metas, dists):
                 source = meta.get("source", "")
-                if exclude_prefix and source.startswith(exclude_prefix):
+                if exclude_prefixes and source.startswith(exclude_prefixes):
                     continue
                 matched = any(source.startswith(p.rsplit(".", 1)[0])
                               for p in relevant_prefixes)

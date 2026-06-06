@@ -11,7 +11,7 @@ last_updated: 2026-06-05
 - [Benchmark Function](concepts/benchmark-function.md) — the central benchmark() API entry point
 - [Solver Interface](concepts/solver-interface.md) — required solver signatures for each problem type
 - [Problem Types](concepts/problem-types.md) — ptype options (u, b, l, n) and selection parameters
-- [Features](concepts/features.md) — feature_name options that modify test problems
+- [Features](concepts/features.md) — feature_name options, including `distribution` mappings
 - [Parallel & Pickle Rules](concepts/parallel-and-pickle.md) — when lambdas break parallel mode
 
 ## API Reference
@@ -24,6 +24,20 @@ last_updated: 2026-06-05
 
 ### MATLAB
 - [benchmark()](api/matlab/benchmark.md) — MATLAB API reference and differences from Python
+
+## Source-Backed Reference
+
+- [Python API Notes Source](reference/python-api_notes.md) — lossless mirror of `_sources/python/api_notes.json`
+- [Python benchmark.json Source](reference/python-benchmark.md) — source-backed Python benchmark facts, options, defaults, choices, returns, notes
+- [Python Classes Source](reference/python-classes.md) — lossless mirror of Python Problem, Feature, and FeaturedProblem metadata
+- [Python Problem Library Tools Source](reference/python-plib_tools.md) — source-backed Python plib helper signatures and descriptions
+- [MATLAB API Notes Source](reference/matlab-api_notes.md) — lossless mirror of `_sources/matlab/api_notes.json`
+- [MATLAB benchmark.json Source](reference/matlab-benchmark.md) — source-backed MATLAB benchmark facts, options, defaults, choices, returns, notes
+- [MATLAB Classes Source](reference/matlab-classes.md) — lossless mirror of MATLAB Problem, Feature, and FeaturedProblem metadata
+- [MATLAB Problem Library Tools Source](reference/matlab-plib_tools.md) — source-backed MATLAB plib helper signatures and descriptions
+- [Enums Source](reference/enums.md) — lossless mirror of bundled enum constants
+- [Legacy Docs and Examples Source](reference/legacy-docs.md) — exact bundled examples, installation notes, problem library notes, profiles, and debugging docs
+- [Bibliography Source](reference/bibliography.md) — exact bundled bibliography source
 
 ## Guides
 

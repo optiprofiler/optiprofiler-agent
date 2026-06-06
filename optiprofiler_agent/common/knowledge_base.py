@@ -150,7 +150,7 @@ class KnowledgeBase:
             "maxdim", "max_eval_factor", "max_tol_order", "seed", "savepath",
             "normalized_scores", "score_only", "silent", "load",
             "custom_problem_libs_path", "noise_level", "noise_type",
-            "perturbation_level", "draw_hist_plots",
+            "distribution", "perturbation_level", "draw_hist_plots",
         ]
         param_lines = []
         for name in important:
