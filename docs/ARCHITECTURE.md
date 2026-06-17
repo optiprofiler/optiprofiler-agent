@@ -9,6 +9,8 @@
 > wiki) see [`HERMES_INSPIRED.md`](HERMES_INSPIRED.md). For future work,
 > see [`ROADMAP.md`](ROADMAP.md). For the user-facing CLI, see the
 > top-level [`README.md`](../README.md).
+> If you want the human-readable request-by-request call map first, read
+> [`AGENT_WORKFLOWS.md`](AGENT_WORKFLOWS.md) before this file.
 >
 > Code references throughout cite the file path so you can `rg` the
 > corresponding symbol immediately.
