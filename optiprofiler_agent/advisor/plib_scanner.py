@@ -6,10 +6,14 @@ import ast
 import csv
 import json
 import re
-import tomllib
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+
+try:  # Python 3.11+
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python 3.10 CI
+    import tomli as tomllib
 
 
 TEXT_EXTENSIONS = {
