@@ -1,0 +1,34 @@
+[
+  {
+    "id": "plib_scan_python_selector",
+    "agent": "advisor",
+    "task": "scan_local_plib",
+    "library_name": "toyplib",
+    "files": {
+      "toy.py": "import numpy as np\n\nclass ToyProblem:\n    pass\n\ndef load_problem(name):\n    return ToyProblem()\n\ndef find_problems(options):\n    return ['TOY']\n",
+      "probinfo_toyplib.csv": "problem_name,ptype,dim,mb,mcon,mlcon,mnlcon\nTOY,u,2,0,0,0,0\n",
+      "pyproject.toml": "[project]\nname = 'toyplib'\ndependencies = ['numpy>=1.26']\n"
+    },
+    "expect": {
+      "languages": ["python"],
+      "dependencies": ["numpy"],
+      "recommended_adapter_shape": "reuse_upstream_selector",
+      "loader_hints_min": 1,
+      "selector_hints_min": 1
+    }
+  },
+  {
+    "id": "plib_scaffold_and_smoke_toy_python",
+    "agent": "advisor",
+    "task": "scaffold_plib_wrapper",
+    "library_name": "toyplib",
+    "files": {
+      "toy.py": "import numpy as np\n\nclass ToyProblem:\n    def __init__(self, name):\n        self.name = name\n        self.x0 = np.array([1.0, -1.0])\n        self.xl = np.array([-5.0, -5.0])\n        self.xu = np.array([5.0, 5.0])\n    def fun(self, x):\n        x = np.asarray(x, dtype=float)\n        return float(np.sum(x * x))\n\ndef load_problem(name):\n    return ToyProblem(name)\n\ndef find_problems(options):\n    return ['TOY_A', 'TOY_B']\n",
+      "probinfo_toyplib.csv": "problem_name,ptype,dim,mb,mcon,mlcon,mnlcon\nTOY_A,b,2,2,0,0,0\nTOY_B,b,2,2,0,0,0\n"
+    },
+    "expect": {
+      "smoke_ok": true,
+      "tested_problem_names": ["TOY_A", "TOY_B"]
+    }
+  }
+]

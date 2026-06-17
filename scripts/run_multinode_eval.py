@@ -24,6 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from optiprofiler_agent.common.interface_adapter import analyze_solver
 from optiprofiler_agent.advisor.scaffold_feature import scaffold_custom_feature
+from optiprofiler_agent.advisor.plib_scanner import scan_local_plib
+from optiprofiler_agent.advisor.plib_wrapper import scaffold_plib_wrapper, smoke_test_plib_wrapper
 from optiprofiler_agent.debugger.debugger import (
     _collect_web_debug_context,
     _format_web_debug_context,
@@ -44,6 +46,7 @@ def _load_cases(paths: list[str] | None) -> list[dict]:
     else:
         files = [
             EVAL_CASES_DIR / "advisor_scaffold_feature.json",
+            EVAL_CASES_DIR / "advisor_plib_scan.json",
             EVAL_CASES_DIR / "debugger_matlab.json",
             EVAL_CASES_DIR / "debugger_web.json",
             EVAL_CASES_DIR / "interpreter_matlab.json",
@@ -178,6 +181,73 @@ def _eval_advisor_case(case: dict) -> tuple[bool, dict]:
             "validation_errors": result.validation_errors,
             "validation_warnings": result.validation_warnings,
             "code_excerpt": code[:500],
+        }
+
+    if task == "scan_local_plib":
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel_path, content in case.get("files", {}).items():
+                path = root / rel_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            evidence = scan_local_plib(root, library_name=case.get("library_name"))
+        expect = case.get("expect", {})
+        missing_languages = [
+            item for item in expect.get("languages", [])
+            if item not in evidence.languages
+        ]
+        missing_dependencies = [
+            item for item in expect.get("dependencies", [])
+            if item not in evidence.dependencies
+        ]
+        passed = (
+            not missing_languages
+            and not missing_dependencies
+            and evidence.recommended_adapter_shape == expect.get(
+                "recommended_adapter_shape",
+                evidence.recommended_adapter_shape,
+            )
+            and len(evidence.loader_hints) >= expect.get("loader_hints_min", 0)
+            and len(evidence.selector_hints) >= expect.get("selector_hints_min", 0)
+        )
+        return passed, {
+            "languages": evidence.languages,
+            "dependencies": evidence.dependencies,
+            "loader_hints": evidence.loader_hints,
+            "selector_hints": evidence.selector_hints,
+            "recommended_adapter_shape": evidence.recommended_adapter_shape,
+            "missing_languages": missing_languages,
+            "missing_dependencies": missing_dependencies,
+        }
+
+    if task == "scaffold_plib_wrapper":
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for rel_path, content in case.get("files", {}).items():
+                path = root / rel_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            scaffold = scaffold_plib_wrapper(
+                root,
+                library_name=case.get("library_name"),
+                staging_dir=root / "stage",
+            )
+            smoke = smoke_test_plib_wrapper(scaffold.staging_dir, scaffold.library_name)
+        expect = case.get("expect", {})
+        expected_names = expect.get("tested_problem_names", [])
+        missing_names = [
+            name for name in expected_names
+            if name not in smoke.tested_problem_names
+        ]
+        passed = smoke.ok == expect.get("smoke_ok", True) and not missing_names
+        return passed, {
+            "staging_dir": str(scaffold.staging_dir),
+            "tools_path": str(scaffold.tools_path),
+            "warnings": scaffold.warnings,
+            "smoke_ok": smoke.ok,
+            "tested_problem_names": smoke.tested_problem_names,
+            "missing_names": missing_names,
+            "stderr": smoke.stderr[-500:],
         }
 
     raise ValueError(f"Unknown advisor task: {task}")

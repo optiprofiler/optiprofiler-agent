@@ -224,9 +224,22 @@
 - [x] N4: prompt-toolkit history and slash-command tab completion.
 - [x] N5: MATLAB support for Agent B and C.
 - [x] M4a first version: Advisor/Unified `scaffold_feature` generates validated Python custom-feature scaffolds with deterministic 5-case eval coverage.
+- [x] M4a follow-up: optional file write/append workflow via shared `write_scaffold_file`.
+- [x] M4b Stage 1: read-only `scan_local_plib` evidence extraction for custom problem-library wrappers.
+- [x] M4b Stage 2: first deterministic `<lib>_tools.py` scaffold generation for Python source libraries with loader/selector primitives.
+- [x] M4b Stage 3: subprocess smoke-test for generated problem-library wrappers.
 - [ ] L1: opt-in trajectory remote upload.
-- [ ] M4a follow-up: optional file write/append workflow via shared `write_scaffold_file`.
+- [ ] M4b follow-up: LLM patch/fix loop for failed wrapper smoke tests and broader upstream library shapes.
+- [ ] M4b follow-up: promote staged wrapper into the user's active custom problem-library tree.
 - [ ] N5 follow-up: broaden report/CLI polish after platform embedding feedback.
+
+### Ecosystem Expansion Backlog
+
+- [ ] Data onboarding loop: turn local/paper/private problem libraries into staged OptiProfiler wrappers with metadata, smoke tests, and promotion.
+- [ ] Solver onboarding loop: scan user solver projects, generate OptiProfiler-compatible solver wrappers, validate interface contracts, and record dependency/runtime assumptions.
+- [ ] Benchmarking-tool loop: scaffold custom features, benchmark protocols, report templates, and reproducible evaluation bundles.
+- [ ] Code-evolution loop: use benchmark feedback to propose and test solver-configuration or heuristic changes under explicit user review.
+- [ ] Enterprise readiness loop: preserve provenance, privacy controls, approval gates, and trajectory audit logs for platform and industrial deployments.
 
 ---
 

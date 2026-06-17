@@ -6,7 +6,7 @@ Verifies tool registration and agent creation without requiring an LLM.
 from unittest.mock import MagicMock, patch
 
 from optiprofiler_agent.config import AgentConfig, LLMConfig
-from optiprofiler_agent.unified_agent import _build_tools, create_unified_agent
+from optiprofiler_agent.unified_agent import _SYSTEM_PROMPT, _build_tools, create_unified_agent
 
 
 class TestBuildTools:
@@ -15,8 +15,8 @@ class TestBuildTools:
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
         tools = _build_tools(config)
         # 4 original optiprofiler tools + 4 Hermes-inspired runtime tools
-        # + scaffold_feature + web_search.
-        assert len(tools) == 10
+        # + scaffold_feature + write_scaffold_file + M4b plib tools + web_search.
+        assert len(tools) == 14
 
     def test_tool_names(self):
         config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
@@ -32,6 +32,10 @@ class TestBuildTools:
             "recall_past",
             "add_wiki_page",
             "scaffold_feature",
+            "write_scaffold_file",
+            "scan_local_plib",
+            "scaffold_plib_wrapper",
+            "smoke_test_plib_wrapper",
             "web_search",
         }
 
@@ -105,6 +109,92 @@ class TestBuildTools:
         assert "mod_fun=custom_mod_fun" in result
         assert "rng.standard_t" in result
         assert "Validation: passed" in result
+
+    def test_scaffold_feature_tool_can_preview_file_write(self, tmp_path):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        scaffold = next(t for t in tools if t.name == "scaffold_feature")
+        target = tmp_path / "features.py"
+
+        result = scaffold.invoke({
+            "description": "heavy-tailed objective noise with level 1e-3",
+            "target_path": str(target),
+            "dry_run": True,
+        })
+
+        assert "Scaffold File Preview" in result
+        assert "```diff" in result
+        assert not target.exists()
+
+    def test_write_scaffold_file_tool_writes_when_requested(self, tmp_path):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        write_tool = next(t for t in tools if t.name == "write_scaffold_file")
+        target = tmp_path / "snippet.py"
+
+        result = write_tool.invoke({
+            "path": str(target),
+            "body": "print('ok')\n",
+            "mode": "new",
+            "dry_run": False,
+        })
+
+        assert "Scaffold File Written" in result
+        assert target.exists()
+        assert "print('ok')" in target.read_text(encoding="utf-8")
+
+    def test_scan_local_plib_tool_returns_json_evidence(self, tmp_path):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        scan = next(t for t in tools if t.name == "scan_local_plib")
+        (tmp_path / "toy.py").write_text(
+            "def load_problem(name):\n    return name\n",
+            encoding="utf-8",
+        )
+
+        result = scan.invoke({"src_dir": str(tmp_path), "library_name": "toy"})
+
+        assert '"library_name": "toy"' in result
+        assert '"toy.py"' in result
+
+    def test_plib_wrapper_tools_generate_and_smoke_test(self, tmp_path):
+        config = AgentConfig(llm=LLMConfig(provider="openai", api_key="fake"))
+        tools = _build_tools(config)
+        scaffold = next(t for t in tools if t.name == "scaffold_plib_wrapper")
+        smoke = next(t for t in tools if t.name == "smoke_test_plib_wrapper")
+        (tmp_path / "toy.py").write_text(
+            "import numpy as np\n\n"
+            "class P:\n"
+            "    x0 = np.array([1.0])\n"
+            "    def fun(self, x): return float(np.sum(np.asarray(x) ** 2))\n\n"
+            "def load_problem(name): return P()\n"
+            "def find_problems(options): return ['P1']\n",
+            encoding="utf-8",
+        )
+        (tmp_path / "probinfo_toy.csv").write_text(
+            "problem_name,ptype,dim,mb,mcon,mlcon,mnlcon\nP1,u,1,0,0,0,0\n",
+            encoding="utf-8",
+        )
+        stage = tmp_path / "stage"
+
+        scaffold_result = scaffold.invoke({
+            "src_dir": str(tmp_path),
+            "library_name": "toy",
+            "staging_dir": str(stage),
+        })
+        smoke_result = smoke.invoke({
+            "staging_dir": str(stage),
+            "library_name": "toy",
+        })
+
+        assert '"tools_path"' in scaffold_result
+        assert '"ok": true' in smoke_result
+        assert '"P1"' in smoke_result
+
+
+def test_system_prompt_requires_debug_tool_for_error_plus_code():
+    assert "error/traceback/exception message together with code" in _SYSTEM_PROMPT
+    assert "MUST call **debug_error**" in _SYSTEM_PROMPT
 
 
 class TestCreateUnifiedAgent:

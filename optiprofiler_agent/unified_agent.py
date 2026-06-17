@@ -87,9 +87,28 @@ scaffold for `benchmark(..., feature_name="custom", mod_*=...)`. Use when \
 the user asks for a custom feature, objective noise, initial-point \
 perturbation, quantization, affine rotation, bound modification, or \
 constraint perturbation. The tool returns complete Python code plus \
-assumptions and validation status. For ordinary built-in features such as \
+assumptions and validation status. It can also preview or apply a file write \
+when the user provides a target path. For ordinary built-in features such as \
 `feature_name="noisy"`, use knowledge_search unless the user asks for a \
 custom feature implementation.
+
+11. **write_scaffold_file** — Preview or apply writing generated scaffold code \
+to a local file. Use only when the user explicitly asks to save/write/append \
+generated scaffold code. Prefer `dry_run=True` first unless the user has \
+already clearly asked you to write the file now.
+
+12. **scan_local_plib** — Read-only discovery for a local custom problem \
+library directory. Use before generating a custom problem-library wrapper. \
+It returns structured evidence about source files, dependencies, loader \
+hints, selector hints, data files, and pickle hazards.
+
+13. **scaffold_plib_wrapper** — Generate staged Python wrapper files for a \
+local custom problem library after `scan_local_plib`. It writes into an \
+explicit staging directory or `.opagent_scaffold/<lib>` under the source dir.
+
+14. **smoke_test_plib_wrapper** — Subprocess smoke-test a staged custom \
+problem-library wrapper by calling `<lib>_select`, loading up to three \
+problems, evaluating `fun(x0)`, and checking finite scalar output.
 
 **Guidelines:**
 - OptiProfiler focuses on **Derivative-Free Optimization (DFO)**.
@@ -98,6 +117,9 @@ custom feature implementation.
 - Always call a tool when specific information is needed rather than guessing.
 - When using knowledge_search, formulate a clear, specific query.
 - Respond in the same language as the user.
+- If the user provides an error/traceback/exception message together with code, \
+you MUST call **debug_error**. Do not answer such cases with knowledge_search \
+alone, even if the fix seems obvious.
 
 **Calling `benchmark()` — do not confuse solver vs benchmark API:**
 - **Solvers** are called as `solver(fun, x0, ...)` — `fun` is the objective for one problem.
@@ -171,7 +193,9 @@ def _build_tools(config: AgentConfig) -> list:
         query: Annotated[str, "A specific question about OptiProfiler"],
     ) -> str:
         """Search the OptiProfiler knowledge base for API docs, parameters,
-        solver interface, features, profiles, and general usage information."""
+        solver interface, features, profiles, and general usage information.
+        Do not use this to diagnose a pasted error or traceback with code;
+        call debug_error for that workflow."""
         from optiprofiler_agent.common.rag import KnowledgeRAG
 
         rag = KnowledgeRAG(
@@ -233,7 +257,8 @@ def _build_tools(config: AgentConfig) -> list:
         language: Annotated[str, "python or matlab"] = "python",
     ) -> str:
         """Diagnose a benchmark script error and suggest a fix.
-        Provide the code and the error traceback."""
+        Provide the code and the error traceback. Use this whenever the user
+        gives an exception/error/traceback plus source code."""
         from optiprofiler_agent.debugger.debugger import debug_script
 
         lang = (language or "python").strip().lower()
@@ -342,20 +367,107 @@ def _build_tools(config: AgentConfig) -> list:
         description: Annotated[str, "Natural-language description of the desired Python custom feature"],
         feature_name: Annotated[str, "Short optional name used in comments"] = "",
         n_runs: Annotated[int, "Optional number of benchmark repetitions; use 0 for the scaffold default"] = 0,
+        target_path: Annotated[str, "Optional file path to write or append the scaffold to"] = "",
+        write_mode: Annotated[str, "auto, new, append, or overwrite"] = "auto",
+        dry_run: Annotated[bool, "Preview file changes without writing"] = True,
     ) -> str:
         """Generate validated Python code for an OptiProfiler custom feature.
 
         Use this for `feature_name="custom"` requests involving `mod_fun`,
         `mod_x0`, `mod_bounds`, `mod_affine`, `mod_cub`, or `mod_ceq`.
+        When target_path is provided, preview or apply the corresponding
+        file write after generation.
         """
         from optiprofiler_agent.advisor.scaffold_feature import scaffold_custom_feature
+        from optiprofiler_agent.advisor.scaffold_file import write_scaffold_file
 
         result = scaffold_custom_feature(
             description=description,
             feature_name=feature_name,
             n_runs=n_runs or None,
         )
-        return result.to_markdown()
+        md = result.to_markdown()
+        if target_path:
+            write_result = write_scaffold_file(
+                target_path,
+                result.code,
+                mode=write_mode,
+                dry_run=dry_run,
+                label=feature_name or description,
+            )
+            md += "\n\n" + write_result.to_markdown()
+        return md
+
+    @tool
+    def write_scaffold_file(
+        path: Annotated[str, "Target file path"],
+        body: Annotated[str, "Generated scaffold code to write"],
+        mode: Annotated[str, "auto, new, append, or overwrite"] = "auto",
+        dry_run: Annotated[bool, "Preview changes without writing"] = True,
+    ) -> str:
+        """Preview or apply writing generated scaffold code to a local file.
+
+        Use dry_run=True to show a diff before modifying an existing file.
+        """
+        from optiprofiler_agent.advisor.scaffold_file import write_scaffold_file as _write_scaffold_file
+
+        return _write_scaffold_file(
+            path,
+            body,
+            mode=mode,
+            dry_run=dry_run,
+        ).to_markdown()
+
+    @tool
+    def scan_local_plib(
+        src_dir: Annotated[str, "Local problem-library source directory to scan read-only"],
+        library_name: Annotated[str, "Optional OptiProfiler plib name"] = "",
+    ) -> str:
+        """Scan a local problem-library directory and return structured evidence.
+
+        This is read-only and should be the first step before proposing a
+        custom problem-library wrapper.
+        """
+        from optiprofiler_agent.advisor.plib_scanner import scan_local_plib as _scan_local_plib
+
+        return _scan_local_plib(src_dir, library_name or None).to_json()
+
+    @tool
+    def scaffold_plib_wrapper(
+        src_dir: Annotated[str, "Local problem-library source directory"],
+        library_name: Annotated[str, "OptiProfiler custom plib name"],
+        staging_dir: Annotated[str, "Optional staging directory for generated wrapper files"] = "",
+    ) -> str:
+        """Generate staged Python custom problem-library wrapper files.
+
+        Run scan_local_plib first when interacting with a user. This tool
+        writes only to the staging directory, not into OptiProfiler's active
+        problem-library path.
+        """
+        from optiprofiler_agent.advisor.plib_wrapper import scaffold_plib_wrapper as _scaffold_plib_wrapper
+
+        return _scaffold_plib_wrapper(
+            src_dir,
+            library_name,
+            staging_dir=staging_dir or None,
+        ).to_json()
+
+    @tool
+    def smoke_test_plib_wrapper(
+        staging_dir: Annotated[str, "Directory containing generated <lib>_tools.py"],
+        library_name: Annotated[str, "OptiProfiler custom plib name"],
+        max_problems: Annotated[int, "Maximum selected problems to load"] = 3,
+        timeout: Annotated[int, "Subprocess timeout in seconds"] = 30,
+    ) -> str:
+        """Smoke-test a staged custom problem-library wrapper in a subprocess."""
+        from optiprofiler_agent.advisor.plib_wrapper import smoke_test_plib_wrapper as _smoke_test_plib_wrapper
+
+        return _smoke_test_plib_wrapper(
+            staging_dir,
+            library_name,
+            max_problems=max_problems,
+            timeout=timeout,
+        ).to_json()
 
     from optiprofiler_agent.tools.web_search import web_search
 
@@ -369,6 +481,10 @@ def _build_tools(config: AgentConfig) -> list:
         recall_past,
         add_wiki_page,
         scaffold_feature,
+        write_scaffold_file,
+        scan_local_plib,
+        scaffold_plib_wrapper,
+        smoke_test_plib_wrapper,
         web_search,
     ]
 

@@ -21,6 +21,59 @@ creep.
 
 ---
 
+## Strategic role — from package expert to ecosystem operator
+
+OptiProfiler Agent started as an expert assistant for one package:
+answer user questions accurately, write benchmark scripts, and keep the
+OptiProfiler API contract straight. The platform changed the agent's
+role. It now sits at the boundary where users submit code, receive
+sandbox failures, and need benchmark results interpreted. The long-term
+platform goal expands the role again: OptiProfiler is becoming a DFO
+benchmarking ecosystem with three core assets:
+
+1. **Data:** problem libraries, metadata, problem selection rules, and
+   reproducible benchmark instances.
+2. **Solvers:** expert-provided solver interfaces, configuration
+   recipes, versioned solver wrappers, and reproducibility constraints.
+3. **Benchmarking tools:** profile generation, feature perturbations,
+   evaluation reports, comparison protocols, and quality gates.
+
+The agent should become the operating layer over these assets, not just
+the help button beside them. This gives the roadmap five durable roles:
+
+| Role | What the agent does | Roadmap link |
+|---|---|---|
+| **Knowledge steward** | Maintains a source-backed wiki that answers exact API, option, and workflow questions without losing low-level details. | N1, wiki coverage, eval factual gates |
+| **Platform copilot** | Debugs failed submissions and interprets successful benchmark outputs at the sandbox boundary. | M1-M3, N5 |
+| **Ecosystem integrator** | Helps users contribute new problem libraries, solver wrappers, custom features, and benchmark tools with generated code plus smoke tests. | M4 and future solver/tool scaffold milestones |
+| **Loop-engineering assistant** | Runs generate → test → analyze → patch loops for wrappers, solver configurations, benchmark protocols, and eventually heuristic or code-evolution workflows. | M4b, L1-L3 |
+| **Governed enterprise layer** | Preserves provenance, privacy, versioning, approval steps, and auditable trajectories so the same workflows can be trusted in industrial settings. | L1-L4 and platform deployment policy |
+
+This means new features should be judged by whether they strengthen one
+of the ecosystem loops:
+
+- **Onboard data**: turn a paper/private problem set into an
+  OptiProfiler problem library with metadata, tests, and documented
+  assumptions.
+- **Onboard solvers**: turn a solver implementation into a robust
+  OptiProfiler-compatible wrapper with dependency notes, timeout
+  behavior, and interface checks.
+- **Run benchmarking**: generate benchmark scripts, execute them through
+  platform/CLI workflows, diagnose failures, and interpret results.
+- **Improve the system**: convert real trajectories into eval cases,
+  wiki updates, and better agent behavior under review.
+- **Support evolution loops**: use benchmark feedback to propose
+  solver-parameter changes, feature stress tests, and eventually
+  code-evolution or heuristic-learning experiments, while keeping every
+  generated step reproducible and reviewable.
+
+Near-term work should still satisfy current platform needs, but the
+center of gravity is now clear: the agent is the programmable interface
+between users, OptiProfiler's benchmark machinery, and the growing
+DFO ecosystem around data, solvers, and evaluation tools.
+
+---
+
 ## Near-term — UX hardening (≤ 1 month)
 
 ### N1. L4 constrained decoding for `BenchmarkReport`
@@ -297,13 +350,14 @@ The two sub-features have **different interaction shapes** on purpose:
 
 #### M4a. Custom feature generation (chat-first)
 
-**Status:** First version implemented (2026-06). The unified agent now has
+**Status:** Implemented (2026-06). The unified agent now has
 `scaffold_feature`, backed by `advisor/scaffold_feature.py`, which maps common
 custom-feature descriptions to validated Python `feature_name="custom"` code.
 It covers objective noise, gradient-scaled noise, quantized/noisy objectives,
 initial-point perturbation, bound shrinking, affine rotation, and nonlinear
-constraint modifiers. The first version returns inline code only; file writes
-remain deferred to the shared `write_scaffold_file` tool planned for M4b.
+constraint modifiers. It returns inline code by default and can preview or
+apply file writes through the shared `write_scaffold_file` helper using
+`target_path`, `write_mode`, and `dry_run`.
 
 **Problem.** When none of the ten built-in `feature_name` presets
 matches what a user wants to test, they have to read
@@ -353,12 +407,12 @@ parallelism on the first run.
    `target_path` argument:
 
    - **omitted** → return the snippet inline in chat (default).
-   - **path to a new file** → write the snippet there, with shebang +
+   - **path to a new file** → preview or write the snippet there, with shebang +
      a header comment naming the feature.
-   - **path to an existing file** → *append* the feature definition
+   - **path to an existing file** → preview or *append* the feature definition
      (and any imports it needs, with import-dedup) without touching
-     the rest of the file. The agent always shows the user the
-     planned diff and asks for confirmation before writing.
+     the rest of the file. `dry_run=True` returns the planned diff;
+     `dry_run=False` applies it.
 
 **Knowledge base — already in place.** `custom-feature.md` gives the
 exact signature table, the setup-vs-every-eval distinction, and the
@@ -376,6 +430,19 @@ and currently passes 5/5.
 ---
 
 #### M4b. Custom problem-library wrapper from a local project (full-auto)
+
+**Status:** First deterministic end-to-end version implemented (2026-06).
+`advisor/plib_scanner.py` and the unified-agent `scan_local_plib` tool
+perform read-only local discovery over a candidate problem-library directory
+and return structured evidence: languages, dependencies, loader/selector
+hints, data files, CSV columns, pickle-risk hints, and a recommended adapter
+shape. `advisor/plib_wrapper.py` adds rule-based wrapper generation for
+Python source libraries with `load_problem`/`find_problems`-style primitives
+and optional `probinfo_<lib>.csv`, plus `smoke_test_plib_wrapper`, which
+subprocess-tests `<lib>_select`, `<lib>_load`, and `fun(x0)`. The deterministic
+eval cases live in `tests/eval_cases/advisor_plib_scan.json`. LLM patch/fix
+loops, richer upstream-source shapes, and promotion into the user's active
+problem-library tree remain follow-up stages.
 
 **Problem.** Today, plugging a third-party / private / paper-companion
 problem set into OptiProfiler is the single highest-friction step in

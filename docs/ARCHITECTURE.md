@@ -54,7 +54,7 @@ architecture:
 │                      │  │   agent              │  │                      │
 │  advisor/   chat Q&A │  │                      │  │  onboarding.py       │
 │  debugger/  fix code │  │  unified_agent.py    │  │  (`opagent init`)    │
-│  interpreter/ report │  │  → 9 tools           │  │                      │
+│  interpreter/ report │  │  → 14 tools          │  │                      │
 └──────┬──────┬────────┘  └─────────┬────────────┘  └─────────┬────────────┘
        │      │                     │                         │
        ▼      ▼                     ▼                         ▼
@@ -116,7 +116,7 @@ the ReAct loop sees on every iteration. Re-running `opagent agent`
 rebuilds the agent and picks up newly-remembered facts — no per-turn
 re-injection needed.
 
-### 3.2 Tool catalog (the nine tools the LLM can call)
+### 3.2 Tool catalog (the 14 tools the LLM can call)
 
 Inspired by Hermes Agent's small, opinionated tool set. Each tool has
 **one** verb in its name and a docstring scoped to one use case so the
@@ -133,8 +133,12 @@ model rarely picks the wrong one. Source of truth is
 | 6 | `update_user_profile` | Set a whitelisted profile field                             | —                       | `~/.opagent/USER.md` (frontmatter) |
 | 7 | `recall_past`       | Full-text search past chat turns (FTS5)                       | `~/.opagent/sessions.db`| —                               |
 | 8 | `add_wiki_page`     | Author a new knowledge page                                   | —                       | `~/.opagent/wiki/auto/*.md`     |
-| 9 | `scaffold_feature`  | Generate validated Python custom-feature code                 | user description        | —                               |
-|10 | `web_search`        | External search (Tavily) — guard-railed scope                 | external API            | —                               |
+| 9 | `scaffold_feature`  | Generate validated Python custom-feature code                 | user description        | optional target path            |
+|10 | `write_scaffold_file` | Preview/apply scaffold file writes                          | generated code          | target file                     |
+|11 | `scan_local_plib`   | Read-only discovery for custom problem-library wrappers       | local project dir       | —                               |
+|12 | `scaffold_plib_wrapper` | Generate staged custom problem-library wrapper files       | local project dir       | staging dir                     |
+|13 | `smoke_test_plib_wrapper` | Smoke-test a staged problem-library wrapper              | staging dir             | —                               |
+|14 | `web_search`        | External search (Tavily) — guard-railed scope                 | external API            | —                               |
 
 **Routing discipline.** The system prompt contains a hard rule that the
 model must call the tool **before** claiming it is unavailable, to
@@ -143,7 +147,7 @@ search is disabled and refuses preemptively. The tool itself returns a
 `web_search disabled: ...` string when keys are missing, which the
 model is then explicitly allowed to relay.
 
-**Why these ten?** They map 1:1 to the user journey we ship for, and
+**Why these 14?** They map 1:1 to the user journey we ship for, and
 to the L4 follow-up in the roadmap (constrained decoding can later
 replace `validate_script`'s post-hoc check with a generation-time
 guarantee). Adding another tool means adding routing reasoning to the
