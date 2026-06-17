@@ -254,6 +254,7 @@ def _smoke_script(lib: str, stage: Path, max_problems: int) -> str:
     import numpy as np
 
     stage = Path({str(stage)!r})
+    sys.path.insert(0, str(stage))
     tools_path = stage / {f'{lib}_tools.py'!r}
     spec = importlib.util.spec_from_file_location({f'{lib}_tools'!r}, tools_path)
     module = importlib.util.module_from_spec(spec)

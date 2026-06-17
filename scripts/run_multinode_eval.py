@@ -232,6 +232,16 @@ def _eval_advisor_case(case: dict) -> tuple[bool, dict]:
                 library_name=case.get("library_name"),
                 staging_dir=root / "stage",
             )
+            (scaffold.staging_dir / "optiprofiler.py").write_text(
+                "class Problem:\n"
+                "    def __init__(self, fun, x0, name='', xl=None, xu=None):\n"
+                "        self.fun = fun\n"
+                "        self.x0 = x0\n"
+                "        self.name = name\n"
+                "        self.xl = xl\n"
+                "        self.xu = xu\n",
+                encoding="utf-8",
+            )
             smoke = smoke_test_plib_wrapper(scaffold.staging_dir, scaffold.library_name)
         expect = case.get("expect", {})
         expected_names = expect.get("tested_problem_names", [])

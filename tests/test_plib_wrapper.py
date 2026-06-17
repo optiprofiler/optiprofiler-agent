@@ -44,6 +44,21 @@ def find_problems(options):
     )
 
 
+def _write_optiprofiler_stub(root):
+    (root / "optiprofiler.py").write_text(
+        """\
+class Problem:
+    def __init__(self, fun, x0, name="", xl=None, xu=None):
+        self.fun = fun
+        self.x0 = x0
+        self.name = name
+        self.xl = xl
+        self.xu = xu
+""",
+        encoding="utf-8",
+    )
+
+
 def test_scaffold_plib_wrapper_generates_tools_and_copies_inputs(tmp_path):
     _make_toy_source(tmp_path)
     stage = tmp_path / "stage"
@@ -57,9 +72,11 @@ def test_scaffold_plib_wrapper_generates_tools_and_copies_inputs(tmp_path):
     assert result.warnings == []
 
 
-def test_generated_plib_wrapper_selects_and_loads(tmp_path):
+def test_generated_plib_wrapper_selects_and_loads(tmp_path, monkeypatch):
     _make_toy_source(tmp_path)
     result = scaffold_plib_wrapper(tmp_path, "toyplib", staging_dir=tmp_path / "stage")
+    _write_optiprofiler_stub(result.staging_dir)
+    monkeypatch.syspath_prepend(str(result.staging_dir))
 
     spec = importlib.util.spec_from_file_location("toyplib_tools", result.tools_path)
     assert spec and spec.loader
@@ -78,6 +95,7 @@ def test_generated_plib_wrapper_selects_and_loads(tmp_path):
 def test_smoke_test_plib_wrapper_passes(tmp_path):
     _make_toy_source(tmp_path)
     result = scaffold_plib_wrapper(tmp_path, "toyplib", staging_dir=tmp_path / "stage")
+    _write_optiprofiler_stub(result.staging_dir)
 
     smoke = smoke_test_plib_wrapper(result.staging_dir, result.library_name)
 

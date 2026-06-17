@@ -182,6 +182,16 @@ class TestBuildTools:
             "library_name": "toy",
             "staging_dir": str(stage),
         })
+        (stage / "optiprofiler.py").write_text(
+            "class Problem:\n"
+            "    def __init__(self, fun, x0, name='', xl=None, xu=None):\n"
+            "        self.fun = fun\n"
+            "        self.x0 = x0\n"
+            "        self.name = name\n"
+            "        self.xl = xl\n"
+            "        self.xu = xu\n",
+            encoding="utf-8",
+        )
         smoke_result = smoke.invoke({
             "staging_dir": str(stage),
             "library_name": "toy",
