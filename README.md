@@ -327,6 +327,7 @@ knowledge/
 ├── _sources/              # Raw, immutable source extractions
 │   ├── python/*.json      # Extracted from Python docstrings
 │   ├── matlab/*.json      # Extracted from MATLAB help comments
+│   ├── platform/*         # Snapshot from sibling optiprofiler-platform docs
 │   └── refs/              # Reference metadata
 └── wiki/                  # Compiled, interlinked markdown pages
     ├── index.md           # Master page catalog (used for two-stage RAG)
@@ -345,9 +346,13 @@ The narrative wiki pages are for explanation and synthesis; generated
 knowledge sources, run:
 
 ```bash
-python scripts/sync_wiki_reference.py
-python scripts/audit_wiki_coverage.py
+python scripts/sync_knowledge.py
 ```
+
+For package-only or platform-only refreshes, use
+`scripts/extract_knowledge.py` or `scripts/extract_platform_knowledge.py`
+directly, then run `scripts/sync_wiki_reference.py` and
+`scripts/audit_wiki_coverage.py`.
 
 RAG retrieval uses **two-stage search**: index scan → targeted vector search.
 

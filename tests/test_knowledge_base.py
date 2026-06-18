@@ -119,10 +119,29 @@ class TestKnowledgeBase:
         kb = KnowledgeBase(KNOWLEDGE_DIR)
         opt = kb.get_param("matlab", "draw_hist_plots")
         assert opt is not None
-        text = f"{opt.get('default', '')} {opt.get('description', '')}".lower()
+        assert opt.get("default") == "'parallel'"
+        text = f"{opt.get('description', '')} {opt.get('source_note', '')}".lower()
         assert "parallel" in text
         assert "load" in text
         assert "sequential" in text
+
+    def test_latest_feature_options_synced_from_package(self):
+        from optiprofiler_agent.common.knowledge_base import KnowledgeBase
+
+        kb = KnowledgeBase(KNOWLEDGE_DIR)
+        py_benchmark = kb.get_benchmark("python")
+        mat_benchmark = kb.get_benchmark("matlab")
+
+        assert py_benchmark["problem_options"]["plibs"]["description"].count("'solar'") >= 1
+        assert "solar" in kb.get_api_notes("python")["problem_libs"]
+
+        for benchmark in (py_benchmark, mat_benchmark):
+            feature_options = benchmark["feature_options"]
+            assert "noise_mode" in feature_options
+            assert "noise_map" in feature_options
+            assert "'deterministic'" in feature_options["noise_mode"]["description"]
+            assert "'chebyshev'" in feature_options["noise_map"]["description"]
+            assert feature_options["distribution"]["default"] == "'spherical'"
 
     def test_output_report_diagnostics_are_documented(self):
         from optiprofiler_agent.common.knowledge_base import KnowledgeBase
@@ -143,6 +162,17 @@ class TestKnowledgeBase:
         assert "optiprofiler/problem_libs" in content
         assert "options.plibs" in content
         assert "MATLAB has no `custom_problem_libs_path` option" in content
+
+    def test_platform_knowledge_is_indexed(self):
+        index = (KNOWLEDGE_DIR / "wiki" / "index.md").read_text()
+        overview = (KNOWLEDGE_DIR / "wiki" / "platform" / "overview.md").read_text()
+        role = (KNOWLEDGE_DIR / "wiki" / "platform" / "ecosystem-agent-role.md").read_text()
+
+        assert "platform/overview.md" in index
+        assert "platform/ecosystem-agent-role.md" in index
+        assert "deployment-gated" in overview
+        assert "loop engineering" in role
+        assert "_sources/platform" in role
 
     def test_solver_compat_scipy_nonlinear_constraints_are_vector_safe(self):
         path = KNOWLEDGE_DIR / "wiki" / "troubleshooting" / "solver-compat.md"

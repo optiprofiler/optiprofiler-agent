@@ -114,70 +114,9 @@
     ]
   },
   "pycutest_load": {
-    "description": "Convert a PyCUTEst problem name to a `Problem` instance. PyCUTEst is a Python interface to the CUTEst optimization test environment. More details can be found at `the PyCUTEst documentation <https://jfowkes.github.io/pycutest/>`_.  .. note::  PyCUTEst is only available on Linux and macOS.",
-    "signature": "(problem_name, **kwargs)",
-    "parameters": {
-      "problem_name": {
-        "type": "str",
-        "description": "Name of the problem in PyCUTEst. You may use `pycutest_select` to get the problem names that satisfy your criteria."
-      }
-    },
-    "returns": {
-      "": {
-        "type": "optiprofiler.Problem",
-        "description": "A ``Problem`` instance corresponding to the named problem."
-      }
-    },
-    "notes": "The problem name may include SIF parameters in the format ``'PROBLEMNAME_paramname_paramvalue'`` (e.g., ``'ARGLINA_N_100'``). In this case, the function will parse the parameters and pass them to PyCUTEst automatically.",
-    "see_also": [
-      {
-        "name": [
-          "pycutest_select",
-          null
-        ],
-        "description": "Select problems from PyCUTEst by criteria."
-      }
-    ]
+    "description": "Load a PyCUTEst problem. Requires pycutest package (Linux/macOS)."
   },
   "pycutest_select": {
-    "description": "Select problems from PyCUTEst that satisfy given criteria. More details about PyCUTEst can be found at `the PyCUTEst documentation <https://jfowkes.github.io/pycutest/>`_.  .. note::  PyCUTEst is only available on Linux and macOS.",
-    "signature": "(options)",
-    "parameters": {
-      "options": {
-        "type": "dict",
-        "description": "A dictionary containing selection criteria. Supported keys:  - **ptype** (*str*) -- Type of problems to select. A string consisting of any combination of ``'u'`` (unconstrained), ``'b'`` (bound constrained), ``'l'`` (linearly constrained), and ``'n'`` (nonlinearly constrained), such as ``'b'``, ``'ul'``, ``'ubn'``. Default is ``'ubln'``. - **mindim** (*int*) -- Minimum dimension. Default is ``1``. - **maxdim** (*int*) -- Maximum dimension. Default is ``inf``. - **minb** (*int*) -- Minimum number of bound constraints. Default is ``0``. - **maxb** (*int*) -- Maximum number of bound constraints. Default is ``inf``. - **minlcon** (*int*) -- Minimum number of linear constraints. Default is ``0``. - **maxlcon** (*int*) -- Maximum number of linear constraints. Default is ``inf``. - **minnlcon** (*int*) -- Minimum number of nonlinear constraints. Default is ``0``. - **maxnlcon** (*int*) -- Maximum number of nonlinear constraints. Default is ``inf``. - **mincon** (*int*) -- Minimum total number of linear and nonlinear constraints. Default is ``0``. - **maxcon** (*int*) -- Maximum total number of linear and nonlinear constraints. Default is ``inf``. - **excludelist** (*list of str*) -- List of problem names to exclude. Default is ``[]``.",
-        "default": "``'ubln'``"
-      }
-    },
-    "returns": {
-      "": {
-        "type": "list of str",
-        "description": "Problem names that satisfy the given criteria."
-      }
-    },
-    "notes": "1. PyCUTEst is only available on Linux and macOS.  2. There is a file ``config.txt`` in the same directory as this module. It can be used to set the options ``variable_size`` and ``test_feasibility_problems``. See the comments in ``config.txt`` for details. You can also override these options at runtime using `set_plib_config` or by setting environment variables ``PYCUTEST_VARIABLE_SIZE`` and ``PYCUTEST_TEST_FEASIBILITY_PROBLEMS``. Environment variables take precedence over ``config.txt``.",
-    "see_also": [
-      {
-        "name": [
-          "pycutest_load",
-          null
-        ],
-        "description": "Load a problem from PyCUTEst."
-      },
-      {
-        "name": [
-          "optiprofiler.get_plib_config",
-          null
-        ],
-        "description": "Read the current configuration."
-      },
-      {
-        "name": [
-          "optiprofiler.set_plib_config",
-          null
-        ],
-        "description": "Override configuration at runtime."
-      }
-    ]
+    "description": "Select PyCUTEst problems matching criteria. Requires pycutest package."
   }
 }

@@ -2,7 +2,7 @@
 tags: [reference, source-backed, bibliography]
 sources: [_sources/refs/bibliography.md]
 related: []
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 

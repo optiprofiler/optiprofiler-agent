@@ -2,7 +2,7 @@
 tags: [reference, source-backed, legacy-docs, examples]
 sources: [common/concepts.md, common/solver_interface.md, python/examples.md, python/installation.md, python/problem_libs.md, matlab/examples.md, matlab/installation.md, matlab/problem_libs.md, profiles/feature_effects.md, profiles/methodology.md, profiles/solver_traits.md, debugging/common_errors.md, debugging/solver_compat.md]
 related: []
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 
@@ -13,7 +13,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 
 ## common/concepts.md
 
-- Source SHA256: `f459221ff08e27e314addeed653003c6f4d5586aafa6a73da5922972270840ce`
+- Source SHA256: `cb73106026a5874144d10a956ef27e5ae92f47053653db08de6eefdbaca23d67`
 
 ```markdown
 # OptiProfiler Core Concepts
@@ -33,8 +33,8 @@ No gradient, Jacobian, or Hessian information is available.
 
 Every call to `fun` is counted internally and used for performance scoring.
 Methods that internally approximate gradients via finite differences
-(BFGS, L-BFGS-B, CG, Newton-CG, TNC, fminunc) consume extra `fun` evaluations,
-making them generally unsuitable for DFO benchmarking.
+consume extra `fun` evaluations, making them generally unsuitable
+for DFO benchmarking.
 
 **Recommended DFO methods** (see language-specific guides for details).
 
@@ -134,7 +134,7 @@ x = solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
 
 ## python/examples.md
 
-- Source SHA256: `c6643e4a3a1f12c33a8d1398dfd6ddb2bf25bbfdd01643eaed54e21fafb4e9fb`
+- Source SHA256: `e74ffb253650d4c8ef110b3972580146587330a19abe91bd39947f3089e5fcb1`
 
 ````markdown
 # Python Examples
@@ -167,7 +167,11 @@ scores = benchmark([solver1, solver2])
 
 This will benchmark the two solvers under the default test setting, which means 'plain' feature (see Feature) and unconstrained problems from the default problem library whose dimension is smaller or equal to 2. It will also return the scores of the two solvers based on the profiles.
 
-There will be a new folder named out in the current working directory, which contains a subfolder named plain_<timestamp> with all the detailed results. Additionally, a PDF file named summary.pdf is generated, summarizing all the performance profiles and data profiles.
+There will be a new folder named out in the current working directory, which contains a subfolder named plain_<timestamp> with all the detailed results.
+
+Additionally, a PDF file named summary.pdf is generated, summarizing all the performance profiles and data profiles.
+
+The subfolder test_log contains diagnostic files for the experiment. In particular, test_log/report.txt records selected problem names, timing information, and special cases detected while building the profiles: problems where merit_init = phi(x_0) = inf (all solvers are declared to pass that problem/run), solver runs that terminated abnormally, and solver outputs that were replaced by the initial point as an output-based penalty. The file test_log/log.txt contains the messages printed during the run.
 
 ### Example 2: one step further by adding options
 
@@ -186,6 +190,19 @@ scores = benchmark(
 ```
 
 This will create the corresponding folders out/noisy_<timestamp> and files as in Example 1. More details on the options can be found in the benchmark() function documentation.
+
+For the deterministic noisy variant from Moré and Wild’s benchmarking model, set noise_mode='deterministic'. If n_runs is not provided, OptiProfiler uses one run for this deterministic feature unless solver_isrand marks at least one solver as randomized, in which case OptiProfiler uses five runs as usual.
+
+```python
+scores = benchmark(
+    [solver1, solver2, solver3],
+    feature_name='noisy',
+    noise_mode='deterministic',
+    noise_map='chebyshev',
+)
+```
+
+By default, n_jobs is set conservatively to about half of the available workers instead of all workers. For the most reproducible timing experiments, set n_jobs explicitly, for example n_jobs=1 for sequential runs.
 
 ### Example 3: useful optionload
 
@@ -223,7 +240,7 @@ scores = benchmark(solvers, solver_names=solver_names)
 ```
 
 > **Note**
-> We use named functions (def) instead of lambda expressions here. Lambda functions cannot be serialized by Python’s multiprocessing module, which would force OptiProfiler to fall back to sequential execution. Using named functions ensures that the benchmark can run in parallel when n_jobs > 1.
+> We use named functions (def) instead of lambda expressions here so that the benchmark can still run in parallel when n_jobs > 1. See Callable arguments must be picklable when running in parallel for the full list of affected callables and the rationale.
 
 ### Example 5: customizing the test suite
 
@@ -247,15 +264,15 @@ scores = benchmark(
 ```
 
 > **Note**
-> In this example, we use named functions (def) instead of lambda expressions. This is recommended because lambda functions cannot be serialized by Python’s multiprocessing module, which would prevent parallel execution. Using named functions ensures that the benchmark can run in parallel when n_jobs > 1.
+> Again, mod_fun and mod_x0 are defined with def rather than lambda so that the benchmark can run in parallel when n_jobs > 1. See Callable arguments must be picklable when running in parallel for details.
 
 If you want to benchmark solvers based on your own problem library, you should do the following three steps:
 
 - Create a directory anywhere on your system (e.g., '/path/to/my_libs'), and create a subfolder inside it for your problem library (e.g., 'myproblems'), so the structure looks like: /path/to/my_libs/ └── myproblems/ └── myproblems_tools.py
 
-- In myproblems_tools.py, implement two functions: myproblems_load: A function that accepts a string representing the optimization problem name and returns a Problem instance. myproblems_select: A function that accepts a dictionary to specify desired problem characteristics and returns a list of problem names that satisfy the requirements. In general, the module should be named <library_name>_tools.py and the two functions should be named <library_name>_load and <library_name>_select.
+- In myproblems_tools.py, implement two functions: myproblems_load: A function that accepts a string representing the optimization problem name and returns a Problem instance. myproblems_select: A function that accepts a dictionary to specify desired problem characteristics and returns a list of problem names that satisfy the requirements. In general, the module should be named <library_name>_tools.py and the two functions should be named <library_name>_load and <library_name>_select. OptiProfiler does not infer the library name from other *_tools.py files; for example, a library named myproblems must provide myproblems_tools.py.
 
-- Use the benchmark function with the custom_problem_libs_path option pointing to your directory. For example, to use both the default S2MPJ library and your custom library 'myproblems', you can run:
+- Use the benchmark function with the custom_problem_libs_path option pointing to your directory. This path can be either the parent directory containing custom libraries or the directory of one custom library. For example, to use both the default S2MPJ library and your custom library 'myproblems', you can run:
 
 ```python
 scores = benchmark(
@@ -267,16 +284,108 @@ scores = benchmark(
 
 For a detailed guide on the required structure of a custom problem library, please refer to the guide on our website or the README on GitHub.
 
+### Example 6: wrapping SciPy solvers with nonlinear constraints
+
+(See also the file in the repository: python/examples/scipy_cobyqa_wrapper.py)
+
+For nonlinearly constrained problems, OptiProfiler calls each solver with the signature
+
+```python
+x = solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+```
+
+where cub(x) <= 0 contains the nonlinear inequality constraints and ceq(x) = 0 contains the nonlinear equality constraints. SciPy’s minimize interface represents constraints with objects such as Bounds, LinearConstraint, and NonlinearConstraint. The adapter in the wrapper below is the conversion from OptiProfiler’s callback signature to SciPy’s constraint objects: linear constraints become LinearConstraint objects, while cub and ceq are wrapped as NonlinearConstraint objects with bounds (-inf, 0) and (0, 0), respectively. The SciPy documentation for COBYQA and the optimization tutorial show this object-based constraint interface; see also the API references for LinearConstraint and NonlinearConstraint.
+
+```python
+import numpy as np
+from scipy.optimize import Bounds, LinearConstraint, NonlinearConstraint, minimize
+
+def scipy_cobyqa_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq,
+                         maxfev=200):
+    constraints = []
+
+    if bub.size > 0:
+        # OptiProfiler gives aub @ x <= bub; SciPy stores it as a
+        # LinearConstraint with lower bound -inf and upper bound bub.
+        constraints.append(LinearConstraint(aub, -np.inf, bub))
+    if beq.size > 0:
+        # Equality constraints use identical lower and upper bounds.
+        constraints.append(LinearConstraint(aeq, beq, beq))
+
+    c_ub_x0 = np.atleast_1d(cub(x0))
+    if c_ub_x0.size > 0:
+        # Convert cub(x) <= 0 to a SciPy NonlinearConstraint.
+        constraints.append(NonlinearConstraint(cub, -np.inf, np.zeros_like(c_ub_x0)))
+    c_eq_x0 = np.atleast_1d(ceq(x0))
+    if c_eq_x0.size > 0:
+        # Convert ceq(x) = 0 by using zero lower and upper bounds.
+        constraints.append(NonlinearConstraint(ceq, np.zeros_like(c_eq_x0),
+                                               np.zeros_like(c_eq_x0)))
+
+    result = minimize(
+        fun,
+        x0,
+        method='COBYQA',
+        bounds=Bounds(xl, xu),
+        constraints=constraints,
+        options={'maxfev': maxfev},
+    )
+    return result.x
+```
+
+Then pass the wrapper to benchmark as an ordinary solver. Since benchmark compares at least two solvers, this example compares two COBYQA wrappers with different function-evaluation budgets:
+
+```python
+def scipy_cobyqa_short(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq):
+    return scipy_cobyqa_wrapper(
+        fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, maxfev=100
+    )
+
+def scipy_cobyqa_long(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq):
+    return scipy_cobyqa_wrapper(
+        fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, maxfev=200
+    )
+
+scores = benchmark(
+    [scipy_cobyqa_short, scipy_cobyqa_long],
+    solver_names=['SciPy COBYQA short', 'SciPy COBYQA long'],
+    ptype='n',
+    problem_names=['HS10', 'HS11', 'HS12'],
+    mindim=2,
+    maxdim=5,
+    max_eval_factor=500,
+    plibs=['s2mpj'],
+    draw_hist_plots='none',
+    n_jobs=1,
+)
+```
+
+## Cautions
+
+### Callable arguments must be picklable when running in parallel
+
+When n_jobs > 1, OptiProfiler dispatches problems to worker processes via multiprocessing. The following callable arguments are sent across process boundaries and must therefore be picklable:
+
+- the entries of solvers;
+
+- feature options: distribution, noise_map, mod_x0, mod_affine, mod_bounds, mod_linear_ub, mod_linear_eq, mod_fun, mod_cub, mod_ceq;
+
+- profile options: merit_fun, score_fun, score_weight_fun.
+
+Lambda expressions and locally-defined nested functions are not picklable. If any of the callables above is a lambda, OptiProfiler detects the failure when serializing the worker arguments and silently falls back to sequential mode (n_jobs = 1), which can be much slower.
+
+To enable parallel execution, define these callables as module-level functions using def. For parametrized solvers, use a closure factory (see Example 4: testing parametrized solvers) or functools.partial() instead of a lambda.
+
 ````
 
 ## python/installation.md
 
-- Source SHA256: `a2088588882aedb062a0c1f0379a9f0a1414315e0abf3db0efad3f5588e60816`
+- Source SHA256: `63d32f5d225afbedff913b624b7787e3d3dbff5efb7470cde307a23950a84cef`
 
 ````markdown
 # Python Installation
 
-Install OptiProfiler via pip:
+Install OptiProfiler from PyPI:
 
 ```bash
 pip install optiprofiler
@@ -288,9 +397,8 @@ You can also install OptiProfiler from conda-forge:
 conda install conda-forge::optiprofiler
 ```
 
-OptiProfiler includes the S2MPJ problem library by default.
-
-If you also want to use the **PyCUTEst** problem library (available on Linux and macOS only), please follow the [PyCUTEst installation guide](https://jfowkes.github.io/pycutest/).
+> **Note**
+> OptiProfiler includes the S2MPJ problem library by default. If you also want to use the PyCUTEst problem library (available on Linux and macOS only), please follow the PyCUTEst installation guide.
 
 ````
 
@@ -329,7 +437,7 @@ benchmark(
 
 ## matlab/examples.md
 
-- Source SHA256: `7794ef83613a669e34c82afc3828d6a4451853d0f2b4353e6c05fd776ca85558`
+- Source SHA256: `f27860de28fb750e06c77bfd44e1c4318c090219d0da006a3fe9211c0cec2fd2`
 
 ````markdown
 # Matlab Examples
@@ -366,6 +474,8 @@ There will be a new folder named out in the current working directory, which con
 
 Additionally, a PDF file named summary.pdf is generated, summarizing all the performance profiles and data profiles.
 
+The subfolder test_log contains diagnostic files for the experiment. In particular, test_log/report.txt records selected problem names, timing information, and special cases detected while building the profiles: problems where merit_init = phi(x_0) = Inf (all solvers are declared to pass that problem/run), solver runs that terminated abnormally, and solver outputs that were replaced by the initial point as an output-based penalty. The file test_log/log.txt contains the messages printed during the run.
+
 ### Example 2: one step further by adding options
 
 (See also the file in the repository: matlab/examples/example2.m)
@@ -381,6 +491,17 @@ scores = benchmark({@solver1, @solver2, @solver3}, options)
 ```
 
 This will create the corresponding folders out/noisy_<timestamp> and files as in Example 1. More details on the options can be found in the benchmark function documentation.
+
+For the deterministic noisy variant from Moré and Wild’s benchmarking model, set options.noise_mode = 'deterministic'. If options.n_runs is not provided, OptiProfiler uses one run for this deterministic feature unless options.solver_isrand marks at least one solver as randomized, in which case OptiProfiler uses five runs as usual.
+
+```matlab
+options.feature_name = 'noisy';
+options.noise_mode = 'deterministic';
+options.noise_map = 'chebyshev';
+scores = benchmark({@solver1, @solver2, @solver3}, options)
+```
+
+By default, n_jobs is set conservatively to about half of the available workers instead of all workers. For the most reproducible timing experiments, set options.n_jobs explicitly, for example options.n_jobs = 1 for sequential runs.
 
 ### Example 3: useful optionload
 
@@ -430,7 +551,7 @@ scores = benchmark({@solver1, @solver2}, options)
 
 If you want to benchmark solvers based on your own problem library, you should do the following three steps:
 
-- Create a new subfolder (e.g., 'myproblems') within the 'problems' folder located in the OptiProfiler project root directory.
+- Create a new subfolder (e.g., 'myproblems') within the 'problems' folder located in the optiprofiler project root directory.
 
 - Implement two MATLAB functions:
 
@@ -443,38 +564,87 @@ scores = benchmark({@solver1, @solver2}, options)
 
 You may also refer to the README file in the 'problems' folder for a detailed guide on how to create and use your own problem library via the OptiProfiler package.
 
+### Example 6: wrapping solvers with nonlinear constraints
+
+(See also the file in the repository: matlab/examples/example6.m)
+
+For nonlinearly constrained problems, OptiProfiler calls each solver with the signature
+
+```matlab
+x = solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+```
+
+where cub(x) <= 0 contains the nonlinear inequality constraints and ceq(x) = 0 contains the nonlinear equality constraints. MATLAB solvers such as fmincon instead expect one nonlinear constraint callback nonlcon returning both values. The small but important adapter is deal: the expression @(x) deal(cub(x), ceq(x)) evaluates OptiProfiler’s two callbacks and returns them as the two outputs expected by fmincon, i.e., [c, ceq] = nonlcon(x). See the MathWorks documentation for fmincon nonlinear constraints and deal.
+
+```matlab
+function x = fmincon_short(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+    x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, 100);
+end
+
+function x = fmincon_long(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+    x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, 200);
+end
+
+function x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, max_fun_evals)
+    % Convert OptiProfiler's separate nonlinear callbacks to fmincon's
+    % two-output callback: [c, ceq] = nonlcon(x).
+    nonlcon = @(x) deal(cub(x), ceq(x));
+    options = optimoptions('fmincon', 'MaxFunctionEvaluations', max_fun_evals);
+    x = fmincon(fun, x0, aub, bub, aeq, beq, xl, xu, nonlcon, options);
+end
+```
+
+Then pass the wrappers to benchmark as ordinary solvers:
+
+```matlab
+options.ptype = 'n';
+options.problem_names = {'HS10', 'HS11', 'HS12'};
+options.plibs = {'s2mpj'};
+options.mindim = 2;
+options.maxdim = 5;
+options.max_eval_factor = 500;
+options.draw_hist_plots = 'none';
+options.n_jobs = 1;
+options.solver_names = {'fmincon short', 'fmincon long'};
+scores = benchmark({@fmincon_short, @fmincon_long}, options)
+```
+
 ````
 
 ## matlab/installation.md
 
-- Source SHA256: `8da0c9f33e6ca4643ec9e20e42a46f82804d43348dc8ef2ebe8c27bfb337e021`
+- Source SHA256: `eaf332d51e6adc3b572d04c5dfc94056c972c3d9c0b8ba14a0b7822c23fa39cc`
 
 ````markdown
 # MATLAB Installation
 
-Clone the repository:
+- Clone the repository using the following command:
 
 ```bash
 git clone https://github.com/optiprofiler/optiprofiler.git
 ```
 
-In MATLAB, navigate to the root directory and run:
+- In MATLAB, navigate to the root directory of this repository, where you can see a file named setup.m. Run the following command in the MATLAB command window:
 
 ```matlab
 setup
 ```
 
-The `setup` function:
+The setup function performs the following tasks:
+
 - Adds the necessary directories to the MATLAB search path.
+
 - Clones the default problem libraries, including S2MPJ and MatCUTEst.
 
-**MatCUTEst** is optional and only supported on **Linux**. During setup you will be asked whether to install it. For automated environments:
+Note that the installation of MatCUTEst is optional. During the setup process, you will be asked whether you want to install it. Please be aware that MatCUTEst is only supported on Linux systems and is not available on macOS or Windows.
+
+For automated environments (e.g., CI/CD scripts) where interactive input is not possible, you can bypass the prompt by providing an additional option to the setup function:
 
 ```matlab
-setup(struct('install_matcutest', true))  % Or false
+setup(struct('install_matcutest', true))  % Or false if you do not need MatCUTEst
 ```
 
-To uninstall:
+- If you want to uninstall the package, you can run:
 
 ```matlab
 setup uninstall

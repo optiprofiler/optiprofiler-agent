@@ -1,5 +1,27 @@
 # Wiki Change Log
 
+## [2026-06-18] sync | OptiProfiler package and platform knowledge refresh
+
+Synced package knowledge against the local sibling `optiprofiler` repository
+after the v1.3-era API updates. The source-backed benchmark references now
+cover `noise_mode`, `noise_map`, the `solar` Python problem library, updated
+`custom_problem_libs_path` behavior, and benchmark output artifacts used by
+Agent C. MATLAB extraction now avoids lossy HTML truncation, preserves inline
+spacing in long option descriptions, and overrides `draw_hist_plots` to the
+source-code default: `parallel` in normal runs, while `load` mode forces
+`sequential`.
+
+Added platform knowledge as a first-class source domain. The new
+`_sources/platform/` snapshot mirrors selected `optiprofiler-platform` docs,
+records platform git commit and dirty state, and feeds generated
+`wiki/reference/platform-*` pages. Narrative `wiki/platform/` pages now cover
+the hosted workflow, Agent A/B/C touchpoints, leaderboard shape, and OPA's
+long-term role in a DFO benchmarking ecosystem and loop-engineering workflow.
+
+Added `scripts/sync_knowledge.py` as the preferred maintenance command. It
+refreshes package API sources, platform docs, generated reference pages,
+coverage audit, and wiki lint in one run.
+
 ## [2026-06-07] update | Source-backed reference mirrors
 
 Added generated `wiki/reference/` pages and coverage tooling so the wiki

@@ -32,6 +32,8 @@ There will be a new folder named out in the current working directory, which con
 
 Additionally, a PDF file named summary.pdf is generated, summarizing all the performance profiles and data profiles.
 
+The subfolder test_log contains diagnostic files for the experiment. In particular, test_log/report.txt records selected problem names, timing information, and special cases detected while building the profiles: problems where merit_init = phi(x_0) = Inf (all solvers are declared to pass that problem/run), solver runs that terminated abnormally, and solver outputs that were replaced by the initial point as an output-based penalty. The file test_log/log.txt contains the messages printed during the run.
+
 ### Example 2: one step further by adding options
 
 (See also the file in the repository: matlab/examples/example2.m)
@@ -47,6 +49,17 @@ scores = benchmark({@solver1, @solver2, @solver3}, options)
 ```
 
 This will create the corresponding folders out/noisy_<timestamp> and files as in Example 1. More details on the options can be found in the benchmark function documentation.
+
+For the deterministic noisy variant from Moré and Wild’s benchmarking model, set options.noise_mode = 'deterministic'. If options.n_runs is not provided, OptiProfiler uses one run for this deterministic feature unless options.solver_isrand marks at least one solver as randomized, in which case OptiProfiler uses five runs as usual.
+
+```matlab
+options.feature_name = 'noisy';
+options.noise_mode = 'deterministic';
+options.noise_map = 'chebyshev';
+scores = benchmark({@solver1, @solver2, @solver3}, options)
+```
+
+By default, n_jobs is set conservatively to about half of the available workers instead of all workers. For the most reproducible timing experiments, set options.n_jobs explicitly, for example options.n_jobs = 1 for sequential runs.
 
 ### Example 3: useful optionload
 
@@ -96,7 +109,7 @@ scores = benchmark({@solver1, @solver2}, options)
 
 If you want to benchmark solvers based on your own problem library, you should do the following three steps:
 
-- Create a new subfolder (e.g., 'myproblems') within the 'problems' folder located in the OptiProfiler project root directory.
+- Create a new subfolder (e.g., 'myproblems') within the 'problems' folder located in the optiprofiler project root directory.
 
 - Implement two MATLAB functions:
 
@@ -108,3 +121,48 @@ scores = benchmark({@solver1, @solver2}, options)
 ```
 
 You may also refer to the README file in the 'problems' folder for a detailed guide on how to create and use your own problem library via the OptiProfiler package.
+
+### Example 6: wrapping solvers with nonlinear constraints
+
+(See also the file in the repository: matlab/examples/example6.m)
+
+For nonlinearly constrained problems, OptiProfiler calls each solver with the signature
+
+```matlab
+x = solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+```
+
+where cub(x) <= 0 contains the nonlinear inequality constraints and ceq(x) = 0 contains the nonlinear equality constraints. MATLAB solvers such as fmincon instead expect one nonlinear constraint callback nonlcon returning both values. The small but important adapter is deal: the expression @(x) deal(cub(x), ceq(x)) evaluates OptiProfiler’s two callbacks and returns them as the two outputs expected by fmincon, i.e., [c, ceq] = nonlcon(x). See the MathWorks documentation for fmincon nonlinear constraints and deal.
+
+```matlab
+function x = fmincon_short(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+    x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, 100);
+end
+
+function x = fmincon_long(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+    x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, 200);
+end
+
+function x = fmincon_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, max_fun_evals)
+    % Convert OptiProfiler's separate nonlinear callbacks to fmincon's
+    % two-output callback: [c, ceq] = nonlcon(x).
+    nonlcon = @(x) deal(cub(x), ceq(x));
+    options = optimoptions('fmincon', 'MaxFunctionEvaluations', max_fun_evals);
+    x = fmincon(fun, x0, aub, bub, aeq, beq, xl, xu, nonlcon, options);
+end
+```
+
+Then pass the wrappers to benchmark as ordinary solvers:
+
+```matlab
+options.ptype = 'n';
+options.problem_names = {'HS10', 'HS11', 'HS12'};
+options.plibs = {'s2mpj'};
+options.mindim = 2;
+options.maxdim = 5;
+options.max_eval_factor = 500;
+options.draw_hist_plots = 'none';
+options.n_jobs = 1;
+options.solver_names = {'fmincon short', 'fmincon long'};
+scores = benchmark({@fmincon_short, @fmincon_long}, options)
+```

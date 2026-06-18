@@ -32,6 +32,8 @@ def test_reference_pages_cover_all_bundled_sources():
         "reference/enums.md",
         "reference/legacy-docs.md",
         "reference/bibliography.md",
+        "reference/platform-manifest.md",
+        "reference/platform-docs.md",
     } <= rel_targets
 
 
@@ -54,7 +56,20 @@ def test_lossless_reference_is_indexed_for_two_stage_rag():
         "reference/python-benchmark.md",
         "reference/matlab-benchmark.md",
         "reference/legacy-docs.md",
+        "reference/platform-docs.md",
     ):
         assert page in index
 
     assert "Source-Backed Reference" in index
+
+
+def test_platform_reference_preserves_snapshot_metadata():
+    manifest = json.loads((KNOWLEDGE_DIR / "_sources" / "platform" / "manifest.json").read_text(encoding="utf-8"))
+    reference = (KNOWLEDGE_DIR / "wiki" / "reference" / "platform-manifest.md").read_text(encoding="utf-8")
+    docs_reference = (KNOWLEDGE_DIR / "wiki" / "reference" / "platform-docs.md").read_text(encoding="utf-8")
+
+    assert manifest["git_commit"] in reference
+    assert "docs/api.md" in reference
+    assert "docs/adr/0013-dfo-ecosystem-module-registry.md" in reference
+    assert "OptiProfiler Platform Source Snapshot" in docs_reference
+    assert "DFO ecosystem module registry" in docs_reference

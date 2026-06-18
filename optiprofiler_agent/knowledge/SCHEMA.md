@@ -13,6 +13,7 @@ knowledge/
 ├── _sources/              # Raw, immutable source extractions
 │   ├── python/            # JSON extracted from Python docstrings
 │   ├── matlab/            # JSON extracted from MATLAB help comments
+│   ├── platform/          # Snapshot from optiprofiler-platform docs
 │   └── refs/              # Reference metadata (papers, URLs)
 └── wiki/                  # Compiled wiki pages (LLM-maintained)
     ├── index.md           # Master page catalog
@@ -21,6 +22,7 @@ knowledge/
     ├── api/               # API reference (python/, matlab/ subdirs)
     ├── reference/         # Generated lossless mirrors of bundled sources
     ├── guides/            # How-to guides and quickstarts
+    ├── platform/          # Hosted platform workflows and agent role
     ├── profiles/          # Profile methodology and interpretation
     ├── solvers/           # Solver entity pages (one per solver)
     └── troubleshooting/   # Error patterns and fixes
@@ -103,16 +105,15 @@ The wiki is structured knowledge, not a lossy summary. Human-authored
 narrative pages may reorganize or explain source material, but exact API
 facts must remain available inside `wiki/`.
 
-1. `knowledge/_sources/**/*.json`, `knowledge/_sources/refs/*.md`, and
-   bundled legacy Markdown docs/examples must have generated mirrors under
-   `wiki/reference/`.
+1. `knowledge/_sources/**/*.json`, `knowledge/_sources/refs/*.md`,
+   `knowledge/_sources/platform/*.md`, and bundled legacy Markdown
+   docs/examples must have generated mirrors under `wiki/reference/`.
 2. Generated reference pages are source-backed and marked with
    `generated: true`; do not hand-edit them.
 3. If any source changes, run:
 
    ```bash
-   python scripts/sync_wiki_reference.py
-   python scripts/audit_wiki_coverage.py
+   python scripts/sync_knowledge.py
    ```
 
 4. `scripts/audit_wiki_coverage.py` is the guardrail for hidden
@@ -143,6 +144,18 @@ facts must remain available inside `wiki/`.
 6. Regenerate source-backed reference pages with `python scripts/sync_wiki_reference.py`
 7. Audit exact source coverage with `python scripts/audit_wiki_coverage.py`
 8. Append entry to `log.md`
+
+### Syncing Package And Platform Sources
+
+Use the combined command when the sibling OptiProfiler package or platform
+repository changes:
+
+```bash
+python scripts/sync_knowledge.py
+```
+
+This command refreshes package API JSON, platform documentation snapshots,
+generated reference pages, the lossless coverage audit, and wiki lint.
 
 ### Lint Check
 

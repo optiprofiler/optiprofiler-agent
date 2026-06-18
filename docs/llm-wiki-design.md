@@ -35,6 +35,7 @@ every source added and every question asked.
 ├───────────────────────────────────────┤
 │  Layer 1: Raw Sources (_sources/)     │  ← Immutable extractions
 │    python/*.json  matlab/*.json       │
+│    platform/*.md/json                 │
 │    refs/bibliography.md               │
 └───────────────────────────────────────┘
 ```
@@ -43,7 +44,9 @@ every source added and every question asked.
 
 Immutable source material. The LLM reads from these but never modifies
 them. Contains JSON files extracted from OptiProfiler source code
-(docstrings, class definitions, API signatures) and reference metadata.
+(docstrings, class definitions, API signatures), platform documentation
+snapshots extracted from the sibling `optiprofiler-platform` repository,
+and reference metadata.
 
 ### Layer 2 — Wiki (`wiki/`)
 
@@ -115,6 +118,8 @@ This reduces noise, saves tokens, and improves answer quality.
 
 ### Ingest — Adding New Knowledge
 
+Preferred maintenance command: `python scripts/sync_knowledge.py`.
+
 1. Place raw source material in `_sources/` (or update existing files)
 2. LLM reads the raw source and extracts key information
 3. Create or update wiki pages with cross-references
@@ -177,15 +182,18 @@ The wiki should be updated whenever:
 
 1. **OptiProfiler releases a new version** — re-run `extract_knowledge.py`
    to refresh `_sources/`, then update affected wiki pages.
-2. **New solver is added to benchmarks** — create a new solver entity page
+2. **OptiProfiler Platform changes API/workflow/docs** — re-run
+   `extract_platform_knowledge.py` or the combined `sync_knowledge.py`
+   command, then update `wiki/platform/` narrative pages when needed.
+3. **New solver is added to benchmarks** — create a new solver entity page
    in `wiki/solvers/`.
-3. **User discovers a common error pattern** — add to
+4. **User discovers a common error pattern** — add to
    `wiki/troubleshooting/` and update index.
-4. **New research paper is published** — add reference to
+5. **New research paper is published** — add reference to
    `_sources/refs/bibliography.md`, update methodology pages.
-5. **Agent answers a novel question** — if the answer required synthesizing
+6. **Agent answers a novel question** — if the answer required synthesizing
    multiple sources, consider filing it as a new wiki page.
-6. **CLI checks** — from the repo root, use `opagent wiki stats`, `opagent wiki lint`,
+7. **CLI checks** — from the repo root, use `opagent wiki stats`, `opagent wiki lint`,
    and `opagent wiki rebuild-index` (same as the `optiprofiler-agent` command name).
 
 The key principle: **the wiki is never "done"** — it compounds with every

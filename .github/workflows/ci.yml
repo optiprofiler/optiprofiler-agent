@@ -212,7 +212,7 @@ jobs:
         run: python scripts/check_prose.py --ci
 
       - name: Spell check (codespell)
-        run: codespell --skip "*.json,*.pyc,__pycache__,.venv,node_modules" optiprofiler_agent/knowledge/ optiprofiler_agent/advisor/prompts/ optiprofiler_agent/debugger/prompts/ optiprofiler_agent/interpreter/prompts/ docs/
+        run: codespell --ignore-words .codespellignore --skip "*.json,*.pyc,__pycache__,.venv,node_modules" optiprofiler_agent/knowledge/ optiprofiler_agent/advisor/prompts/ optiprofiler_agent/debugger/prompts/ optiprofiler_agent/interpreter/prompts/ docs/
 
   # PyPI: only after every check above passes, and only for version tags (not
   # branch pushes or PRs). This replaces a separate tag-only workflow so we

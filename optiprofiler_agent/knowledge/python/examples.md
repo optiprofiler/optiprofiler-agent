@@ -28,7 +28,11 @@ scores = benchmark([solver1, solver2])
 
 This will benchmark the two solvers under the default test setting, which means 'plain' feature (see Feature) and unconstrained problems from the default problem library whose dimension is smaller or equal to 2. It will also return the scores of the two solvers based on the profiles.
 
-There will be a new folder named out in the current working directory, which contains a subfolder named plain_<timestamp> with all the detailed results. Additionally, a PDF file named summary.pdf is generated, summarizing all the performance profiles and data profiles.
+There will be a new folder named out in the current working directory, which contains a subfolder named plain_<timestamp> with all the detailed results.
+
+Additionally, a PDF file named summary.pdf is generated, summarizing all the performance profiles and data profiles.
+
+The subfolder test_log contains diagnostic files for the experiment. In particular, test_log/report.txt records selected problem names, timing information, and special cases detected while building the profiles: problems where merit_init = phi(x_0) = inf (all solvers are declared to pass that problem/run), solver runs that terminated abnormally, and solver outputs that were replaced by the initial point as an output-based penalty. The file test_log/log.txt contains the messages printed during the run.
 
 ### Example 2: one step further by adding options
 
@@ -47,6 +51,19 @@ scores = benchmark(
 ```
 
 This will create the corresponding folders out/noisy_<timestamp> and files as in Example 1. More details on the options can be found in the benchmark() function documentation.
+
+For the deterministic noisy variant from Moré and Wild’s benchmarking model, set noise_mode='deterministic'. If n_runs is not provided, OptiProfiler uses one run for this deterministic feature unless solver_isrand marks at least one solver as randomized, in which case OptiProfiler uses five runs as usual.
+
+```python
+scores = benchmark(
+    [solver1, solver2, solver3],
+    feature_name='noisy',
+    noise_mode='deterministic',
+    noise_map='chebyshev',
+)
+```
+
+By default, n_jobs is set conservatively to about half of the available workers instead of all workers. For the most reproducible timing experiments, set n_jobs explicitly, for example n_jobs=1 for sequential runs.
 
 ### Example 3: useful optionload
 
@@ -84,7 +101,7 @@ scores = benchmark(solvers, solver_names=solver_names)
 ```
 
 > **Note**
-> We use named functions (def) instead of lambda expressions here. Lambda functions cannot be serialized by Python’s multiprocessing module, which would force OptiProfiler to fall back to sequential execution. Using named functions ensures that the benchmark can run in parallel when n_jobs > 1.
+> We use named functions (def) instead of lambda expressions here so that the benchmark can still run in parallel when n_jobs > 1. See Callable arguments must be picklable when running in parallel for the full list of affected callables and the rationale.
 
 ### Example 5: customizing the test suite
 
@@ -108,15 +125,15 @@ scores = benchmark(
 ```
 
 > **Note**
-> In this example, we use named functions (def) instead of lambda expressions. This is recommended because lambda functions cannot be serialized by Python’s multiprocessing module, which would prevent parallel execution. Using named functions ensures that the benchmark can run in parallel when n_jobs > 1.
+> Again, mod_fun and mod_x0 are defined with def rather than lambda so that the benchmark can run in parallel when n_jobs > 1. See Callable arguments must be picklable when running in parallel for details.
 
 If you want to benchmark solvers based on your own problem library, you should do the following three steps:
 
 - Create a directory anywhere on your system (e.g., '/path/to/my_libs'), and create a subfolder inside it for your problem library (e.g., 'myproblems'), so the structure looks like: /path/to/my_libs/ └── myproblems/ └── myproblems_tools.py
 
-- In myproblems_tools.py, implement two functions: myproblems_load: A function that accepts a string representing the optimization problem name and returns a Problem instance. myproblems_select: A function that accepts a dictionary to specify desired problem characteristics and returns a list of problem names that satisfy the requirements. In general, the module should be named <library_name>_tools.py and the two functions should be named <library_name>_load and <library_name>_select.
+- In myproblems_tools.py, implement two functions: myproblems_load: A function that accepts a string representing the optimization problem name and returns a Problem instance. myproblems_select: A function that accepts a dictionary to specify desired problem characteristics and returns a list of problem names that satisfy the requirements. In general, the module should be named <library_name>_tools.py and the two functions should be named <library_name>_load and <library_name>_select. OptiProfiler does not infer the library name from other *_tools.py files; for example, a library named myproblems must provide myproblems_tools.py.
 
-- Use the benchmark function with the custom_problem_libs_path option pointing to your directory. For example, to use both the default S2MPJ library and your custom library 'myproblems', you can run:
+- Use the benchmark function with the custom_problem_libs_path option pointing to your directory. This path can be either the parent directory containing custom libraries or the directory of one custom library. For example, to use both the default S2MPJ library and your custom library 'myproblems', you can run:
 
 ```python
 scores = benchmark(
@@ -127,3 +144,95 @@ scores = benchmark(
 ```
 
 For a detailed guide on the required structure of a custom problem library, please refer to the guide on our website or the README on GitHub.
+
+### Example 6: wrapping SciPy solvers with nonlinear constraints
+
+(See also the file in the repository: python/examples/scipy_cobyqa_wrapper.py)
+
+For nonlinearly constrained problems, OptiProfiler calls each solver with the signature
+
+```python
+x = solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq)
+```
+
+where cub(x) <= 0 contains the nonlinear inequality constraints and ceq(x) = 0 contains the nonlinear equality constraints. SciPy’s minimize interface represents constraints with objects such as Bounds, LinearConstraint, and NonlinearConstraint. The adapter in the wrapper below is the conversion from OptiProfiler’s callback signature to SciPy’s constraint objects: linear constraints become LinearConstraint objects, while cub and ceq are wrapped as NonlinearConstraint objects with bounds (-inf, 0) and (0, 0), respectively. The SciPy documentation for COBYQA and the optimization tutorial show this object-based constraint interface; see also the API references for LinearConstraint and NonlinearConstraint.
+
+```python
+import numpy as np
+from scipy.optimize import Bounds, LinearConstraint, NonlinearConstraint, minimize
+
+def scipy_cobyqa_wrapper(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq,
+                         maxfev=200):
+    constraints = []
+
+    if bub.size > 0:
+        # OptiProfiler gives aub @ x <= bub; SciPy stores it as a
+        # LinearConstraint with lower bound -inf and upper bound bub.
+        constraints.append(LinearConstraint(aub, -np.inf, bub))
+    if beq.size > 0:
+        # Equality constraints use identical lower and upper bounds.
+        constraints.append(LinearConstraint(aeq, beq, beq))
+
+    c_ub_x0 = np.atleast_1d(cub(x0))
+    if c_ub_x0.size > 0:
+        # Convert cub(x) <= 0 to a SciPy NonlinearConstraint.
+        constraints.append(NonlinearConstraint(cub, -np.inf, np.zeros_like(c_ub_x0)))
+    c_eq_x0 = np.atleast_1d(ceq(x0))
+    if c_eq_x0.size > 0:
+        # Convert ceq(x) = 0 by using zero lower and upper bounds.
+        constraints.append(NonlinearConstraint(ceq, np.zeros_like(c_eq_x0),
+                                               np.zeros_like(c_eq_x0)))
+
+    result = minimize(
+        fun,
+        x0,
+        method='COBYQA',
+        bounds=Bounds(xl, xu),
+        constraints=constraints,
+        options={'maxfev': maxfev},
+    )
+    return result.x
+```
+
+Then pass the wrapper to benchmark as an ordinary solver. Since benchmark compares at least two solvers, this example compares two COBYQA wrappers with different function-evaluation budgets:
+
+```python
+def scipy_cobyqa_short(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq):
+    return scipy_cobyqa_wrapper(
+        fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, maxfev=100
+    )
+
+def scipy_cobyqa_long(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq):
+    return scipy_cobyqa_wrapper(
+        fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq, maxfev=200
+    )
+
+scores = benchmark(
+    [scipy_cobyqa_short, scipy_cobyqa_long],
+    solver_names=['SciPy COBYQA short', 'SciPy COBYQA long'],
+    ptype='n',
+    problem_names=['HS10', 'HS11', 'HS12'],
+    mindim=2,
+    maxdim=5,
+    max_eval_factor=500,
+    plibs=['s2mpj'],
+    draw_hist_plots='none',
+    n_jobs=1,
+)
+```
+
+## Cautions
+
+### Callable arguments must be picklable when running in parallel
+
+When n_jobs > 1, OptiProfiler dispatches problems to worker processes via multiprocessing. The following callable arguments are sent across process boundaries and must therefore be picklable:
+
+- the entries of solvers;
+
+- feature options: distribution, noise_map, mod_x0, mod_affine, mod_bounds, mod_linear_ub, mod_linear_eq, mod_fun, mod_cub, mod_ceq;
+
+- profile options: merit_fun, score_fun, score_weight_fun.
+
+Lambda expressions and locally-defined nested functions are not picklable. If any of the callables above is a lambda, OptiProfiler detects the failure when serializing the worker arguments and silently falls back to sequential mode (n_jobs = 1), which can be much slower.
+
+To enable parallel execution, define these callables as module-level functions using def. For parametrized solvers, use a closure factory (see Example 4: testing parametrized solvers) or functools.partial() instead of a lambda.

@@ -1,6 +1,6 @@
 ---
 tags: [index, navigation]
-last_updated: 2026-06-05
+last_updated: 2026-06-18
 ---
 
 # OptiProfiler Knowledge Wiki — Index
@@ -13,6 +13,11 @@ last_updated: 2026-06-05
 - [Problem Types](concepts/problem-types.md) — ptype options (u, b, l, n) and selection parameters
 - [Features](concepts/features.md) — feature_name options, including `distribution` mappings
 - [Parallel & Pickle Rules](concepts/parallel-and-pickle.md) — when lambdas break parallel mode
+
+## Platform
+
+- [Platform Overview](platform/overview.md) — hosted submission flow, sandbox runners, Agent A/B/C touchpoints, and leaderboard shape
+- [Agent Role In The DFO Ecosystem](platform/ecosystem-agent-role.md) — how OPA should support problem libraries, solvers, benchmarking tools, and loop engineering
 
 ## API Reference
 
@@ -35,6 +40,8 @@ last_updated: 2026-06-05
 - [MATLAB benchmark.json Source](reference/matlab-benchmark.md) — source-backed MATLAB benchmark facts, options, defaults, choices, returns, notes
 - [MATLAB Classes Source](reference/matlab-classes.md) — lossless mirror of MATLAB Problem, Feature, and FeaturedProblem metadata
 - [MATLAB Problem Library Tools Source](reference/matlab-plib_tools.md) — source-backed MATLAB plib helper signatures and descriptions
+- [Platform Manifest Source](reference/platform-manifest.md) — lossless mirror of the local platform source snapshot manifest
+- [Platform Docs Source](reference/platform-docs.md) — exact bundled platform documentation snapshot for platform workflow and ecosystem facts
 - [Enums Source](reference/enums.md) — lossless mirror of bundled enum constants
 - [Legacy Docs and Examples Source](reference/legacy-docs.md) — exact bundled examples, installation notes, problem library notes, profiles, and debugging docs
 - [Bibliography Source](reference/bibliography.md) — exact bundled bibliography source

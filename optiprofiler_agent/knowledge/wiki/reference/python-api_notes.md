@@ -2,7 +2,7 @@
 tags: [reference, source-backed, python, api-notes]
 sources: [_sources/python/api_notes.json]
 related: []
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 
@@ -14,7 +14,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 ## Source Metadata
 
 - Source path: `_sources/python/api_notes.json`
-- Canonical SHA256: `2cbb777ae7d0a216d902b4f91a4dd5319974b383b8541cf39457ced72b2e6b29`
+- Canonical SHA256: `36a447405e55a7d96e28b669d50ef2b4cf580e67767cc5e0375f376107bb7002`
 - Top-level keys: `language`, `public_exports`, `solver_format`, `options_format`, `vector_convention`, `problem_libs`, `python_only_options`, `installation`, `pycutest_note`, `lambda_warning`
 
 ## Path Index
@@ -26,7 +26,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 | `solver_format` | str |
 | `options_format` | str |
 | `vector_convention` | str |
-| `problem_libs` | list[3] |
+| `problem_libs` | list[4] |
 | `python_only_options` | list[1] |
 | `installation` | dict[2] |
 | `pycutest_note` | str |
@@ -76,6 +76,7 @@ keyword arguments to benchmark()
 [
   "s2mpj",
   "pycutest",
+  "solar",
   "custom"
 ]
 ```
@@ -123,6 +124,7 @@ Lambda functions are not picklable — use named functions (def) for parallel ex
   "problem_libs": [
     "s2mpj",
     "pycutest",
+    "solar",
     "custom"
   ],
   "public_exports": [

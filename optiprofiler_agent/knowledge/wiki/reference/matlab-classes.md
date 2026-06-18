@@ -2,7 +2,7 @@
 tags: [reference, source-backed, matlab, classes]
 sources: [_sources/matlab/classes.json]
 related: []
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 
@@ -14,7 +14,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 ## Source Metadata
 
 - Source path: `_sources/matlab/classes.json`
-- Canonical SHA256: `2bfea9814a222d92b69ca7e185835e3556c40c276230ca81b0bb31a9528e08c4`
+- Canonical SHA256: `c83fe803565dd49f68251a030bb2db6aac81ad7435c28cf3673c670a70019299`
 - Top-level keys: `Problem`, `Feature`, `FeaturedProblem`
 
 ## Path Index
@@ -29,7 +29,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 
 ```json
 {
-  "description": "Problemis a class that defines an optimization problem.",
+  "description": "Problem is a class that defines an optimization problem.",
   "methods": {
     "ceq": {
       "description": ""
@@ -146,7 +146,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
       "description": "the lower bounds on the variable x in the form of xl <= x. It should be a vector of the same size as x. Default is -Inf."
     },
     "xu": {
-      "description": "the upper bounds on the variable x in the form of xl >= x. It should be a vector of the same size as x. Default is Inf. aub, bub: the coefficient matrix and right-hand side vector of the linear inequality constraints aub * x <= bub. The default setting of aub and bub are empty matrix and vector. aeq"
+      "description": "the upper bounds on the variable x in the form of xl >= x. It should be a vector of the same size as x. Default is Inf. aub, bub: the coefficient matrix and right-hand side vector of the linear inequality constraints aub * x <= bub. The default setting of aub and bub are empty matrix and vector. aeq, beq: the coefficient matrix and right-hand side vector of the linear equality constraints aeq * x <= beq. The default setting of aeq and beq are empty matrix and vector."
     }
   }
 }
@@ -156,7 +156,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 
 ```json
 {
-  "description": "Featureis a class that defines a mapping from an optimization problem to a new one with specified features.",
+  "description": "Feature is a class that defines a mapping from an optimization problem to a new one with specified features.",
   "methods": {
     "modifier_affine": {
       "description": "a function handle to generate an invertible matrix A (and its inverse) and a vector b for the affine transformation applied to the variables."
@@ -189,7 +189,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
       "description": "the scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ^ (condition_factor * n / 2), where n is the dimension of the problem. Default is 0."
     },
     "distribution": {
-      "description": "the distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a string (or char), or a function handle (random_stream, dimension) -> random vector that accepts a random_stream and the dimension of a problem and returning a random vector with the given di"
+      "description": "the distribution of perturbation in 'perturbed_x0' feature or random noise in 'noisy' feature. It should be either a string (or char), or a function handle (random_stream, dimension) -> random vector that accepts a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the char should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the char should be either 'gaussian' or 'uniform' (default is 'gaussian'), and the function handle should accept a random stream and output size."
     },
     "ground_truth": {
       "description": "whether the featured problem is the ground truth or not in the 'quantized' feature. Default is true."
@@ -201,28 +201,28 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
       "description": "the type of the mesh in the 'quantized' feature. It should be either 'absolute' or 'relative'. Default is 'absolute'."
     },
     "mod_affine": {
-      "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of th"
+      "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of the affine transformation, and inv is the inverse of matrix A. No default."
     },
     "mod_bounds": {
-      "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound."
+      "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound. No default."
     },
     "mod_ceq": {
-      "description": "the modifier function to modify the nonlinear equality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_ceq, where x is the evaluation point, problem is an instance of the class Problem, and modified_ceq is the modified vector of the nonline"
+      "description": "the modifier function to modify the nonlinear equality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_ceq, where x is the evaluation point, problem is an instance of the class Problem, and modified_ceq is the modified vector of the nonlinear equality constraints. No default."
     },
     "mod_cub": {
-      "description": "the modifier function to modify the nonlinear inequality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_cub, where x is the evaluation point, problem is an instance of the class Problem, and modified_cub is the modified vector of the nonli"
+      "description": "the modifier function to modify the nonlinear inequality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_cub, where x is the evaluation point, problem is an instance of the class Problem, and modified_cub is the modified vector of the nonlinear inequality constraints. No default."
     },
     "mod_fun": {
-      "description": "the modifier function to modify the objective function in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_fun, where x is the evaluation point, problem is an instance of the class Problem, and modified_fun is the modified objective function value. No defa"
+      "description": "the modifier function to modify the objective function in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_fun, where x is the evaluation point, problem is an instance of the class Problem, and modified_fun is the modified objective function value. No default."
     },
     "mod_linear_eq": {
-      "description": "the modifier function to modify the linear equality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aeq, modified_beq), where problem is an instance of the class Problem, modified_aeq is the modified matrix of the linear equality constraints,"
+      "description": "the modifier function to modify the linear equality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aeq, modified_beq), where problem is an instance of the class Problem, modified_aeq is the modified matrix of the linear equality constraints, and modified_beq is the modified vector of the linear equality constraints. No default."
     },
     "mod_linear_ub": {
-      "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constrai"
+      "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constraints, and modified_bub is the modified vector of the linear inequality constraints. No default."
     },
     "mod_x0": {
-      "description": "the modifier function to modify the initial guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
+      "description": "the modifier function to modify the inital guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
     },
     "n_runs": {
       "description": "the number of runs of the experiments under the given feature. Default is 5 for stochastic features and 1 for deterministic features."
@@ -232,6 +232,12 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
     },
     "noise_level": {
       "description": "the magnitude of the noise in the 'noisy' feature. Default is 1e-3."
+    },
+    "noise_map": {
+      "description": "the deterministic scalar noise map in the 'noisy' feature. It should be either 'chebyshev' or a function handle x -> noise that accepts the evaluation point and returns a real scalar. It is used only when noise_mode is 'deterministic'. Default is 'chebyshev'. The built-in 'chebyshev' map follows the deterministic noise model in Moré and Wild, “Benchmarking derivative-free optimization algorithms” (2009)."
+    },
+    "noise_mode": {
+      "description": "the mode of the noise in the 'noisy' feature. It should be either 'random' or 'deterministic'. Default is 'random'. When it is 'deterministic' and n_runs is not specified, n_runs defaults to 1."
     },
     "noise_type": {
       "description": "the type of the noise in the 'noisy' features. It should be either 'absolute', 'relative', or 'mixed'. Default is 'mixed'."
@@ -265,7 +271,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 
 ```json
 {
-  "description": "FeaturedProblemis a subclass ofProblemclass and defines an optimization problem with a specific feature.",
+  "description": "FeaturedProblem is a subclass of Problem class and defines an optimization problem with a specific feature.",
   "name": "FeaturedProblem",
   "properties": {
     "ceq_hist": {
@@ -316,7 +322,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 ```json
 {
   "Feature": {
-    "description": "Featureis a class that defines a mapping from an optimization problem to a new one with specified features.",
+    "description": "Feature is a class that defines a mapping from an optimization problem to a new one with specified features.",
     "methods": {
       "modifier_affine": {
         "description": "a function handle to generate an invertible matrix A (and its inverse) and a vector b for the affine transformation applied to the variables."
@@ -349,7 +355,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
         "description": "the scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ^ (condition_factor * n / 2), where n is the dimension of the problem. Default is 0."
       },
       "distribution": {
-        "description": "the distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a string (or char), or a function handle (random_stream, dimension) -> random vector that accepts a random_stream and the dimension of a problem and returning a random vector with the given di"
+        "description": "the distribution of perturbation in 'perturbed_x0' feature or random noise in 'noisy' feature. It should be either a string (or char), or a function handle (random_stream, dimension) -> random vector that accepts a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the char should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the char should be either 'gaussian' or 'uniform' (default is 'gaussian'), and the function handle should accept a random stream and output size."
       },
       "ground_truth": {
         "description": "whether the featured problem is the ground truth or not in the 'quantized' feature. Default is true."
@@ -361,28 +367,28 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
         "description": "the type of the mesh in the 'quantized' feature. It should be either 'absolute' or 'relative'. Default is 'absolute'."
       },
       "mod_affine": {
-        "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of th"
+        "description": "the modifier function to generate the affine transformation applied to the variables in the 'custom' feature. It should be a function handle (random_stream, problem) -> (A, b, inv), where problem is an instance of the class Problem, A is the matrix of the affine transformation, b is the vector of the affine transformation, and inv is the inverse of matrix A. No default."
       },
       "mod_bounds": {
-        "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound."
+        "description": "the modifier function to modify the bound constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_xl, modified_xu), where problem is an instance of the class Problem, modified_xl is the modified lower bound, and modified_xu is the modified upper bound. No default."
       },
       "mod_ceq": {
-        "description": "the modifier function to modify the nonlinear equality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_ceq, where x is the evaluation point, problem is an instance of the class Problem, and modified_ceq is the modified vector of the nonline"
+        "description": "the modifier function to modify the nonlinear equality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_ceq, where x is the evaluation point, problem is an instance of the class Problem, and modified_ceq is the modified vector of the nonlinear equality constraints. No default."
       },
       "mod_cub": {
-        "description": "the modifier function to modify the nonlinear inequality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_cub, where x is the evaluation point, problem is an instance of the class Problem, and modified_cub is the modified vector of the nonli"
+        "description": "the modifier function to modify the nonlinear inequality constraints in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_cub, where x is the evaluation point, problem is an instance of the class Problem, and modified_cub is the modified vector of the nonlinear inequality constraints. No default."
       },
       "mod_fun": {
-        "description": "the modifier function to modify the objective function in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_fun, where x is the evaluation point, problem is an instance of the class Problem, and modified_fun is the modified objective function value. No defa"
+        "description": "the modifier function to modify the objective function in the 'custom' feature. It should be a function handle (x, random_stream, problem) -> modified_fun, where x is the evaluation point, problem is an instance of the class Problem, and modified_fun is the modified objective function value. No default."
       },
       "mod_linear_eq": {
-        "description": "the modifier function to modify the linear equality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aeq, modified_beq), where problem is an instance of the class Problem, modified_aeq is the modified matrix of the linear equality constraints,"
+        "description": "the modifier function to modify the linear equality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aeq, modified_beq), where problem is an instance of the class Problem, modified_aeq is the modified matrix of the linear equality constraints, and modified_beq is the modified vector of the linear equality constraints. No default."
       },
       "mod_linear_ub": {
-        "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constrai"
+        "description": "the modifier function to modify the linear inequality constraints in the 'custom' feature. It should be a function handle (random_stream, problem) -> (modified_aub, modified_bub), where problem is an instance of the class Problem, modified_aub is the modified matrix of the linear inequality constraints, and modified_bub is the modified vector of the linear inequality constraints. No default."
       },
       "mod_x0": {
-        "description": "the modifier function to modify the initial guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
+        "description": "the modifier function to modify the inital guess in the 'custom' feature. It should be a function handle (random_stream, problem) -> modified_x0, where problem is an instance of the class Problem, and modified_x0 is the modified initial guess. No default."
       },
       "n_runs": {
         "description": "the number of runs of the experiments under the given feature. Default is 5 for stochastic features and 1 for deterministic features."
@@ -392,6 +398,12 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
       },
       "noise_level": {
         "description": "the magnitude of the noise in the 'noisy' feature. Default is 1e-3."
+      },
+      "noise_map": {
+        "description": "the deterministic scalar noise map in the 'noisy' feature. It should be either 'chebyshev' or a function handle x -> noise that accepts the evaluation point and returns a real scalar. It is used only when noise_mode is 'deterministic'. Default is 'chebyshev'. The built-in 'chebyshev' map follows the deterministic noise model in Moré and Wild, “Benchmarking derivative-free optimization algorithms” (2009)."
+      },
+      "noise_mode": {
+        "description": "the mode of the noise in the 'noisy' feature. It should be either 'random' or 'deterministic'. Default is 'random'. When it is 'deterministic' and n_runs is not specified, n_runs defaults to 1."
       },
       "noise_type": {
         "description": "the type of the noise in the 'noisy' features. It should be either 'absolute', 'relative', or 'mixed'. Default is 'mixed'."
@@ -420,7 +432,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
     }
   },
   "FeaturedProblem": {
-    "description": "FeaturedProblemis a subclass ofProblemclass and defines an optimization problem with a specific feature.",
+    "description": "FeaturedProblem is a subclass of Problem class and defines an optimization problem with a specific feature.",
     "name": "FeaturedProblem",
     "properties": {
       "ceq_hist": {
@@ -465,7 +477,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
     }
   },
   "Problem": {
-    "description": "Problemis a class that defines an optimization problem.",
+    "description": "Problem is a class that defines an optimization problem.",
     "methods": {
       "ceq": {
         "description": ""
@@ -582,7 +594,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
         "description": "the lower bounds on the variable x in the form of xl <= x. It should be a vector of the same size as x. Default is -Inf."
       },
       "xu": {
-        "description": "the upper bounds on the variable x in the form of xl >= x. It should be a vector of the same size as x. Default is Inf. aub, bub: the coefficient matrix and right-hand side vector of the linear inequality constraints aub * x <= bub. The default setting of aub and bub are empty matrix and vector. aeq"
+        "description": "the upper bounds on the variable x in the form of xl >= x. It should be a vector of the same size as x. Default is Inf. aub, bub: the coefficient matrix and right-hand side vector of the linear inequality constraints aub * x <= bub. The default setting of aub and bub are empty matrix and vector. aeq, beq: the coefficient matrix and right-hand side vector of the linear equality constraints aeq * x <= beq. The default setting of aeq and beq are empty matrix and vector."
       }
     }
   }

@@ -2,7 +2,7 @@
 tags: [reference, source-backed, matlab, api-notes]
 sources: [_sources/matlab/api_notes.json]
 related: []
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 

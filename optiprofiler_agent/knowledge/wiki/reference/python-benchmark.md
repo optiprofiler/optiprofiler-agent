@@ -2,7 +2,7 @@
 tags: [reference, source-backed, python, benchmark]
 sources: [_sources/python/benchmark.json]
 related: [../api/python/benchmark.md]
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 
@@ -14,8 +14,8 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 ## Source Metadata
 
 - Source path: `_sources/python/benchmark.json`
-- Canonical SHA256: `3344b987704f5783c868e6fb42fc9cac37e016efa6d33383f0e1db06fa3c8440`
-- Top-level keys: `description`, `signature`, `calling_convention`, `parameters`, `feature_options`, `profile_options`, `problem_options`, `returns`, `output_artifacts`, `raises`, `notes`, `see_also`, `name`, `solver_signatures`, `solver_notes`
+- Canonical SHA256: `27ae1979b3a58fea66a224f5bda3bbd373d0fed8f28cd3f8febdf2820dee8ce2`
+- Top-level keys: `description`, `signature`, `parameters`, `feature_options`, `profile_options`, `problem_options`, `returns`, `raises`, `notes`, `see_also`, `name`, `calling_convention`, `solver_signatures`, `solver_notes`, `output_artifacts`
 
 ## Path Index
 
@@ -23,16 +23,17 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 |---|---|
 | `description` | str |
 | `signature` | str |
-| `calling_convention` | dict[3] |
 | `parameters` | dict[1] |
 | `parameters.solvers` | dict[2] |
-| `feature_options` | dict[25] |
+| `feature_options` | dict[27] |
 | `feature_options.feature_name` | dict[4] |
 | `feature_options.n_runs` | dict[3] |
 | `feature_options.distribution` | dict[3] |
 | `feature_options.perturbation_level` | dict[3] |
 | `feature_options.noise_level` | dict[3] |
 | `feature_options.noise_type` | dict[4] |
+| `feature_options.noise_mode` | dict[4] |
+| `feature_options.noise_map` | dict[3] |
 | `feature_options.significant_digits` | dict[3] |
 | `feature_options.perturbed_trailing_digits` | dict[3] |
 | `feature_options.rotated` | dict[3] |
@@ -104,7 +105,7 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 | `problem_options.maxnlcon` | dict[3] |
 | `problem_options.mincon` | dict[3] |
 | `problem_options.maxcon` | dict[3] |
-| `problem_options.custom_problem_libs_path` | dict[4] |
+| `problem_options.custom_problem_libs_path` | dict[3] |
 | `problem_options.excludelist` | dict[3] |
 | `problem_options.problem_names` | dict[3] |
 | `problem_options.problem` | dict[3] |
@@ -112,17 +113,18 @@ Do not hand-edit it; run `python scripts/sync_wiki_reference.py` after changing 
 | `returns.solver_scores` | dict[2] |
 | `returns.profile_scores` | dict[2] |
 | `returns.curves` | dict[2] |
-| `output_artifacts` | dict[4] |
 | `raises` | list[2] |
 | `notes` | str |
 | `see_also` | list[3] |
 | `name` | str |
+| `calling_convention` | dict[3] |
 | `solver_signatures` | dict[4] |
 | `solver_signatures.unconstrained` | str |
 | `solver_signatures.bound_constrained` | str |
 | `solver_signatures.linearly_constrained` | str |
 | `solver_signatures.nonlinearly_constrained` | str |
 | `solver_notes` | list[3] |
+| `output_artifacts` | dict[5] |
 
 ## description
 
@@ -133,17 +135,7 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 ## signature
 
 ```text
-(solvers: 'list[callable] | None' = None, /, **kwargs) -> 'tuple[np.ndarray, np.ndarray | None, list[dict] | None]'
-```
-
-## calling_convention
-
-```json
-{
-  "options": "keyword arguments to benchmark(). Example: benchmark(solvers, ptype='u', mindim=2)",
-  "solvers": "list of callables: [solver1, solver2]",
-  "syntax": "scores = benchmark([solver1, solver2], ptype='u', mindim=2, maxdim=20)"
-}
+(solvers: 'list[Callable[..., Any]] | None' = None, /, **kwargs) -> 'tuple[np.ndarray, np.ndarray | None, list[dict] | None]'
 ```
 
 ## parameters
@@ -151,8 +143,8 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 ```json
 {
   "solvers": {
-    "description": "Solvers to benchmark. Each solver must be a callable accepting corresponding arguments depending on the test suite you choose:  - for an unconstrained problem, ``solver(fun, x0) -> numpy.ndarray, shape (n,)``, where ``fun`` is the objective function accepting a 1-D array and returning a float, and ``x0`` is the initial guess (1-D array); - for a bound-constrained problem, ``solver(fun, x0, xl, xu) -> numpy.ndarray, shape (n,)``, where ``xl`` and ``xu`` are the lower and upper bounds (1-D arrays, may contain ``-numpy.inf`` or ``numpy.inf``); - for a linearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> numpy.ndarray, shape (n,)``, where ``aub`` and ``aeq`` are the coefficient matrices of the linear inequality and equality constraints, and ``bub`` and ``beq`` are the right-hand side vectors; - for a nonlinearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray, shape (n,)``, where ``cub`` and ``ceq`` are the nonlinear inequality and equality constraint functions accepting a 1-D array and returning a 1-D array.  All vectors and matrices mentioned above are `numpy.ndarray`.  If the 'load' option is provided in ``**kwargs``, solvers can be None, in which case data from a previous experiment will be loaded to generate profiles.",
-    "type": "list of callable if 'load' in ``**kwargs``"
+    "description": "Solvers to benchmark. Each solver must be a callable accepting corresponding arguments depending on the test suite you choose:  - for an unconstrained problem, ``solver(fun, x0) -> numpy.ndarray, shape (n,)``, where ``fun`` is the objective function accepting a 1-D array and returning a float, and ``x0`` is the initial guess (1-D array); - for a bound-constrained problem, ``solver(fun, x0, xl, xu) -> numpy.ndarray, shape (n,)``, where ``xl`` and ``xu`` are the lower and upper bounds (1-D arrays, may contain ``-numpy.inf`` or ``numpy.inf``); - for a linearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> numpy.ndarray, shape (n,)``, where ``aub`` and ``aeq`` are the coefficient matrices of the linear inequality and equality constraints, and ``bub`` and ``beq`` are the right-hand side vectors; - for a nonlinearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray, shape (n,)``, where ``cub`` and ``ceq`` are the nonlinear inequality and equality constraint functions accepting a 1-D array and returning a 1-D array.  All vectors and matrices mentioned above are `numpy.ndarray`.  If the ``load`` option is provided, solvers can be None, in which case data from a previous experiment will be loaded to generate profiles.",
+    "type": "list of callable if ``load`` is provided"
   }
 }
 ```
@@ -161,8 +153,8 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 
 ```json
 {
-  "description": "Solvers to benchmark. Each solver must be a callable accepting corresponding arguments depending on the test suite you choose:  - for an unconstrained problem, ``solver(fun, x0) -> numpy.ndarray, shape (n,)``, where ``fun`` is the objective function accepting a 1-D array and returning a float, and ``x0`` is the initial guess (1-D array); - for a bound-constrained problem, ``solver(fun, x0, xl, xu) -> numpy.ndarray, shape (n,)``, where ``xl`` and ``xu`` are the lower and upper bounds (1-D arrays, may contain ``-numpy.inf`` or ``numpy.inf``); - for a linearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> numpy.ndarray, shape (n,)``, where ``aub`` and ``aeq`` are the coefficient matrices of the linear inequality and equality constraints, and ``bub`` and ``beq`` are the right-hand side vectors; - for a nonlinearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray, shape (n,)``, where ``cub`` and ``ceq`` are the nonlinear inequality and equality constraint functions accepting a 1-D array and returning a 1-D array.  All vectors and matrices mentioned above are `numpy.ndarray`.  If the 'load' option is provided in ``**kwargs``, solvers can be None, in which case data from a previous experiment will be loaded to generate profiles.",
-  "type": "list of callable if 'load' in ``**kwargs``"
+  "description": "Solvers to benchmark. Each solver must be a callable accepting corresponding arguments depending on the test suite you choose:  - for an unconstrained problem, ``solver(fun, x0) -> numpy.ndarray, shape (n,)``, where ``fun`` is the objective function accepting a 1-D array and returning a float, and ``x0`` is the initial guess (1-D array); - for a bound-constrained problem, ``solver(fun, x0, xl, xu) -> numpy.ndarray, shape (n,)``, where ``xl`` and ``xu`` are the lower and upper bounds (1-D arrays, may contain ``-numpy.inf`` or ``numpy.inf``); - for a linearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> numpy.ndarray, shape (n,)``, where ``aub`` and ``aeq`` are the coefficient matrices of the linear inequality and equality constraints, and ``bub`` and ``beq`` are the right-hand side vectors; - for a nonlinearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray, shape (n,)``, where ``cub`` and ``ceq`` are the nonlinear inequality and equality constraint functions accepting a 1-D array and returning a 1-D array.  All vectors and matrices mentioned above are `numpy.ndarray`.  If the ``load`` option is provided, solvers can be None, in which case data from a previous experiment will be loaded to generate profiles.",
+  "type": "list of callable if ``load`` is provided"
 }
 ```
 
@@ -172,12 +164,12 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 {
   "condition_factor": {
     "default": "0",
-    "description": "The scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ** (condition_factor * n / 2), where n is the dimension of the problem. Default is 0.",
+    "description": "The scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be ``2^(condition_factor * n / 2)``, where n is the dimension of the problem. Default is 0.",
     "type": "float"
   },
   "distribution": {
-    "default": "'spherical')",
-    "description": "The distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a str (or char), or a callable ``(random_stream, dimension) -> random vector``, accepting a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the str should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the str should be either 'gaussian' or 'uniform' (default is 'gaussian').",
+    "default": "'spherical'",
+    "description": "The distribution of perturbation in 'perturbed_x0' feature or random noise in 'noisy' feature. It should be either a str (or char), or a callable ``(random_stream, dimension) -> random vector``, accepting a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the str should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the str should be either 'gaussian' or 'uniform' (default is 'gaussian'), and the callable should accept a random stream and output size.",
     "type": "str or callable"
   },
   "feature_name": {
@@ -264,6 +256,20 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
     "description": "The magnitude of the noise in the 'noisy' feature. Default is 1e-3.",
     "type": "float"
   },
+  "noise_map": {
+    "default": "'chebyshev'",
+    "description": "The deterministic scalar noise map in the 'noisy' feature. It should be either 'chebyshev' or a callable ``x -> noise`` returning a real scalar. It is used only when noise_mode is 'deterministic'. Default is 'chebyshev'. The built-in 'chebyshev' map follows the deterministic noise model in Moré and Wild [5]_.",
+    "type": "str or callable"
+  },
+  "noise_mode": {
+    "choices": [
+      "random",
+      "deterministic"
+    ],
+    "default": "'random'",
+    "description": "The mode of the noise in the 'noisy' feature. It should be either 'random' or 'deterministic'. Default is 'random'. When it is 'deterministic' and n_runs is not specified, n_runs defaults to 1.",
+    "type": "str"
+  },
   "noise_type": {
     "choices": [
       "absolute",
@@ -349,8 +355,8 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 
 ```json
 {
-  "default": "'spherical')",
-  "description": "The distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a str (or char), or a callable ``(random_stream, dimension) -> random vector``, accepting a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the str should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the str should be either 'gaussian' or 'uniform' (default is 'gaussian').",
+  "default": "'spherical'",
+  "description": "The distribution of perturbation in 'perturbed_x0' feature or random noise in 'noisy' feature. It should be either a str (or char), or a callable ``(random_stream, dimension) -> random vector``, accepting a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the str should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the str should be either 'gaussian' or 'uniform' (default is 'gaussian'), and the callable should accept a random stream and output size.",
   "type": "str or callable"
 }
 ```
@@ -390,6 +396,30 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 }
 ```
 
+## feature_options.noise_mode
+
+```json
+{
+  "choices": [
+    "random",
+    "deterministic"
+  ],
+  "default": "'random'",
+  "description": "The mode of the noise in the 'noisy' feature. It should be either 'random' or 'deterministic'. Default is 'random'. When it is 'deterministic' and n_runs is not specified, n_runs defaults to 1.",
+  "type": "str"
+}
+```
+
+## feature_options.noise_map
+
+```json
+{
+  "default": "'chebyshev'",
+  "description": "The deterministic scalar noise map in the 'noisy' feature. It should be either 'chebyshev' or a callable ``x -> noise`` returning a real scalar. It is used only when noise_mode is 'deterministic'. Default is 'chebyshev'. The built-in 'chebyshev' map follows the deterministic noise model in Moré and Wild [5]_.",
+  "type": "str or callable"
+}
+```
+
 ## feature_options.significant_digits
 
 ```json
@@ -425,7 +455,7 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 ```json
 {
   "default": "0",
-  "description": "The scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ** (condition_factor * n / 2), where n is the dimension of the problem. Default is 0.",
+  "description": "The scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be ``2^(condition_factor * n / 2)``, where n is the dimension of the problem. Default is 0.",
   "type": "float"
 }
 ```
@@ -683,12 +713,12 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
     "type": "int"
   },
   "merit_fun": {
-    "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, all solvers are declared to pass that degenerate convergence test, and the case is listed in test_log/report.txt.",
+    "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, the convergence test is degenerate; by convention, all solvers are declared to pass that problem/run. These cases are listed in ``test_log/report.txt``.",
     "type": "callable"
   },
   "n_jobs": {
-    "default": "about half of available workers, at least 2 when possible",
-    "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers, with at least 2 when more than one worker is available.",
+    "default": "a conservative number of workers, chosen as about half of the available workers (at least 2 when more than one worker is available)",
+    "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers (at least 2 when more than one worker is available).",
     "type": "int"
   },
   "normalized_scores": {
@@ -979,7 +1009,7 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 
 ```json
 {
-  "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, all solvers are declared to pass that degenerate convergence test, and the case is listed in test_log/report.txt.",
+  "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, the convergence test is degenerate; by convention, all solvers are declared to pass that problem/run. These cases are listed in ``test_log/report.txt``.",
   "type": "callable"
 }
 ```
@@ -988,8 +1018,8 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 
 ```json
 {
-  "default": "about half of available workers, at least 2 when possible",
-  "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers, with at least 2 when more than one worker is available.",
+  "default": "a conservative number of workers, chosen as about half of the available workers (at least 2 when more than one worker is available)",
+  "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers (at least 2 when more than one worker is available).",
   "type": "int"
 }
 ```
@@ -1238,13 +1268,8 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 ```json
 {
   "custom_problem_libs_path": {
-    "choices": [
-      "s2mpj",
-      "pycutest",
-      "custom"
-    ],
     "default": "None, meaning only built-in libraries are available",
-    "description": "The path to a directory containing custom problem libraries. Each subdirectory in this path should be a problem library with the same structure as the built-in libraries (e.g., 's2mpj', 'pycutest', 'custom'). Specifically, each subdirectory should contain a file named '<library_name>_tools.py' with two functions: '<library_name>_load' and '<library_name>_select'. This option allows users to use their own problem libraries without modifying the installed package. Default is None, meaning only built-in libraries are available.",
+    "description": "The path to a directory containing custom problem libraries, or a direct path to one custom problem library. Each custom problem library must contain a tools module named '<library_name>_tools.py' with two functions: '<library_name>_load' and '<library_name>_select'. This option allows users to use their own problem libraries without modifying the installed package. If a custom library has the same name as a built-in library, the custom library is used. Default is None, meaning only built-in libraries are available.",
     "type": "str or Path"
   },
   "excludelist": {
@@ -1304,7 +1329,7 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
   },
   "plibs": {
     "default": "``'s2mpj'``",
-    "description": "The problem libraries to be used. It should be a list of strs. The built-in choices are ``'s2mpj'``, ``'pycutest'``, and ``'custom'``. Default setting is ``'s2mpj'``. Note that ``'pycutest'`` requires the separate installation of the ``pycutest`` package; see https://jfowkes.github.io/pycutest/ for installation instructions. You can also use your own problem library by specifying its name here together with the ``custom_problem_libs_path`` option.",
+    "description": "The problem libraries to be used. It should be a list of strs. The built-in choices are ``'s2mpj'``, ``'pycutest'``, ``'solar'``, and ``'custom'``. Default setting is ``'s2mpj'``. Note that ``'pycutest'`` requires the separate installation of the ``pycutest`` package; see https://jfowkes.github.io/pycutest/ for installation instructions. ``'solar'`` uses a slim SOLAR runtime and may be substantially slower than algebraic test problems because it calls an external simulator. You can also use your own problem library by specifying its name here together with the ``custom_problem_libs_path`` option.",
     "type": "list of str"
   },
   "problem": {
@@ -1339,7 +1364,7 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 ```json
 {
   "default": "``'s2mpj'``",
-  "description": "The problem libraries to be used. It should be a list of strs. The built-in choices are ``'s2mpj'``, ``'pycutest'``, and ``'custom'``. Default setting is ``'s2mpj'``. Note that ``'pycutest'`` requires the separate installation of the ``pycutest`` package; see https://jfowkes.github.io/pycutest/ for installation instructions. You can also use your own problem library by specifying its name here together with the ``custom_problem_libs_path`` option.",
+  "description": "The problem libraries to be used. It should be a list of strs. The built-in choices are ``'s2mpj'``, ``'pycutest'``, ``'solar'``, and ``'custom'``. Default setting is ``'s2mpj'``. Note that ``'pycutest'`` requires the separate installation of the ``pycutest`` package; see https://jfowkes.github.io/pycutest/ for installation instructions. ``'solar'`` uses a slim SOLAR runtime and may be substantially slower than algebraic test problems because it calls an external simulator. You can also use your own problem library by specifying its name here together with the ``custom_problem_libs_path`` option.",
   "type": "list of str"
 }
 ```
@@ -1467,13 +1492,8 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 
 ```json
 {
-  "choices": [
-    "s2mpj",
-    "pycutest",
-    "custom"
-  ],
   "default": "None, meaning only built-in libraries are available",
-  "description": "The path to a directory containing custom problem libraries. Each subdirectory in this path should be a problem library with the same structure as the built-in libraries (e.g., 's2mpj', 'pycutest', 'custom'). Specifically, each subdirectory should contain a file named '<library_name>_tools.py' with two functions: '<library_name>_load' and '<library_name>_select'. This option allows users to use their own problem libraries without modifying the installed package. Default is None, meaning only built-in libraries are available.",
+  "description": "The path to a directory containing custom problem libraries, or a direct path to one custom problem library. Each custom problem library must contain a tools module named '<library_name>_tools.py' with two functions: '<library_name>_load' and '<library_name>_select'. This option allows users to use their own problem libraries without modifying the installed package. If a custom library has the same name as a built-in library, the custom library is used. Default is None, meaning only built-in libraries are available.",
   "type": "str or Path"
 }
 ```
@@ -1554,17 +1574,6 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 }
 ```
 
-## output_artifacts
-
-```json
-{
-  "result_directory": "`<savepath>/<benchmark_id>/<feature_stamp>_<timestamp>/`",
-  "summary_pdf": "summary.pdf summarizes performance profiles and data profiles.",
-  "test_log_log": "test_log/log.txt records messages printed during the run.",
-  "test_log_report": "test_log/report.txt records selected problem names, timing information, merit_init = phi(x_0) = inf cases, abnormal solver terminations, output fallbacks, and solver scores."
-}
-```
-
 ## raises
 
 ```json
@@ -1583,7 +1592,7 @@ Benchmark optimization solvers on a set of problems with specified features. Thi
 ## notes
 
 ```text
-The current version supports benchmarking derivative-free optimization solvers.  .. caution::  The log-ratio profiles are available only when there are exactly two solvers. For more information on performance and data profiles, see [1]_, [2]_, [5]_. For that of log-ratio profiles, see [4]_, [6]_.  .. caution::  All callable arguments (``solvers``, ``distribution``, ``mod_x0``, ``mod_affine``, ``mod_bounds``, ``mod_linear_ub``, ``mod_linear_eq``, ``mod_fun``, ``mod_cub``, ``mod_ceq``, ``merit_fun``, ``score_fun``, ``score_weight_fun``) must be picklable for parallel execution (``n_jobs > 1``). In particular, **lambda functions are not picklable** and will cause the benchmark to fall back to sequential mode automatically. To take advantage of parallel execution, define named functions (using ``def``) instead of lambda expressions.  1. Two problem libraries are available by default: `S2MPJ <https://github.com/GrattonToint/S2MPJ>`_ (see [3]_) and `PyCUTEst <https://jfowkes.github.io/pycutest/>`_ (Linux and macOS only). To use your own problem library, see the ``custom_problem_libs_path`` option or the guide on our `website <https://www.optprof.com>`_.  2. Each problem library has a ``config.txt`` file that controls options such as ``variable_size`` and ``test_feasibility_problems``. You can override these at runtime using `set_plib_config` or by setting the corresponding environment variables (e.g., ``S2MPJ_VARIABLE_SIZE``). See `get_plib_config` and `set_plib_config` for details.  3. When the ``load`` option is provided, the function loads data from a previous experiment and draws profiles using the provided options. Available options in this mode are:  - *Profile and plot options*: ``benchmark_id``, ``solver_names``, ``feature_stamp``, ``errorbar_type``, ``savepath``, ``max_tol_order``, ``merit_fun``, ``run_plain``, ``score_only``, ``summarize_performance_profiles``, ``summarize_data_profiles``, ``summarize_log_ratio_profiles``, ``summarize_output_based_profiles``, ``silent``, ``semilogx``, ``normalized_scores``, ``score_weight_fun``, ``score_fun``, ``solvers_to_load``, ``line_colors``, ``line_styles``, ``line_widths``, ``bar_colors``. - *Feature options*: none. - *Problem options*: ``plibs``, ``ptype``, ``mindim``, ``maxdim``, ``minb``, ``maxb``, ``minlcon``, ``maxlcon``, ``minnlcon``, ``maxnlcon``, ``mincon``, ``maxcon``, ``excludelist``.  4. More information about OptiProfiler can be found at https://www.optprof.com.
+The current version supports benchmarking derivative-free optimization solvers.  .. caution::  The log-ratio profiles are available only when there are exactly two solvers. For more information on performance and data profiles, see [1]_, [2]_, [5]_. For that of log-ratio profiles, see [4]_, [6]_.  .. caution::  All callable arguments (``solvers``, ``distribution``, ``noise_map``, ``mod_x0``, ``mod_affine``, ``mod_bounds``, ``mod_linear_ub``, ``mod_linear_eq``, ``mod_fun``, ``mod_cub``, ``mod_ceq``, ``merit_fun``, ``score_fun``, ``score_weight_fun``) must be picklable for parallel execution (``n_jobs > 1``). In particular, **lambda functions are not picklable** and will cause the benchmark to fall back to sequential mode automatically. To take advantage of parallel execution, define named functions (using ``def``) instead of lambda expressions.  1. Several problem libraries are available by default: `S2MPJ <https://github.com/GrattonToint/S2MPJ>`_ (see [3]_) and `PyCUTEst <https://jfowkes.github.io/pycutest/>`_ (Linux and macOS only), and SOLAR (see [7]_) through the ``solar`` adapter. SOLAR is distributed through its own LGPL-2.1 runtime files; see the adapter README and ``runtime/solar/manifest.json`` for provenance. To use your own problem library, see the ``custom_problem_libs_path`` option or the guide on our `website <https://www.optprof.com>`_. A custom library with the same name as a built-in library overrides the built-in one for that run.  2. Each problem library has a ``config.txt`` file that controls options such as ``variable_size`` and ``test_feasibility_problems``. You can override these at runtime using `set_plib_config` or by setting the corresponding environment variables (e.g., ``S2MPJ_VARIABLE_SIZE``). See `get_plib_config` and `set_plib_config` for details.  3. When the ``load`` option is provided, the function loads data from a previous experiment and draws profiles using the provided options. Available options in this mode are:  - *Profile and plot options*: ``benchmark_id``, ``solver_names``, ``feature_stamp``, ``errorbar_type``, ``savepath``, ``max_tol_order``, ``merit_fun``, ``run_plain``, ``score_only``, ``summarize_performance_profiles``, ``summarize_data_profiles``, ``summarize_log_ratio_profiles``, ``summarize_output_based_profiles``, ``silent``, ``semilogx``, ``normalized_scores``, ``score_weight_fun``, ``score_fun``, ``solvers_to_load``, ``line_colors``, ``line_styles``, ``line_widths``, ``bar_colors``. - *Feature options*: none. - *Problem options*: ``plibs``, ``ptype``, ``mindim``, ``maxdim``, ``minb``, ``maxb``, ``minlcon``, ``maxlcon``, ``minnlcon``, ``maxnlcon``, ``mincon``, ``maxcon``, ``excludelist``.  4. More information about OptiProfiler can be found at https://www.optprof.com.
 ```
 
 ## see_also
@@ -1618,6 +1627,16 @@ The current version supports benchmarking derivative-free optimization solvers. 
 
 ```text
 benchmark
+```
+
+## calling_convention
+
+```json
+{
+  "options": "keyword arguments to benchmark(). Example: benchmark(solvers, ptype='u', mindim=2)",
+  "solvers": "list of callables: [solver1, solver2]",
+  "syntax": "scores = benchmark([solver1, solver2], ptype='u', mindim=2, maxdim=20)"
+}
 ```
 
 ## solver_signatures
@@ -1665,6 +1684,18 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
 ]
 ```
 
+## output_artifacts
+
+```json
+{
+  "detailed_profiles": "detailed_profiles/ contains high-quality single profile PDFs.",
+  "history_plots": "history_plots/ contains per-problem history plots when draw_hist_plots is not 'none'.",
+  "summary_pdf": "summary_<stamp>.pdf contains the merged summary profiles for the run.",
+  "test_log": "test_log/ stores log.txt, report.txt, option snapshots, curves, and profile scores.",
+  "test_log_report": "test_log/report.txt records selected problems, timing, merit_init = phi(x_0) = Inf cases, abnormal solver terminations, output fallbacks, and solver scores."
+}
+```
+
 ## Canonical JSON Mirror
 
 ```json
@@ -1678,12 +1709,12 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
   "feature_options": {
     "condition_factor": {
       "default": "0",
-      "description": "The scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be 2 ** (condition_factor * n / 2), where n is the dimension of the problem. Default is 0.",
+      "description": "The scaling factor of the condition number of the linear transformation in the 'linearly_transformed' feature. More specifically, the condition number of the linear transformation will be ``2^(condition_factor * n / 2)``, where n is the dimension of the problem. Default is 0.",
       "type": "float"
     },
     "distribution": {
-      "default": "'spherical')",
-      "description": "The distribution of perturbation in 'perturbed_x0' feature or noise in 'noisy' feature. It should be either a str (or char), or a callable ``(random_stream, dimension) -> random vector``, accepting a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the str should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the str should be either 'gaussian' or 'uniform' (default is 'gaussian').",
+      "default": "'spherical'",
+      "description": "The distribution of perturbation in 'perturbed_x0' feature or random noise in 'noisy' feature. It should be either a str (or char), or a callable ``(random_stream, dimension) -> random vector``, accepting a random_stream and the dimension of a problem and returning a random vector with the given dimension. In 'perturbed_x0' case, the str should be either 'spherical' or 'gaussian' (default is 'spherical'). In 'noisy' case, the str should be either 'gaussian' or 'uniform' (default is 'gaussian'), and the callable should accept a random stream and output size.",
       "type": "str or callable"
     },
     "feature_name": {
@@ -1770,6 +1801,20 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
       "description": "The magnitude of the noise in the 'noisy' feature. Default is 1e-3.",
       "type": "float"
     },
+    "noise_map": {
+      "default": "'chebyshev'",
+      "description": "The deterministic scalar noise map in the 'noisy' feature. It should be either 'chebyshev' or a callable ``x -> noise`` returning a real scalar. It is used only when noise_mode is 'deterministic'. Default is 'chebyshev'. The built-in 'chebyshev' map follows the deterministic noise model in Moré and Wild [5]_.",
+      "type": "str or callable"
+    },
+    "noise_mode": {
+      "choices": [
+        "random",
+        "deterministic"
+      ],
+      "default": "'random'",
+      "description": "The mode of the noise in the 'noisy' feature. It should be either 'random' or 'deterministic'. Default is 'random'. When it is 'deterministic' and n_runs is not specified, n_runs defaults to 1.",
+      "type": "str"
+    },
     "noise_type": {
       "choices": [
         "absolute",
@@ -1817,28 +1862,24 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
     }
   },
   "name": "benchmark",
-  "notes": "The current version supports benchmarking derivative-free optimization solvers.  .. caution::  The log-ratio profiles are available only when there are exactly two solvers. For more information on performance and data profiles, see [1]_, [2]_, [5]_. For that of log-ratio profiles, see [4]_, [6]_.  .. caution::  All callable arguments (``solvers``, ``distribution``, ``mod_x0``, ``mod_affine``, ``mod_bounds``, ``mod_linear_ub``, ``mod_linear_eq``, ``mod_fun``, ``mod_cub``, ``mod_ceq``, ``merit_fun``, ``score_fun``, ``score_weight_fun``) must be picklable for parallel execution (``n_jobs > 1``). In particular, **lambda functions are not picklable** and will cause the benchmark to fall back to sequential mode automatically. To take advantage of parallel execution, define named functions (using ``def``) instead of lambda expressions.  1. Two problem libraries are available by default: `S2MPJ <https://github.com/GrattonToint/S2MPJ>`_ (see [3]_) and `PyCUTEst <https://jfowkes.github.io/pycutest/>`_ (Linux and macOS only). To use your own problem library, see the ``custom_problem_libs_path`` option or the guide on our `website <https://www.optprof.com>`_.  2. Each problem library has a ``config.txt`` file that controls options such as ``variable_size`` and ``test_feasibility_problems``. You can override these at runtime using `set_plib_config` or by setting the corresponding environment variables (e.g., ``S2MPJ_VARIABLE_SIZE``). See `get_plib_config` and `set_plib_config` for details.  3. When the ``load`` option is provided, the function loads data from a previous experiment and draws profiles using the provided options. Available options in this mode are:  - *Profile and plot options*: ``benchmark_id``, ``solver_names``, ``feature_stamp``, ``errorbar_type``, ``savepath``, ``max_tol_order``, ``merit_fun``, ``run_plain``, ``score_only``, ``summarize_performance_profiles``, ``summarize_data_profiles``, ``summarize_log_ratio_profiles``, ``summarize_output_based_profiles``, ``silent``, ``semilogx``, ``normalized_scores``, ``score_weight_fun``, ``score_fun``, ``solvers_to_load``, ``line_colors``, ``line_styles``, ``line_widths``, ``bar_colors``. - *Feature options*: none. - *Problem options*: ``plibs``, ``ptype``, ``mindim``, ``maxdim``, ``minb``, ``maxb``, ``minlcon``, ``maxlcon``, ``minnlcon``, ``maxnlcon``, ``mincon``, ``maxcon``, ``excludelist``.  4. More information about OptiProfiler can be found at https://www.optprof.com.",
+  "notes": "The current version supports benchmarking derivative-free optimization solvers.  .. caution::  The log-ratio profiles are available only when there are exactly two solvers. For more information on performance and data profiles, see [1]_, [2]_, [5]_. For that of log-ratio profiles, see [4]_, [6]_.  .. caution::  All callable arguments (``solvers``, ``distribution``, ``noise_map``, ``mod_x0``, ``mod_affine``, ``mod_bounds``, ``mod_linear_ub``, ``mod_linear_eq``, ``mod_fun``, ``mod_cub``, ``mod_ceq``, ``merit_fun``, ``score_fun``, ``score_weight_fun``) must be picklable for parallel execution (``n_jobs > 1``). In particular, **lambda functions are not picklable** and will cause the benchmark to fall back to sequential mode automatically. To take advantage of parallel execution, define named functions (using ``def``) instead of lambda expressions.  1. Several problem libraries are available by default: `S2MPJ <https://github.com/GrattonToint/S2MPJ>`_ (see [3]_) and `PyCUTEst <https://jfowkes.github.io/pycutest/>`_ (Linux and macOS only), and SOLAR (see [7]_) through the ``solar`` adapter. SOLAR is distributed through its own LGPL-2.1 runtime files; see the adapter README and ``runtime/solar/manifest.json`` for provenance. To use your own problem library, see the ``custom_problem_libs_path`` option or the guide on our `website <https://www.optprof.com>`_. A custom library with the same name as a built-in library overrides the built-in one for that run.  2. Each problem library has a ``config.txt`` file that controls options such as ``variable_size`` and ``test_feasibility_problems``. You can override these at runtime using `set_plib_config` or by setting the corresponding environment variables (e.g., ``S2MPJ_VARIABLE_SIZE``). See `get_plib_config` and `set_plib_config` for details.  3. When the ``load`` option is provided, the function loads data from a previous experiment and draws profiles using the provided options. Available options in this mode are:  - *Profile and plot options*: ``benchmark_id``, ``solver_names``, ``feature_stamp``, ``errorbar_type``, ``savepath``, ``max_tol_order``, ``merit_fun``, ``run_plain``, ``score_only``, ``summarize_performance_profiles``, ``summarize_data_profiles``, ``summarize_log_ratio_profiles``, ``summarize_output_based_profiles``, ``silent``, ``semilogx``, ``normalized_scores``, ``score_weight_fun``, ``score_fun``, ``solvers_to_load``, ``line_colors``, ``line_styles``, ``line_widths``, ``bar_colors``. - *Feature options*: none. - *Problem options*: ``plibs``, ``ptype``, ``mindim``, ``maxdim``, ``minb``, ``maxb``, ``minlcon``, ``maxlcon``, ``minnlcon``, ``maxnlcon``, ``mincon``, ``maxcon``, ``excludelist``.  4. More information about OptiProfiler can be found at https://www.optprof.com.",
   "output_artifacts": {
-    "result_directory": "`<savepath>/<benchmark_id>/<feature_stamp>_<timestamp>/`",
-    "summary_pdf": "summary.pdf summarizes performance profiles and data profiles.",
-    "test_log_log": "test_log/log.txt records messages printed during the run.",
-    "test_log_report": "test_log/report.txt records selected problem names, timing information, merit_init = phi(x_0) = inf cases, abnormal solver terminations, output fallbacks, and solver scores."
+    "detailed_profiles": "detailed_profiles/ contains high-quality single profile PDFs.",
+    "history_plots": "history_plots/ contains per-problem history plots when draw_hist_plots is not 'none'.",
+    "summary_pdf": "summary_<stamp>.pdf contains the merged summary profiles for the run.",
+    "test_log": "test_log/ stores log.txt, report.txt, option snapshots, curves, and profile scores.",
+    "test_log_report": "test_log/report.txt records selected problems, timing, merit_init = phi(x_0) = Inf cases, abnormal solver terminations, output fallbacks, and solver scores."
   },
   "parameters": {
     "solvers": {
-      "description": "Solvers to benchmark. Each solver must be a callable accepting corresponding arguments depending on the test suite you choose:  - for an unconstrained problem, ``solver(fun, x0) -> numpy.ndarray, shape (n,)``, where ``fun`` is the objective function accepting a 1-D array and returning a float, and ``x0`` is the initial guess (1-D array); - for a bound-constrained problem, ``solver(fun, x0, xl, xu) -> numpy.ndarray, shape (n,)``, where ``xl`` and ``xu`` are the lower and upper bounds (1-D arrays, may contain ``-numpy.inf`` or ``numpy.inf``); - for a linearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> numpy.ndarray, shape (n,)``, where ``aub`` and ``aeq`` are the coefficient matrices of the linear inequality and equality constraints, and ``bub`` and ``beq`` are the right-hand side vectors; - for a nonlinearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray, shape (n,)``, where ``cub`` and ``ceq`` are the nonlinear inequality and equality constraint functions accepting a 1-D array and returning a 1-D array.  All vectors and matrices mentioned above are `numpy.ndarray`.  If the 'load' option is provided in ``**kwargs``, solvers can be None, in which case data from a previous experiment will be loaded to generate profiles.",
-      "type": "list of callable if 'load' in ``**kwargs``"
+      "description": "Solvers to benchmark. Each solver must be a callable accepting corresponding arguments depending on the test suite you choose:  - for an unconstrained problem, ``solver(fun, x0) -> numpy.ndarray, shape (n,)``, where ``fun`` is the objective function accepting a 1-D array and returning a float, and ``x0`` is the initial guess (1-D array); - for a bound-constrained problem, ``solver(fun, x0, xl, xu) -> numpy.ndarray, shape (n,)``, where ``xl`` and ``xu`` are the lower and upper bounds (1-D arrays, may contain ``-numpy.inf`` or ``numpy.inf``); - for a linearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq) -> numpy.ndarray, shape (n,)``, where ``aub`` and ``aeq`` are the coefficient matrices of the linear inequality and equality constraints, and ``bub`` and ``beq`` are the right-hand side vectors; - for a nonlinearly constrained problem, ``solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray, shape (n,)``, where ``cub`` and ``ceq`` are the nonlinear inequality and equality constraint functions accepting a 1-D array and returning a 1-D array.  All vectors and matrices mentioned above are `numpy.ndarray`.  If the ``load`` option is provided, solvers can be None, in which case data from a previous experiment will be loaded to generate profiles.",
+      "type": "list of callable if ``load`` is provided"
     }
   },
   "problem_options": {
     "custom_problem_libs_path": {
-      "choices": [
-        "s2mpj",
-        "pycutest",
-        "custom"
-      ],
       "default": "None, meaning only built-in libraries are available",
-      "description": "The path to a directory containing custom problem libraries. Each subdirectory in this path should be a problem library with the same structure as the built-in libraries (e.g., 's2mpj', 'pycutest', 'custom'). Specifically, each subdirectory should contain a file named '<library_name>_tools.py' with two functions: '<library_name>_load' and '<library_name>_select'. This option allows users to use their own problem libraries without modifying the installed package. Default is None, meaning only built-in libraries are available.",
+      "description": "The path to a directory containing custom problem libraries, or a direct path to one custom problem library. Each custom problem library must contain a tools module named '<library_name>_tools.py' with two functions: '<library_name>_load' and '<library_name>_select'. This option allows users to use their own problem libraries without modifying the installed package. If a custom library has the same name as a built-in library, the custom library is used. Default is None, meaning only built-in libraries are available.",
       "type": "str or Path"
     },
     "excludelist": {
@@ -1898,7 +1939,7 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
     },
     "plibs": {
       "default": "``'s2mpj'``",
-      "description": "The problem libraries to be used. It should be a list of strs. The built-in choices are ``'s2mpj'``, ``'pycutest'``, and ``'custom'``. Default setting is ``'s2mpj'``. Note that ``'pycutest'`` requires the separate installation of the ``pycutest`` package; see https://jfowkes.github.io/pycutest/ for installation instructions. You can also use your own problem library by specifying its name here together with the ``custom_problem_libs_path`` option.",
+      "description": "The problem libraries to be used. It should be a list of strs. The built-in choices are ``'s2mpj'``, ``'pycutest'``, ``'solar'``, and ``'custom'``. Default setting is ``'s2mpj'``. Note that ``'pycutest'`` requires the separate installation of the ``pycutest`` package; see https://jfowkes.github.io/pycutest/ for installation instructions. ``'solar'`` uses a slim SOLAR runtime and may be substantially slower than algebraic test problems because it calls an external simulator. You can also use your own problem library by specifying its name here together with the ``custom_problem_libs_path`` option.",
       "type": "list of str"
     },
     "problem": {
@@ -2030,12 +2071,12 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
       "type": "int"
     },
     "merit_fun": {
-      "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, all solvers are declared to pass that degenerate convergence test, and the case is listed in test_log/report.txt.",
+      "description": "The merit function to measure the quality of a point using the objective function value and the maximum constraint violation. It should be a callable ``(fun_value, maxcv_value, maxcv_init) -> merit_value``, where fun_value is the objective function value, maxcv_value is the maximum constraint violation, and maxcv_init is the maximum constraint violation at the initial guess. The default merit function varphi(x) is defined by the objective function f(x) and the maximum constraint violation v(x) as::  varphi(x) = f(x)                        if v(x) <= v1 varphi(x) = f(x) + 1e5 * (v(x) - v1)   if v1 < v(x) <= v2 varphi(x) = np.inf                       if v(x) > v2  where v1 = min(0.01, 1e-10 * max(1, v0)), v2 = max(0.1, 2 * v0), and v0 is the maximum constraint violation at the initial guess. If varphi(x_0) is inf for a problem/run, the convergence test is degenerate; by convention, all solvers are declared to pass that problem/run. These cases are listed in ``test_log/report.txt``.",
       "type": "callable"
     },
     "n_jobs": {
-      "default": "about half of available workers, at least 2 when possible",
-      "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers, with at least 2 when more than one worker is available.",
+      "default": "a conservative number of workers, chosen as about half of the available workers (at least 2 when more than one worker is available)",
+      "description": "The number of parallel jobs to run the test. Default is a conservative number of workers, chosen as about half of the available workers (at least 2 when more than one worker is available).",
       "type": "int"
     },
     "normalized_scores": {
@@ -2205,7 +2246,7 @@ solver(fun, x0, xl, xu, aub, bub, aeq, beq, cub, ceq) -> numpy.ndarray
       ]
     }
   ],
-  "signature": "(solvers: 'list[callable] | None' = None, /, **kwargs) -> 'tuple[np.ndarray, np.ndarray | None, list[dict] | None]'",
+  "signature": "(solvers: 'list[Callable[..., Any]] | None' = None, /, **kwargs) -> 'tuple[np.ndarray, np.ndarray | None, list[dict] | None]'",
   "solver_notes": [
     "fun(x) -> float: provides ONLY function values — no gradient/Hessian (DFO).",
     "Must return numpy.ndarray of shape (n,).",

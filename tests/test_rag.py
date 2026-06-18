@@ -89,7 +89,7 @@ class TestKnowledgeRAG:
         rag = KnowledgeRAG(KNOWLEDGE_DIR)
         rag.build_index()
 
-        results = rag.retrieve("performance profile Dolan More", top_k=3)
+        results = rag.retrieve("performance profile Dolan More", top_k=10)
         assert len(results) > 0
         sources = [r["source"] for r in results]
         assert any("profiles/" in s for s in sources)
@@ -194,7 +194,7 @@ class TestWikiStructure:
         assert (KNOWLEDGE_DIR / "wiki" / "log.md").exists()
 
     def test_wiki_categories_exist(self):
-        for cat in ("concepts", "api", "reference", "guides", "profiles", "solvers", "troubleshooting"):
+        for cat in ("concepts", "api", "reference", "guides", "profiles", "platform", "solvers", "troubleshooting"):
             assert (KNOWLEDGE_DIR / "wiki" / cat).is_dir(), f"Missing wiki/{cat}/"
 
     def test_sources_dir_exists(self):

@@ -201,6 +201,9 @@ def apply_fixes(result: LintResult) -> int:
 def run_codespell(paths: list[Path] | None = None) -> int:
     """Run codespell and return exit code."""
     cmd = ["codespell", "--skip", "*.json,*.pyc,__pycache__,.venv,node_modules"]
+    ignore_words = Path(".codespellignore")
+    if ignore_words.exists():
+        cmd.extend(["--ignore-words", str(ignore_words)])
     if paths:
         cmd.extend(str(p) for p in paths)
     else:

@@ -2,7 +2,7 @@
 tags: [reference, source-backed, enums]
 sources: [enums.json, common/enums.json]
 related: []
-last_updated: 2026-06-07
+last_updated: 2026-06-18
 generated: true
 ---
 
@@ -12,7 +12,7 @@ This page mirrors bundled enum JSON files exactly.
 
 ## enums.json
 
-- Canonical SHA256: `bb3e79d32a2dd030c5c739ca480f269448ed717408d76fed00dbffb1e2cdf57b`
+- Canonical SHA256: `5a5e446bbfe7485404837cd3ca74bd20958b6bde5a2c5cf84472d64b4b0d2135`
 
 ```json
 {
@@ -45,6 +45,8 @@ This page mirrors bundled enum JSON files exactly.
     "MOD_X0": "mod_x0",
     "NAN_RATE": "nan_rate",
     "NOISE_LEVEL": "noise_level",
+    "NOISE_MAP": "noise_map",
+    "NOISE_MODE": "noise_mode",
     "NOISE_TYPE": "noise_type",
     "N_RUNS": "n_runs",
     "PERTURBATION_LEVEL": "perturbation_level",
@@ -117,7 +119,7 @@ This page mirrors bundled enum JSON files exactly.
 
 ## common/enums.json
 
-- Canonical SHA256: `bb3e79d32a2dd030c5c739ca480f269448ed717408d76fed00dbffb1e2cdf57b`
+- Canonical SHA256: `5a5e446bbfe7485404837cd3ca74bd20958b6bde5a2c5cf84472d64b4b0d2135`
 
 ```json
 {
@@ -150,6 +152,8 @@ This page mirrors bundled enum JSON files exactly.
     "MOD_X0": "mod_x0",
     "NAN_RATE": "nan_rate",
     "NOISE_LEVEL": "noise_level",
+    "NOISE_MAP": "noise_map",
+    "NOISE_MODE": "noise_mode",
     "NOISE_TYPE": "noise_type",
     "N_RUNS": "n_runs",
     "PERTURBATION_LEVEL": "perturbation_level",

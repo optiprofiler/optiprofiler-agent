@@ -1,0 +1,77 @@
+{
+  "source_repository": "optiprofiler-platform",
+  "git_commit": "827e9e7",
+  "worktree_status": "M backend/app/services/language_backends/__init__.py;  M backend/app/services/language_backends/base.py;  M backend/app/services/leaderboard.py;  M docs/README.md;  M docs/adr/0010-multi-language-backend.md; ?? docs/problem-libraries-industrial-dfo.md",
+  "sources": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "size_bytes": 4306
+    },
+    {
+      "path": "docs/api.md",
+      "exists": true,
+      "size_bytes": 4174
+    },
+    {
+      "path": "docs/architecture.md",
+      "exists": true,
+      "size_bytes": 7223
+    },
+    {
+      "path": "docs/leaderboard.md",
+      "exists": true,
+      "size_bytes": 15512
+    },
+    {
+      "path": "docs/adr/0005-agent-c-integration.md",
+      "exists": true,
+      "size_bytes": 3468
+    },
+    {
+      "path": "docs/adr/0006-chat-widget.md",
+      "exists": true,
+      "size_bytes": 4556
+    },
+    {
+      "path": "docs/adr/0007-auto-debug.md",
+      "exists": true,
+      "size_bytes": 5524
+    },
+    {
+      "path": "docs/adr/0008-leaderboard.md",
+      "exists": true,
+      "size_bytes": 16796
+    },
+    {
+      "path": "docs/adr/0009-matlab-solver-upload.md",
+      "exists": true,
+      "size_bytes": 8477
+    },
+    {
+      "path": "docs/adr/0010-multi-language-backend.md",
+      "exists": true,
+      "size_bytes": 10759
+    },
+    {
+      "path": "docs/adr/0011-leaderboard-pairwise-scoring.md",
+      "exists": true,
+      "size_bytes": 11195
+    },
+    {
+      "path": "docs/adr/0012-matlab-cli-sandbox.md",
+      "exists": true,
+      "size_bytes": 19088
+    },
+    {
+      "path": "docs/adr/0013-dfo-ecosystem-module-registry.md",
+      "exists": true,
+      "size_bytes": 5851
+    },
+    {
+      "path": "docs/problem-libraries-industrial-dfo.md",
+      "exists": true,
+      "size_bytes": 11942
+    }
+  ]
+}

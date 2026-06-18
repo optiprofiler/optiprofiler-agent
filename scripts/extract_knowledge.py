@@ -7,9 +7,13 @@ Generates a language-partitioned knowledge base from two sources:
 
 Output structure:
   knowledge/
-  ├── common/          (project-level: concepts, enums, installation)
-  ├── python/          (Python API: benchmark, classes, plib tools, examples)
-  └── matlab/          (MATLAB API: benchmark, classes, plib tools, examples)
+  ├── enums.json       (authoritative enum constants)
+  ├── _sources/        (authoritative raw JSON extractions)
+  │   ├── python/
+  │   └── matlab/
+  ├── common/          (legacy/back-compat project-level docs)
+  ├── python/          (legacy/back-compat Python docs)
+  └── matlab/          (legacy/back-compat MATLAB docs)
 
 Usage:
   python scripts/extract_knowledge.py [--optiprofiler-root PATH] [--dry-run]
@@ -43,7 +47,12 @@ def _join(lines: list[str]) -> str:
 
 def _extract_default(desc: str) -> str | None:
     m = re.search(r"[Dd]efault\s+(?:is|setting is|value is)\s+(.+?)(?:\.\s|$)", desc)
-    return m.group(1).strip().rstrip(".") if m else None
+    if not m:
+        return None
+    value = m.group(1).strip().rstrip(".")
+    if value.endswith(")") and value.count(")") > value.count("("):
+        value = value[:-1].rstrip()
+    return value
 
 
 def _extract_choices(desc: str) -> list[str] | None:
@@ -144,7 +153,7 @@ def _convert_tag_to_md(el: Tag) -> list[str]:
             dd = dt.find_next_sibling("dd")
             lines.append(f"**{dt.get_text(strip=True)}**")
             if dd:
-                lines.append(f": {_get_spaced_text(dd)[:300]}\n")
+                lines.append(f": {_get_spaced_text(dd)}\n")
     return lines
 
 
@@ -327,6 +336,16 @@ def extract_python_benchmark() -> dict:
         "Must return numpy.ndarray of shape (n,).",
         "At least 2 solvers required.",
     ]
+    data["output_artifacts"] = {
+        "summary_pdf": "summary_<stamp>.pdf contains the merged summary profiles for the run.",
+        "test_log": "test_log/ stores log.txt, report.txt, option snapshots, curves, and profile scores.",
+        "history_plots": "history_plots/ contains per-problem history plots when draw_hist_plots is not 'none'.",
+        "detailed_profiles": "detailed_profiles/ contains high-quality single profile PDFs.",
+        "test_log_report": (
+            "test_log/report.txt records selected problems, timing, merit_init = phi(x_0) = Inf cases, "
+            "abnormal solver terminations, output fallbacks, and solver scores."
+        ),
+    }
     return data
 
 
@@ -376,7 +395,7 @@ def extract_python_api_notes() -> dict:
         "solver_format": "list of callables: [solver1, solver2]",
         "options_format": "keyword arguments to benchmark()",
         "vector_convention": "1-D numpy arrays, shape (n,)",
-        "problem_libs": ["s2mpj", "pycutest", "custom"],
+        "problem_libs": ["s2mpj", "pycutest", "solar", "custom"],
         "python_only_options": ["custom_problem_libs_path"],
         "installation": {
             "pip": "pip install optiprofiler",
@@ -420,6 +439,16 @@ def _parse_matlab_benchmark_html(soup: BeautifulSoup) -> dict:
         "Must return column vector x.",
         "At least 2 solvers required (cell array of function handles).",
     ]
+    result["output_artifacts"] = {
+        "summary_pdf": "summary_<stamp>.pdf contains the merged summary profiles for the run.",
+        "test_log": "test_log/ stores log files, report.txt, option snapshots, curves, and profile scores.",
+        "history_plots": "history_plots/ contains per-problem history plots when draw_hist_plots is not 'none'.",
+        "detailed_profiles": "detailed_profiles/ contains high-quality single profile PDFs.",
+        "test_log_report": (
+            "test_log/report.txt records selected problems, timing, merit_init = phi(x_0) = Inf cases, "
+            "abnormal solver terminations, output fallbacks, and solver scores."
+        ),
+    }
 
     # Options are in <li> elements with <strong> for the name.
     # Category headers appear in <p> tags like "Options for profiles and plots"
@@ -436,7 +465,7 @@ def _parse_matlab_benchmark_html(soup: BeautifulSoup) -> dict:
     all_elements = article.find_all(["p", "li"])
     for el in all_elements:
         if el.name == "p":
-            p_text = el.get_text(strip=True).lower()
+            p_text = _get_spaced_text(el).lower()
             for marker, cat in cat_markers.items():
                 if marker in p_text:
                     cur_cat = cat
@@ -450,10 +479,10 @@ def _parse_matlab_benchmark_html(soup: BeautifulSoup) -> dict:
         if not opt_name or opt_name in skip_names or opt_name[0].isupper():
             continue
 
-        desc = el.get_text(strip=True)
+        desc = _get_spaced_text(el)
         # Remove the leading "opt_name:" prefix from the description
-        desc = re.sub(r"^\w+:\s*", "", desc, count=1)
-        entry = {"description": desc[:500]}
+        desc = re.sub(rf"^{re.escape(opt_name)}\s*:?\s*", "", desc, count=1)
+        entry = {"description": desc}
         d = _extract_default(desc)
         if d:
             entry["default"] = d
@@ -462,6 +491,14 @@ def _parse_matlab_benchmark_html(soup: BeautifulSoup) -> dict:
             entry["choices"] = ch
 
         result.setdefault(cur_cat, {})[opt_name] = entry
+
+    draw_hist_plots = result.get("profile_options", {}).get("draw_hist_plots")
+    if draw_hist_plots:
+        draw_hist_plots["default"] = "'parallel'"
+        draw_hist_plots["source_note"] = (
+            "MATLAB getDefaultProfileOptions.m sets draw_hist_plots to 'parallel' in normal runs; "
+            "load mode forces it to 'sequential'."
+        )
 
     # Returns
     result["returns"] = {
@@ -491,7 +528,7 @@ def _parse_matlab_class_html(soup: BeautifulSoup, class_name: str) -> dict:
         dd = dl.find("dd")
         if dd:
             first_p = dd.find("p")
-            result["description"] = first_p.get_text(strip=True) if first_p else ""
+            result["description"] = _get_spaced_text(first_p) if first_p else ""
 
     # Walk <p> + <blockquote> siblings in order.
     # <p> sets the section context, <blockquote> contains the data.
@@ -521,7 +558,7 @@ def _parse_matlab_class_html(soup: BeautifulSoup, class_name: str) -> dict:
                 m = re.match(r"(\w+)(?:\s*\([^)]*\))?\s*:\s*(.+)", entry.strip(), re.DOTALL)
                 if m:
                     name = m.group(1)
-                    desc = " ".join(m.group(2).split())[:300]
+                    desc = " ".join(m.group(2).split())
                     target = properties if current_section == "properties" else methods
                     target[name] = {"description": desc}
                     parsed_any = True
@@ -558,7 +595,7 @@ def _parse_matlab_tool_html(soup: BeautifulSoup, func_name: str) -> dict:
             result["signature"] = dt.get_text(strip=True)
         if dd:
             first_p = dd.find("p")
-            result["description"] = first_p.get_text(strip=True)[:500] if first_p else ""
+            result["description"] = _get_spaced_text(first_p) if first_p else ""
 
             # Extract parameters from <li> items in dd
             params = {}
@@ -566,9 +603,9 @@ def _parse_matlab_tool_html(soup: BeautifulSoup, func_name: str) -> dict:
                 strong = li.find("strong")
                 if strong:
                     pname = strong.get_text(strip=True).rstrip(":")
-                    pdesc = li.get_text(strip=True)
-                    pdesc = re.sub(r"^\w+:\s*", "", pdesc, count=1)
-                    params[pname] = {"description": pdesc[:300]}
+                    pdesc = _get_spaced_text(li)
+                    pdesc = re.sub(rf"^{re.escape(pname)}\s*:?\s*", "", pdesc, count=1)
+                    params[pname] = {"description": pdesc}
             if params:
                 result["parameters"] = params
 
@@ -955,7 +992,18 @@ def main():
     # ── Write files ──
     print("\n=== Writing files ===")
 
-    # common/ — only language-neutral knowledge
+    # Authoritative wiki sources.
+    _write_json(out / "enums.json", enums)
+    _write_json(out / "_sources" / "python" / "benchmark.json", py_benchmark)
+    _write_json(out / "_sources" / "python" / "classes.json", py_classes)
+    _write_json(out / "_sources" / "python" / "plib_tools.json", py_plib)
+    _write_json(out / "_sources" / "python" / "api_notes.json", py_notes)
+    _write_json(out / "_sources" / "matlab" / "benchmark.json", mat_benchmark)
+    _write_json(out / "_sources" / "matlab" / "classes.json", mat_classes)
+    _write_json(out / "_sources" / "matlab" / "plib_tools.json", mat_plib)
+    _write_json(out / "_sources" / "matlab" / "api_notes.json", mat_notes)
+
+    # Legacy/back-compat mirrors.
     _write_json(out / "common" / "enums.json", enums)
     _write_md(out / "common" / "concepts.md", concepts)
     _write_md(out / "common" / "solver_interface.md", solver_iface)
@@ -982,7 +1030,7 @@ def main():
     old_files = [
         out / "common" / "api_params.json",
         out / "common" / "installation.md",
-        out / "api_params.json", out / "enums.json", out / "examples.md",
+        out / "api_params.json", out / "examples.md",
         out / "matlab_guide.md", out / "problem_libs_guide.md",
         out / "solver_interface_spec.md",
     ]
@@ -990,7 +1038,7 @@ def main():
         if f.exists():
             f.unlink()
 
-    print(f"\nDone. {16} files written to {out}/")
+    print(f"\nDone. Knowledge files written to {out}/")
     return 0
 
 

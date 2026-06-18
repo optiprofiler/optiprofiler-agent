@@ -15,8 +15,8 @@ No gradient, Jacobian, or Hessian information is available.
 
 Every call to `fun` is counted internally and used for performance scoring.
 Methods that internally approximate gradients via finite differences
-(BFGS, L-BFGS-B, CG, Newton-CG, TNC, fminunc) consume extra `fun` evaluations,
-making them generally unsuitable for DFO benchmarking.
+consume extra `fun` evaluations, making them generally unsuitable
+for DFO benchmarking.
 
 **Recommended DFO methods** (see language-specific guides for details).
 

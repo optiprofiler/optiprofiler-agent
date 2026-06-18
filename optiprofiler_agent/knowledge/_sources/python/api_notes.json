@@ -15,6 +15,7 @@
   "problem_libs": [
     "s2mpj",
     "pycutest",
+    "solar",
     "custom"
   ],
   "python_only_options": [

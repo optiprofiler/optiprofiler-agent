@@ -19,11 +19,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 KNOWLEDGE_DIR = REPO_ROOT / "optiprofiler_agent" / "knowledge"
 WIKI_DIR = KNOWLEDGE_DIR / "wiki"
 REFERENCE_DIR = WIKI_DIR / "reference"
-REFERENCE_LAST_UPDATED = "2026-06-07"
+REFERENCE_LAST_UPDATED = "2026-06-18"
 
 JSON_SOURCE_GLOBS = (
     "_sources/python/*.json",
     "_sources/matlab/*.json",
+    "_sources/platform/*.json",
 )
 LEGACY_MD_DIRS = ("common", "python", "matlab", "profiles", "debugging")
 
@@ -232,6 +233,13 @@ def _bibliography_sources() -> list[Path]:
     return sorted(refs_dir.glob("*.md"))
 
 
+def _platform_markdown_sources() -> list[Path]:
+    platform_dir = KNOWLEDGE_DIR / "_sources" / "platform"
+    if not platform_dir.exists():
+        return []
+    return sorted(platform_dir.glob("*.md"))
+
+
 def generate_reference_pages() -> dict[Path, str]:
     pages: dict[Path, str] = {}
 
@@ -257,6 +265,14 @@ def generate_reference_pages() -> dict[Path, str]:
             "Bibliography",
             bibliography,
             tags=["reference", "source-backed", "bibliography"],
+        )
+
+    platform_sources = _platform_markdown_sources()
+    if platform_sources:
+        pages[REFERENCE_DIR / "platform-docs.md"] = _render_markdown_reference_page(
+            "Platform Docs",
+            platform_sources,
+            tags=["reference", "source-backed", "platform"],
         )
 
     return pages
