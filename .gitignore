@@ -58,6 +58,7 @@ Thumbs.db
 
 # Local benchmark / scratch (entire folder — not part of the published package)
 op_test/
+out/
 
 # Chroma / local RAG persistence
 *.chroma/
